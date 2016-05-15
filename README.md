@@ -1,4 +1,4 @@
-## 库介绍
+## 介绍
 
 JQNetwork，为 Jason Qt Netowrk 的简称
 
