@@ -9,5 +9,3 @@
     
     GitHub: https://github.com/188080501/
 */
-
-#include "jqnetwork_client.h"

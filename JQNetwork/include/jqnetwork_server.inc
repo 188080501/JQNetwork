@@ -10,4 +10,10 @@
     GitHub: https://github.com/188080501/
 */
 
-#include "jqnetwork_client.h"
+#ifndef JQNETWORK_SERVER_INC
+#define JQNETWORK_SERVER_INC
+
+// JQNetwork lib import
+#include "jqnetwork_server.h"
+
+#endif//JQNETWORK_SERVER_INC
