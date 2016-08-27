@@ -10,8 +10,8 @@
     GitHub: https://github.com/188080501/
 */
 
-#ifndef JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_H
-#define JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_H
+#ifndef JQNETWORK_INCLUDE_JQNETWORK_FORWARF_H
+#define JQNETWORK_INCLUDE_JQNETWORK_FORWARF_H
 
 // JQNetwork lib import
 //...
@@ -23,6 +23,6 @@ namespace JQNetwork
 
 }
 
-#include "jqnetwork_foundation.inc"
+#include "jqnetwork_forwarf.inc"
 
-#endif//JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_H
+#endif//JQNETWORK_INCLUDE_JQNETWORK_FORWARF_H

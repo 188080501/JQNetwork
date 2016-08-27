@@ -10,8 +10,8 @@
     GitHub: https://github.com/188080501/
 */
 
-#ifndef JQNETWORK_PACKAGE_H
-#define JQNETWORK_PACKAGE_H
+#ifndef JQNETWORK_INCLUDE_JQNETWORK_PACKAGE_H
+#define JQNETWORK_INCLUDE_JQNETWORK_PACKAGE_H
 
 // JQNetwork lib import
 //...
@@ -25,4 +25,4 @@ namespace JQNetwork
 
 #include "jqnetwork_package.inc"
 
-#endif//JQNETWORK_PACKAGE_H
+#endif//JQNETWORK_INCLUDE_JQNETWORK_PACKAGE_H

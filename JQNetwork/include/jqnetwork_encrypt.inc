@@ -10,19 +10,10 @@
     GitHub: https://github.com/188080501/
 */
 
-#ifndef JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_H
-#define JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_H
+#ifndef JQNETWORK_INCLUDE_JQNETWORK_ENCRYPT_INC
+#define JQNETWORK_INCLUDE_JQNETWORK_ENCRYPT_INC
 
 // JQNetwork lib import
-//...
+#include "jqnetwork_encrypt.h"
 
-namespace JQNetwork
-{
-
-
-
-}
-
-#include "jqnetwork_foundation.inc"
-
-#endif//JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_H
+#endif//JQNETWORK_INCLUDE_JQNETWORK_ENCRYPT_INC
