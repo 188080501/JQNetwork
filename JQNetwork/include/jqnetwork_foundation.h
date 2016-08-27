@@ -19,7 +19,7 @@
 namespace JQNetwork
 {
 
-
+class ;
 
 }
 
