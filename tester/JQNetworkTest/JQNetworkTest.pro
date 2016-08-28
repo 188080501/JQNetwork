@@ -10,7 +10,7 @@
 #   GitHub: https://github.com/188080501/
 #
 
-QT       += core network testlib
+QT       += core testlib
 
 TEMPLATE = app
 

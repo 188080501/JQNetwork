@@ -12,6 +12,7 @@
 #include <JQNetworkServer>
 #include <JQNetworkProcessor>
 #include <JQNetworkClient>
+#include <JQNetworkForwarf>
 
 void JQNetworkTest::jqnetworkConnectTest()
 {

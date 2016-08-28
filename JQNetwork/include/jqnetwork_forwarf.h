@@ -14,7 +14,7 @@
 #define JQNETWORK_INCLUDE_JQNETWORK_FORWARF_H
 
 // JQNetwork lib import
-//...
+#include <JQNetworkFoundation>
 
 namespace JQNetwork
 {
@@ -22,6 +22,20 @@ namespace JQNetwork
 
 
 }
+
+class JQNetworkForwarf: public QObject
+{
+    Q_OBJECT
+
+public:
+    JQNetworkForwarf() = default;
+
+    ~JQNetworkForwarf() = default;
+
+    JQNetworkForwarf(const JQNetworkForwarf &) = delete;
+
+    JQNetworkForwarf &operator =(const JQNetworkForwarf &) = delete;
+};
 
 #include "jqnetwork_forwarf.inc"
 

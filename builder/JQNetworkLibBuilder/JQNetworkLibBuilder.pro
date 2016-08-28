@@ -10,7 +10,12 @@
 #   GitHub: https://github.com/188080501/
 #
 
-TEMPLATE = subdirs
+QT       += core
 
-SUBDIRS += \
-    JQNetworkLibBuilder
+TEMPLATE = lib
+
+CONFIG += staticlib
+
+TARGET = JQNetwork
+
+include( $$PWD/../../JQNetwork/JQNetworkSrc.pri )
