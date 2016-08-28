@@ -13,13 +13,18 @@
 #ifndef JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_H
 #define JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_H
 
-// JQNetwork lib import
-//...
+// Qt lib import
+#include <QObject>
 
 namespace JQNetwork
 {
 
-class ;
+class JQNetworkPackage;
+class JQNetworkConnect;
+class JQNetworkConnectPool;
+class JQNetworkServer;
+class JQNetworkProcessor;
+class JQNetworkClient;
 
 }
 

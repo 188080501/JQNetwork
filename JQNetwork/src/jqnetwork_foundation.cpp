@@ -11,3 +11,5 @@
 */
 
 #include "jqnetwork_foundation.h"
+
+using namespace JQNetwork;

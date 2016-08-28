@@ -11,3 +11,5 @@
 */
 
 #include "jqnetwork_client.h"
+
+using namespace JQNetwork;

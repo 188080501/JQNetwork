@@ -1,11 +1,18 @@
-﻿/*
-    This file is part of JQNetwork
-    
-    Library introduce: https://github.com/188080501/JQNetwork
+#
+#   This file is part of JQNetwork
+#
+#   Library introduce: https://github.com/188080501/JQNetwork
+#
+#   Copyright: Jason
+#
+#   Contact email: Jason@JasonServer.com
+#
+#   GitHub: https://github.com/188080501/
+#
 
-    Copyright: Jason
+TEMPLATE = subdirs
 
-    Contact email: Jason@JasonServer.com
-    
-    GitHub: https://github.com/188080501/
-*/
+SUBDIRS += \
+    tester \
+    builder \
+    demos

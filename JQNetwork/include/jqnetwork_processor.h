@@ -14,7 +14,7 @@
 #define JQNETWORK_INCLUDE_JQNETWORK_PROCESSOR_H
 
 // JQNetwork lib import
-//...
+#include <JQNetworkFoundation>
 
 namespace JQNetwork
 {
@@ -22,6 +22,20 @@ namespace JQNetwork
 
 
 }
+
+class JQNetworkProcessor: public QObject
+{
+    Q_OBJECT
+
+public:
+    JQNetworkProcessor() = default;
+
+    ~JQNetworkProcessor() = default;
+
+    JQNetworkProcessor(const JQNetworkProcessor &) = delete;
+
+    JQNetworkProcessor &operator =(const JQNetworkProcessor &) = delete;
+};
 
 #include "jqnetwork_processor.inc"
 

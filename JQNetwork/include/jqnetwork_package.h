@@ -14,7 +14,7 @@
 #define JQNETWORK_INCLUDE_JQNETWORK_PACKAGE_H
 
 // JQNetwork lib import
-//...
+#include <JQNetworkFoundation>
 
 namespace JQNetwork
 {
@@ -22,6 +22,20 @@ namespace JQNetwork
 
 
 }
+
+class JQNetworkPackage: public QObject
+{
+    Q_OBJECT
+
+public:
+    JQNetworkPackage() = default;
+
+    ~JQNetworkPackage() = default;
+
+    JQNetworkPackage(const JQNetworkPackage &) = delete;
+
+    JQNetworkPackage &operator =(const JQNetworkPackage &) = delete;
+};
 
 #include "jqnetwork_package.inc"
 

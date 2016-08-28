@@ -11,3 +11,5 @@
 */
 
 #include "jqnetwork_connect.h"
+
+using namespace JQNetwork;

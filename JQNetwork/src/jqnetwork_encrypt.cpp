@@ -11,3 +11,5 @@
 */
 
 #include "jqnetwork_encrypt.h"
+
+using namespace JQNetwork;

@@ -11,3 +11,5 @@
 */
 
 #include "jqnetwork_processor.h"
+
+using namespace JQNetwork;

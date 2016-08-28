@@ -9,3 +9,11 @@
     
     GitHub: https://github.com/188080501/
 */
+
+#ifndef JQNETWORK_INCLUDE_JQNETWORK_CONNECTPOOL_INC
+#define JQNETWORK_INCLUDE_JQNETWORK_CONNECTPOOL_INC
+
+// JQNetwork lib import
+#include "jqnetwork_connectpool.h"
+
+#endif//JQNETWORK_INCLUDE_JQNETWORK_CONNECTPOOL_INC

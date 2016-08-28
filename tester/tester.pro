@@ -9,3 +9,8 @@
 #
 #   GitHub: https://github.com/188080501/
 #
+
+TEMPLATE = subdirs
+
+SUBDIRS += \
+    JQNetworkTest
