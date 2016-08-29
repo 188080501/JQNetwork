@@ -18,4 +18,6 @@ void JQNetworkTest::jqnetworkConnectTest()
 {
 //    QBENCHMARK
 //    QCOMPARE
+
+    auto connect = JQNetworkConnect::createConnect();
 }

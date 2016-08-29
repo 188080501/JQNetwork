@@ -17,11 +17,7 @@
 #include <JQNetworkFoundation>
 
 namespace JQNetwork
-{
-
-
-
-}
+{ }
 
 #include "jqnetwork_encrypt.inc"
 

@@ -17,11 +17,7 @@
 #include <JQNetworkFoundation>
 
 namespace JQNetwork
-{
-
-
-
-}
+{ }
 
 class JQNetworkPackage: public QObject
 {

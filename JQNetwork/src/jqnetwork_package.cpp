@@ -12,4 +12,7 @@
 
 #include "jqnetwork_package.h"
 
+// Qt lib import
+#include <QDebug>
+
 using namespace JQNetwork;

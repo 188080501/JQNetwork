@@ -11,3 +11,8 @@
 */
 
 #include "jqnetwork_forwarf.h"
+
+// Qt lib import
+#include <QDebug>
+
+using namespace JQNetwork;

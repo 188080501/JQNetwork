@@ -12,6 +12,9 @@
 
 QT *= core network concurrent
 
+CONFIG *= c++11
+CONFIG *= c++14
+
 INCLUDEPATH *= \
     $$PWD/include/
 

@@ -13,11 +13,23 @@
 #ifndef JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_H
 #define JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_H
 
+// C++ lib import
+#include <functional>
+
 // Qt lib import
 #include <QObject>
+#include <QSharedPointer>
+#include <QString>
+#include <QByteArray>
 
-namespace JQNetwork
-{
+class QJsonObject;
+class QJsonArray;
+class QJsonValue;
+class QThreadPool;
+class QTcpSocket;
+class QTcpServer;
+
+template <class Key, class T> class QMap;
 
 class JQNetworkPackage;
 class JQNetworkConnect;
@@ -26,7 +38,8 @@ class JQNetworkServer;
 class JQNetworkProcessor;
 class JQNetworkClient;
 
-}
+namespace JQNetwork
+{ }
 
 #include "jqnetwork_foundation.inc"
 
