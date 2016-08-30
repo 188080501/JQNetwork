@@ -19,10 +19,13 @@
 namespace JQNetwork
 { }
 
-class JQNetworkConnect: public QObject
+class JQNetworkConnectSettings
 {
-    Q_OBJECT
+    //...
+};
 
+class JQNetworkConnect
+{
 private:
     JQNetworkConnect();
 
@@ -33,16 +36,13 @@ private:
 public:
     ~JQNetworkConnect() = default;
 
-private Q_SLOTS:
+private:
     void onTcpSocketReadyRead();
 
     void onTcpSocketError();
 
 public:
     static QSharedPointer< JQNetworkConnect > createConnect();
-
-signals:
-    void connectToHostSucceed();
 
 private:
     QSharedPointer< QTcpSocket > tcpSocket_;

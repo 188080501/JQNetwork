@@ -21,8 +21,8 @@ using namespace JQNetwork;
 JQNetworkConnect::JQNetworkConnect():
     tcpSocket_( new QTcpSocket )
 {
-    connect( tcpSocket_.data(), &QTcpSocket::readyRead, this, &JQNetworkConnect::onTcpSocketReadyRead, Qt::DirectConnection );
-    connect( tcpSocket_.data(), ( QAbstractSocket::SocketError( QAbstractSocket::* )() const )&QAbstractSocket::error, this, &JQNetworkConnect::onTcpSocketError, Qt::DirectConnection );
+    QObject::connect( tcpSocket_.data(), &QTcpSocket::readyRead, std::bind( &JQNetworkConnect::onTcpSocketReadyRead, this ) );
+    QObject::connect( tcpSocket_.data(), ( QAbstractSocket::SocketError( QAbstractSocket::* )() const )&QAbstractSocket::error, std::bind( &JQNetworkConnect::onTcpSocketError, this ) );
 }
 
 QSharedPointer< JQNetworkConnect > JQNetworkConnect::createConnect()
