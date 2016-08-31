@@ -15,40 +15,147 @@
 // Qt lib import
 #include <QDebug>
 #include <QTcpSocket>
+#include <QTimer>
 
 using namespace JQNetwork;
 
 JQNetworkConnect::JQNetworkConnect():
     tcpSocket_( new QTcpSocket )
 {
-    QObject::connect( tcpSocket_.data(), &QTcpSocket::readyRead, std::bind( &JQNetworkConnect::onTcpSocketReadyRead, this ) );
-    QObject::connect( tcpSocket_.data(), ( QAbstractSocket::SocketError( QAbstractSocket::* )() const )&QAbstractSocket::error, std::bind( &JQNetworkConnect::onTcpSocketError, this ) );
+    connect( tcpSocket_.data(), &QAbstractSocket::stateChanged, this, &JQNetworkConnect::onTcpSocketStateChanged );
+    connect( tcpSocket_.data(), &QAbstractSocket::bytesWritten, this, &JQNetworkConnect::onTcpSocketBytesWritten );
+    connect( tcpSocket_.data(), &QTcpSocket::readyRead, this, &JQNetworkConnect::onTcpSocketReadyRead );
+
+    tcpSocketLastState_ = tcpSocket_->state();
 }
 
-QSharedPointer< JQNetworkConnect > JQNetworkConnect::createConnect()
+QSharedPointer< JQNetworkConnect > JQNetworkConnect::createConnectByHostAndPort(
+        const QSharedPointer< JQNetworkConnectSettings > &connectSettings,
+        const QString &hostName,
+        const quint16 &port
+    )
 {
     QSharedPointer< JQNetworkConnect > newConnect( new JQNetworkConnect );
+    newConnect->connectSettings_ = connectSettings;
 
-    // TODO
+    newConnect->tcpSocket_->connectToHost( hostName, port );
+
+    if ( newConnect->connectSettings_->maximumConnectToHostWaitTime != -1 )
+    {
+        newConnect->timerForConnectToHostTimeOut_ = QSharedPointer< QTimer >( new QTimer );
+        QObject::connect( newConnect->timerForConnectToHostTimeOut_.data(), &QTimer::timeout, std::bind( &JQNetworkConnect::onTcpSocketConnectToHostTimeOut, newConnect.data() ) );
+        newConnect->timerForConnectToHostTimeOut_->setSingleShot( true );
+        newConnect->timerForConnectToHostTimeOut_->start( newConnect->connectSettings_->maximumConnectToHostWaitTime );
+    }
 
     return newConnect;
 }
 
-void JQNetworkConnect::onTcpSocketReadyRead()
+void JQNetworkConnect::onTcpSocketStateChanged()
 {
-    const auto &&data = tcpSocket_->readAll();
+    if ( abandonTcpSocket ) { return; }
+    NULLPTR_CHECK( tcpSocket_ );
 
-    qDebug() << "onTcpSocketReadyRead: readAll:" << data;
-}
+    const auto &&lastState = (QTcpSocket::SocketState)tcpSocketLastState_;
+    const auto &&currentState = tcpSocket_->state();
 
-void JQNetworkConnect::onTcpSocketError()
-{
-    switch ( tcpSocket_->error() )
+    qDebug() << __func__ << ": lastState:" << lastState << ", currentState:" << currentState;
+
+    switch ( currentState )
     {
-        case QAbstractSocket::HostNotFoundError:
+        case QAbstractSocket::ConnectedState:
         {
+            if ( !timerForConnectToHostTimeOut_.isNull() )
+            {
+                timerForConnectToHostTimeOut_.clear();
+            }
+
+            NULLPTR_CHECK( connectSettings_->connectToHostSucceedCallback );
+            connectSettings_->connectToHostSucceedCallback( this );
+
+            break;
+        }
+        case QAbstractSocket::UnconnectedState:
+        {
+            switch ( tcpSocket_->error() )
+            {
+                case QAbstractSocket::UnknownSocketError: { break; }
+                case QAbstractSocket::RemoteHostClosedError:
+                {
+                    NULLPTR_CHECK( connectSettings_->remoteHostClosedCallback );
+                    connectSettings_->remoteHostClosedCallback( this );
+                    break;
+                }
+                case QAbstractSocket::HostNotFoundError:
+                {
+                    NULLPTR_CHECK( connectSettings_->connectToHostErrorCallback );
+                    connectSettings_->connectToHostErrorCallback( this );
+                    break;
+                }
+                default:
+                {
+                    qDebug() << __func__ << ": unknow error:" << tcpSocket_->error();
+                    break;
+                }
+            }
+
+            this->onReadyToDelete();
             break;
         }
         default: { break; }
     }
+
+    tcpSocketLastState_ = currentState;
+}
+
+void JQNetworkConnect::onTcpSocketConnectToHostTimeOut()
+{
+    if ( abandonTcpSocket ) { return; }
+    NULLPTR_CHECK( timerForConnectToHostTimeOut_ );
+    NULLPTR_CHECK( tcpSocket_ );
+
+    qDebug() << __func__;
+
+    NULLPTR_CHECK( connectSettings_->connectToHostTimeoutCallback );
+    connectSettings_->connectToHostTimeoutCallback( this );
+
+    this->onReadyToDelete();
+}
+
+void JQNetworkConnect::onTcpSocketReadyRead()
+{
+    if ( abandonTcpSocket ) { return; }
+    NULLPTR_CHECK( tcpSocket_ );
+
+    const auto &&data = tcpSocket_->readAll();
+
+    qDebug() << __func__ << ": size:" << data.size();
+}
+
+void JQNetworkConnect::onTcpSocketBytesWritten(const qint64 &bytes)
+{
+    if ( abandonTcpSocket ) { return; }
+    NULLPTR_CHECK( tcpSocket_ );
+
+    static qint64 total = 0;
+    total += bytes;
+
+    qDebug() << __func__ << ":" << bytes << total;
+}
+
+void JQNetworkConnect::onReadyToDelete()
+{
+    if ( abandonTcpSocket ) { return; }
+    abandonTcpSocket = true;
+
+    if ( !timerForConnectToHostTimeOut_ )
+    {
+        timerForConnectToHostTimeOut_.clear();
+    }
+
+    NULLPTR_CHECK( tcpSocket_ );
+    tcpSocket_->close();
+
+    NULLPTR_CHECK( connectSettings_->readyToDeleteCallback );
+    connectSettings_->readyToDeleteCallback( this );
 }

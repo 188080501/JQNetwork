@@ -19,13 +19,39 @@
 namespace JQNetwork
 { }
 
-class JQNetworkConnectSettings
+struct JQNetworkConnectSettings
 {
-    //...
+    bool longConnection = true;
+    bool autoMaintainLongConnection = false;
+
+    qint64 cutPackageSize = -1;
+    int streamFormat = -1;
+    qint64 packageCompressionThresholdForBytes = -1;
+    int packageCompressionThresholdForFirstCommunicationElapsed = -1;
+    qint64 maximumSendForTotalByteCount = -1;
+    qint64 maximumSendPackageByteCount = -1;
+    qint64 maximumSendSpeed = -1;
+    qint64 maximumReceiveForTotalByteCount = -1;
+    qint64 maximumReceivePackageByteCount = -1;
+    qint64 maximumReceiveSpeed = -1;
+
+    int maximumConnectToHostWaitTime = 15 * 1000;
+    int maximumSendPackageWaitTime = 30 * 1000;
+    int maximumReceivePackageWaitTime = 30 * 1000;
+    int maximumNoCommunicationTime = 30 * 1000;
+    int maximumConnectionTime = -1;
+
+    std::function< void( QPointer< JQNetworkConnect > ) > connectToHostErrorCallback = nullptr;
+    std::function< void( QPointer< JQNetworkConnect > ) > connectToHostTimeoutCallback = nullptr;
+    std::function< void( QPointer< JQNetworkConnect > ) > connectToHostSucceedCallback = nullptr;
+    std::function< void( QPointer< JQNetworkConnect > ) > remoteHostClosedCallback = nullptr;
+    std::function< void( QPointer< JQNetworkConnect > ) > readyToDeleteCallback = nullptr;
 };
 
-class JQNetworkConnect
+class JQNetworkConnect: public QObject
 {
+    Q_OBJECT
+
 private:
     JQNetworkConnect();
 
@@ -36,16 +62,35 @@ private:
 public:
     ~JQNetworkConnect() = default;
 
-private:
+private Q_SLOTS:
+    void onTcpSocketStateChanged();
+
+    void onTcpSocketConnectToHostTimeOut();
+
+    void onTcpSocketBytesWritten(const qint64 &bytes);
+
     void onTcpSocketReadyRead();
 
-    void onTcpSocketError();
+    void onReadyToDelete();
 
 public:
-    static QSharedPointer< JQNetworkConnect > createConnect();
+    static QSharedPointer< JQNetworkConnect > createConnectByHostAndPort(
+            const QSharedPointer< JQNetworkConnectSettings > &connectSettings,
+            const QString &hostName,
+            const quint16 &port
+        );
 
 private:
+    // Settings
+    QSharedPointer< JQNetworkConnectSettings > connectSettings_;
+
+    // Socket
     QSharedPointer< QTcpSocket > tcpSocket_;
+    int tcpSocketLastState_ = 0;
+    bool abandonTcpSocket = false;
+
+    // Timer
+    QSharedPointer< QTimer > timerForConnectToHostTimeOut_;
 };
 
 #include "jqnetwork_connect.inc"

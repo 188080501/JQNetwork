@@ -11,5 +11,9 @@ int main(int argc, char *argv[])
 
     JQNetworkTest jqNetworkTest;
 
+    jqNetworkTest.jqnetworkConnectTest();
+
+    return a.exec();
+
     return QTest::qExec( &jqNetworkTest, argc, argv );
 }

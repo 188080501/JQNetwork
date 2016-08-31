@@ -8,7 +8,7 @@ class JQNetworkTest: public QObject
 {
      Q_OBJECT
 
-private slots:
+public slots:
     void jqnetworkConnectTest();
 };
 

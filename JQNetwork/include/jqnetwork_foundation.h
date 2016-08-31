@@ -19,17 +19,23 @@
 // Qt lib import
 #include <QObject>
 #include <QSharedPointer>
+#include <QPointer>
 #include <QString>
 #include <QByteArray>
+#include <QHostAddress>
+
+#define NULLPTR_CHECK( ptr ) \
+    if ( !ptr ) { qDebug( "%s: %s is null", __func__, # ptr ); return; }
 
 class QJsonObject;
 class QJsonArray;
 class QJsonValue;
+class QTimer;
 class QThreadPool;
 class QTcpSocket;
 class QTcpServer;
 
-template <class Key, class T> class QMap;
+template < class Key, class T > class QMap;
 
 class JQNetworkPackage;
 class JQNetworkConnect;

@@ -16,3 +16,5 @@
 #include <QDebug>
 
 using namespace JQNetwork;
+
+QSharedPointer< QThreadPool > JQNetworkConnectPool::gloabConnectPool_;

@@ -19,6 +19,11 @@
 namespace JQNetwork
 { }
 
+struct JQNetworkConnectPoolSettings
+{
+    // TODO
+};
+
 class JQNetworkConnectPool: public QObject
 {
     Q_OBJECT
@@ -31,6 +36,9 @@ public:
     JQNetworkConnectPool(const JQNetworkConnectPool &) = delete;
 
     JQNetworkConnectPool &operator =(const JQNetworkConnectPool &) = delete;
+
+private:
+    static QSharedPointer< QThreadPool > gloabConnectPool_;
 };
 
 #include "jqnetwork_connectpool.inc"

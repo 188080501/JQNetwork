@@ -19,5 +19,18 @@ void JQNetworkTest::jqnetworkConnectTest()
 //    QBENCHMARK
 //    QCOMPARE
 
-    auto connect = JQNetworkConnect::createConnect();
+    auto connectSettings = QSharedPointer< JQNetworkConnectSettings >( new JQNetworkConnectSettings );
+
+    connectSettings->connectToHostErrorCallback = [ ]( auto ){ qDebug( "connectToHostErrorCallback" ); };
+    connectSettings->connectToHostTimeoutCallback = [ ]( auto ){ qDebug( "connectToHostTimeoutCallback" ); };
+    connectSettings->connectToHostSucceedCallback = [ ]( auto ){ qDebug( "connectToHostSucceedCallback" ); };
+    connectSettings->remoteHostClosedCallback = [ ]( auto ){ qDebug( "remoteHostClosedCallback" ); };
+    connectSettings->readyToDeleteCallback = [ ]( auto ){ qDebug( "readyToDeleteCallback" ); };
+
+    static auto connect = JQNetworkConnect::createConnectByHostAndPort(
+                connectSettings,
+                "121.40.189.164",
+//                { },
+                23415
+            );
 }
