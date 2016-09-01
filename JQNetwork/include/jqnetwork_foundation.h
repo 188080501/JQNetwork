@@ -15,6 +15,7 @@
 
 // C++ lib import
 #include <functional>
+#include <vector>
 
 // Qt lib import
 #include <QObject>
@@ -29,7 +30,9 @@
 
 class QJsonObject;
 class QJsonArray;
+class QSemaphore;
 class QJsonValue;
+class QMutex;
 class QTimer;
 class QThreadPool;
 class QEventLoop;
@@ -53,8 +56,22 @@ class JQNetworkThreadPoolHelper: public QObject
 {
     Q_OBJECT
 
-public slots:
-    inline void run(const std::function< void() > &callback);
+public:
+    JQNetworkThreadPoolHelper();
+
+    ~JQNetworkThreadPoolHelper() = default;
+
+    void run(const std::function< void() > &callback);
+
+public Q_SLOTS:
+    void onRun();
+
+private:
+    QSharedPointer< QMutex > mutex_;
+    QSharedPointer< std::vector< std::function< void() > > > waitForRunCallbacks_;
+    bool alreadyCall_ = false;
+    qint64 lastRunTime_ = 0;
+    int lastRunCallbackCount_ = 0;
 };
 
 class JQNetworkThreadPool: public QObject

@@ -2,6 +2,7 @@
 
 // Qt lib import
 #include <QtTest>
+#include <QtConcurrent>
 
 // JQNetwork lib import
 #include <JQNetworkFoundation>
@@ -16,18 +17,19 @@
 
 void JQNetworkTest::jqNetworkThreadPoolTest()
 {
+    QMutex mutex;
     QMap< QThread *, int > flag;
     flag[ QThread::currentThread() ] =  2;
 
     {
         JQNetworkThreadPool threadPool( 3 );
 
-        threadPool.run( [ & ](){ ++flag[ QThread::currentThread() ]; } );
-        threadPool.run( [ & ](){ ++flag[ QThread::currentThread() ]; } );
-        threadPool.run( [ & ](){ ++flag[ QThread::currentThread() ]; } );
-        threadPool.run( [ & ](){ ++flag[ QThread::currentThread() ]; } );
-        threadPool.run( [ & ](){ ++flag[ QThread::currentThread() ]; } );
-        threadPool.run( [ & ](){ ++flag[ QThread::currentThread() ]; } );
+        threadPool.run( [ & ](){ mutex.lock(); ++flag[ QThread::currentThread() ]; mutex.unlock(); } );
+        threadPool.run( [ & ](){ mutex.lock(); ++flag[ QThread::currentThread() ]; mutex.unlock(); } );
+        threadPool.run( [ & ](){ mutex.lock(); ++flag[ QThread::currentThread() ]; mutex.unlock(); } );
+        threadPool.run( [ & ](){ mutex.lock(); ++flag[ QThread::currentThread() ]; mutex.unlock(); } );
+        threadPool.run( [ & ](){ mutex.lock(); ++flag[ QThread::currentThread() ]; mutex.unlock(); } );
+        threadPool.run( [ & ](){ mutex.lock(); ++flag[ QThread::currentThread() ]; mutex.unlock(); } );
     }
 
     QCOMPARE( flag.size(), 4 );
@@ -35,6 +37,23 @@ void JQNetworkTest::jqNetworkThreadPoolTest()
     {
         QCOMPARE( value, 2 );
     }
+}
+
+void JQNetworkTest::jqNetworkThreadPoolBenchmark()
+{
+    int number = 0;
+
+    QBENCHMARK_ONCE
+    {
+        JQNetworkThreadPool threadPool( 3 );
+
+        for ( auto count = 0; count < 10000000; ++count )
+        {
+            threadPool.run( [ & ](){ ++number; } );
+        }
+    }
+
+    qDebug() << number;
 }
 
 void JQNetworkTest::jqNetworkConnectTest()

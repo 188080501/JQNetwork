@@ -16,10 +16,68 @@
 #include <QDebug>
 #include <QThreadPool>
 #include <QSemaphore>
+#include <QVector>
 
 #include <QtConcurrent>
 
 using namespace JQNetwork;
+
+JQNetworkThreadPoolHelper::JQNetworkThreadPoolHelper():
+    mutex_( new QMutex )
+{ }
+
+void JQNetworkThreadPoolHelper::run(const std::function< void() > &callback)
+{
+    mutex_->lock();
+
+    if ( !waitForRunCallbacks_ )
+    {
+        waitForRunCallbacks_ = QSharedPointer< std::vector< std::function< void() > > >( new std::vector< std::function< void() > > );
+    }
+
+    waitForRunCallbacks_->push_back( callback );
+
+    if ( !alreadyCall_ )
+    {
+        alreadyCall_ = true;
+        QMetaObject::invokeMethod(
+                    this,
+                    "onRun",
+                    Qt::QueuedConnection
+                );
+    }
+
+    mutex_->unlock();
+}
+
+void JQNetworkThreadPoolHelper::onRun()
+{
+    auto currentTime = QDateTime::currentMSecsSinceEpoch();
+
+    if ( ( ( currentTime - lastRunTime_ ) < 5 ) && ( lastRunCallbackCount_ > 10 ) )
+    {
+        QThread::msleep( 5 );
+    }
+
+    QSharedPointer< std::vector< std::function< void() > > > buf;
+
+    mutex_->lock();
+
+    buf = waitForRunCallbacks_;
+    waitForRunCallbacks_.clear();
+
+    alreadyCall_ = false;
+
+    lastRunTime_ = currentTime;
+    lastRunCallbackCount_ = buf->size();
+
+    mutex_->unlock();
+
+    for ( const auto &callback: *buf )
+    {
+        callback();
+    }
+}
 
 // JQNetworkThreadPool
 JQNetworkThreadPool::JQNetworkThreadPool(const int &threadCount):
@@ -31,33 +89,26 @@ JQNetworkThreadPool::JQNetworkThreadPool(const int &threadCount):
     eventLoops_->resize( threadCount );
     helpers_->resize( threadCount );
 
-    static bool flag = true;
-    if ( flag )
-    {
-        flag = false;
-        qRegisterMetaType< std::function< void() > >( "std::function<void()>" );
-    }
-
-    QSemaphore semaphore;
+    QSemaphore semaphoreForThreadStart;
 
     for ( auto index = 0; index < threadCount; ++index )
     {
         QtConcurrent::run(
                     threadPool_.data(),
-                    [ this, index, &semaphore ](){
+                    [ this, index, &semaphoreForThreadStart ](){
                         QEventLoop eventLoop;
                         JQNetworkThreadPoolHelper helper;
 
                         ( *this->eventLoops_ )[ index ] = &eventLoop;
                         ( *this->helpers_ )[ index ] = &helper;
 
-                        semaphore.release( 1 );
+                        semaphoreForThreadStart.release( 1 );
                         eventLoop.exec();
                     }
                 );
     }
 
-    semaphore.acquire( threadCount );
+    semaphoreForThreadStart.acquire( threadCount );
 }
 
 JQNetworkThreadPool::~JQNetworkThreadPool()
@@ -74,10 +125,5 @@ void JQNetworkThreadPool::run(const std::function< void() > &callback)
 {
     rotaryIndex_ = ( rotaryIndex_ + 1 ) % helpers_->size();
 
-    QMetaObject::invokeMethod(
-                ( *helpers_ )[ rotaryIndex_ ].data(),
-                "run",
-                Qt::QueuedConnection,
-                Q_ARG( std::function< void() >, callback )
-            );
+    ( *helpers_ )[ rotaryIndex_ ]->run( callback );
 }

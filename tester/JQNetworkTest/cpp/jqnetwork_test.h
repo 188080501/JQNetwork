@@ -8,9 +8,18 @@ class JQNetworkTest: public QObject
 {
      Q_OBJECT
 
+public:
+    JQNetworkTest() = default;
+
+    ~JQNetworkTest() = default;
+
 private slots:
     void jqNetworkThreadPoolTest();
 
+private slots:
+    void jqNetworkThreadPoolBenchmark();
+
+public slots:
     void jqNetworkConnectTest();
 };
 

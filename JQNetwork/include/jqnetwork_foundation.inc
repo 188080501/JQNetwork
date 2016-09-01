@@ -16,10 +16,4 @@
 // JQNetwork lib import
 #include "jqnetwork_foundation.h"
 
-// JQNetworkThreadPoolHelper
-inline void JQNetworkThreadPoolHelper::run(const std::function< void() > &callback)
-{
-    callback();
-}
-
 #endif//JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_INC
