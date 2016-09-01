@@ -19,10 +19,8 @@
 namespace JQNetwork
 { }
 
-class JQNetworkPackage: public QObject
+class JQNetworkPackage
 {
-    Q_OBJECT
-
 public:
     JQNetworkPackage() = default;
 

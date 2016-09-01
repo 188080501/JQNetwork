@@ -86,7 +86,7 @@ private:
 
     // Socket
     QSharedPointer< QTcpSocket > tcpSocket_;
-    int tcpSocketLastState_ = 0;
+    bool onceConnectSucceed_ = false;
     bool abandonTcpSocket = false;
 
     // Timer

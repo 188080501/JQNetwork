@@ -18,10 +18,10 @@
 
 // Qt lib import
 #include <QObject>
-#include <QSharedPointer>
-#include <QPointer>
 #include <QString>
 #include <QByteArray>
+#include <QSharedPointer>
+#include <QPointer>
 #include <QHostAddress>
 
 #define NULLPTR_CHECK( ptr ) \
@@ -32,9 +32,11 @@ class QJsonArray;
 class QJsonValue;
 class QTimer;
 class QThreadPool;
+class QEventLoop;
 class QTcpSocket;
 class QTcpServer;
 
+template < typename T > class QVector;
 template < class Key, class T > class QMap;
 
 class JQNetworkPackage;
@@ -46,6 +48,37 @@ class JQNetworkClient;
 
 namespace JQNetwork
 { }
+
+class JQNetworkThreadPoolHelper: public QObject
+{
+    Q_OBJECT
+
+public slots:
+    inline void run(const std::function< void() > &callback);
+};
+
+class JQNetworkThreadPool: public QObject
+{
+    Q_OBJECT
+
+public:
+    JQNetworkThreadPool(const int &threadCount);
+
+    ~JQNetworkThreadPool();
+
+    JQNetworkThreadPool(const JQNetworkThreadPool &) = delete;
+
+    JQNetworkThreadPool &operator =(const JQNetworkThreadPool &) = delete;
+
+public:
+    void run(const std::function< void() > &callback);
+
+private:
+    QSharedPointer< QThreadPool > threadPool_;
+    QSharedPointer< QVector< QPointer< QEventLoop > > > eventLoops_;
+    QSharedPointer< QVector< QPointer< JQNetworkThreadPoolHelper > > > helpers_;
+    int rotaryIndex_ = -1;
+};
 
 #include "jqnetwork_foundation.inc"
 

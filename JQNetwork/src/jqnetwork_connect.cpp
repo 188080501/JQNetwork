@@ -19,14 +19,13 @@
 
 using namespace JQNetwork;
 
+// JQNetworkConnect
 JQNetworkConnect::JQNetworkConnect():
     tcpSocket_( new QTcpSocket )
 {
-    connect( tcpSocket_.data(), &QAbstractSocket::stateChanged, this, &JQNetworkConnect::onTcpSocketStateChanged );
-    connect( tcpSocket_.data(), &QAbstractSocket::bytesWritten, this, &JQNetworkConnect::onTcpSocketBytesWritten );
-    connect( tcpSocket_.data(), &QTcpSocket::readyRead, this, &JQNetworkConnect::onTcpSocketReadyRead );
-
-    tcpSocketLastState_ = tcpSocket_->state();
+    connect( tcpSocket_.data(), &QAbstractSocket::stateChanged, this, &JQNetworkConnect::onTcpSocketStateChanged, Qt::DirectConnection );
+    connect( tcpSocket_.data(), &QAbstractSocket::bytesWritten, this, &JQNetworkConnect::onTcpSocketBytesWritten, Qt::DirectConnection );
+    connect( tcpSocket_.data(), &QTcpSocket::readyRead, this, &JQNetworkConnect::onTcpSocketReadyRead, Qt::DirectConnection );
 }
 
 QSharedPointer< JQNetworkConnect > JQNetworkConnect::createConnectByHostAndPort(
@@ -43,7 +42,7 @@ QSharedPointer< JQNetworkConnect > JQNetworkConnect::createConnectByHostAndPort(
     if ( newConnect->connectSettings_->maximumConnectToHostWaitTime != -1 )
     {
         newConnect->timerForConnectToHostTimeOut_ = QSharedPointer< QTimer >( new QTimer );
-        QObject::connect( newConnect->timerForConnectToHostTimeOut_.data(), &QTimer::timeout, std::bind( &JQNetworkConnect::onTcpSocketConnectToHostTimeOut, newConnect.data() ) );
+        connect( newConnect->timerForConnectToHostTimeOut_.data(), &QTimer::timeout, newConnect.data(), &JQNetworkConnect::onTcpSocketConnectToHostTimeOut, Qt::DirectConnection );
         newConnect->timerForConnectToHostTimeOut_->setSingleShot( true );
         newConnect->timerForConnectToHostTimeOut_->start( newConnect->connectSettings_->maximumConnectToHostWaitTime );
     }
@@ -56,12 +55,11 @@ void JQNetworkConnect::onTcpSocketStateChanged()
     if ( abandonTcpSocket ) { return; }
     NULLPTR_CHECK( tcpSocket_ );
 
-    const auto &&lastState = (QTcpSocket::SocketState)tcpSocketLastState_;
-    const auto &&currentState = tcpSocket_->state();
+    const auto &&state = tcpSocket_->state();
 
-    qDebug() << __func__ << ": lastState:" << lastState << ", currentState:" << currentState;
+    qDebug() << __func__ << ": state:" << state;
 
-    switch ( currentState )
+    switch ( state )
     {
         case QAbstractSocket::ConnectedState:
         {
@@ -73,13 +71,23 @@ void JQNetworkConnect::onTcpSocketStateChanged()
             NULLPTR_CHECK( connectSettings_->connectToHostSucceedCallback );
             connectSettings_->connectToHostSucceedCallback( this );
 
+            onceConnectSucceed_ = true;
+
             break;
         }
         case QAbstractSocket::UnconnectedState:
         {
             switch ( tcpSocket_->error() )
             {
-                case QAbstractSocket::UnknownSocketError: { break; }
+                case QAbstractSocket::UnknownSocketError:
+                {
+                    if ( onceConnectSucceed_ ) { break; }
+
+                    NULLPTR_CHECK( connectSettings_->connectToHostErrorCallback );
+                    connectSettings_->connectToHostErrorCallback( this );
+
+                    break;
+                }
                 case QAbstractSocket::RemoteHostClosedError:
                 {
                     NULLPTR_CHECK( connectSettings_->remoteHostClosedCallback );
@@ -87,6 +95,7 @@ void JQNetworkConnect::onTcpSocketStateChanged()
                     break;
                 }
                 case QAbstractSocket::HostNotFoundError:
+                case QAbstractSocket::ConnectionRefusedError:
                 {
                     NULLPTR_CHECK( connectSettings_->connectToHostErrorCallback );
                     connectSettings_->connectToHostErrorCallback( this );
@@ -104,8 +113,6 @@ void JQNetworkConnect::onTcpSocketStateChanged()
         }
         default: { break; }
     }
-
-    tcpSocketLastState_ = currentState;
 }
 
 void JQNetworkConnect::onTcpSocketConnectToHostTimeOut()
