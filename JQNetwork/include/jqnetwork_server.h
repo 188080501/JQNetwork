@@ -19,18 +19,30 @@
 namespace JQNetwork
 { }
 
+struct JQNetworkServerSettings
+{
+    //...
+};
+
 class JQNetworkServer: public QObject
 {
     Q_OBJECT
 
 public:
-    JQNetworkServer() = default;
+    JQNetworkServer(const QSharedPointer< JQNetworkServerSettings > serverSettings);
 
-    ~JQNetworkServer() = default;
+    ~JQNetworkServer();
 
     JQNetworkServer(const JQNetworkServer &) = delete;
 
     JQNetworkServer &operator =(const JQNetworkServer &) = delete;
+
+private:
+    // Settings
+    QSharedPointer< JQNetworkServerSettings > serverSettings_;
+
+    // Server
+    QSharedPointer< QTcpServer > tcpServer_;
 };
 
 #include "jqnetwork_server.inc"

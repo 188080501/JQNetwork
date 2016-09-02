@@ -19,6 +19,11 @@
 namespace JQNetwork
 { }
 
+struct JQNetworkClientSettings
+{
+    //...
+};
+
 class JQNetworkClient: public QObject
 {
     Q_OBJECT

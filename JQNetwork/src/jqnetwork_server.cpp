@@ -16,3 +16,14 @@
 #include <QDebug>
 
 using namespace JQNetwork;
+
+JQNetworkServer::JQNetworkServer(const QSharedPointer< JQNetworkServerSettings > serverSettings):
+    serverSettings_( serverSettings )
+{
+    //...
+}
+
+JQNetworkServer::~JQNetworkServer()
+{
+    //...
+}
