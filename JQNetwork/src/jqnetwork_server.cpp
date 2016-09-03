@@ -14,16 +14,233 @@
 
 // Qt lib import
 #include <QDebug>
+#include <QTcpServer>
+#include <QThread>
+
+// JQNetwork lib import
+#include <JQNetworkConnectPool>
+#include <JQNetworkConnect>
 
 using namespace JQNetwork;
 
-JQNetworkServer::JQNetworkServer(const QSharedPointer< JQNetworkServerSettings > serverSettings):
-    serverSettings_( serverSettings )
+// JQNetworkServerHelper
+class JQNetworkServerHelper: public QTcpServer
 {
-    //...
+public:
+    JQNetworkServerHelper(const std::function< void(qintptr socketDescriptor) > &onIncomingConnectionCallback):
+        onIncomingConnectionCallback_( onIncomingConnectionCallback )
+    { }
+
+    ~JQNetworkServerHelper() = default;
+
+private:
+    inline void incomingConnection(qintptr socketDescriptor)
+    {
+        onIncomingConnectionCallback_( socketDescriptor );
+    }
+
+private:
+    std::function< void(qintptr socketDescriptor) > onIncomingConnectionCallback_;
+};
+
+// JQNetworkServer
+QWeakPointer< JQNetworkThreadPool > JQNetworkServer::globalServerThreadPool_;
+QWeakPointer< JQNetworkThreadPool > JQNetworkServer::globalSocketThreadPool_;
+QWeakPointer< JQNetworkThreadPool > JQNetworkServer::globalProcessorThreadPool_;
+
+JQNetworkServer::JQNetworkServer(
+        const QSharedPointer< JQNetworkServerSettings > serverSettings,
+        const QSharedPointer< JQNetworkConnectPoolSettings > connectPoolSettings,
+        const QSharedPointer< JQNetworkConnectSettings > connectSettings
+    ):
+    serverSettings_( serverSettings ),
+    connectPoolSettings_( connectPoolSettings ),
+    connectSettings_( connectSettings )
+{
+    if ( globalServerThreadPool_ )
+    {
+        serverThreadPool_ = globalServerThreadPool_.toStrongRef();
+    }
+    else
+    {
+        serverThreadPool_ = QSharedPointer< JQNetworkThreadPool >( new JQNetworkThreadPool( serverSettings->globalServerThreadCount ) );
+        globalServerThreadPool_ = serverThreadPool_.toWeakRef();
+    }
+
+    if ( globalSocketThreadPool_ )
+    {
+        socketThreadPool_ = globalSocketThreadPool_.toStrongRef();
+    }
+    else
+    {
+        socketThreadPool_ = QSharedPointer< JQNetworkThreadPool >( new JQNetworkThreadPool( serverSettings->globalSocketThreadCount ) );
+        globalSocketThreadPool_ = socketThreadPool_.toWeakRef();
+    }
+
+    if ( globalProcessorThreadPool_ )
+    {
+        processorThreadPool_ = globalProcessorThreadPool_.toStrongRef();
+    }
+    else
+    {
+        processorThreadPool_ = QSharedPointer< JQNetworkThreadPool >( new JQNetworkThreadPool( serverSettings->globalProcessorThreadCount ) );
+        globalProcessorThreadPool_ = processorThreadPool_.toWeakRef();
+    }
 }
 
 JQNetworkServer::~JQNetworkServer()
 {
-    //...
+    serverThreadPool_->waitRun(
+                [
+                    this
+                ]()
+                {
+                    if ( !this->tcpServer_ ) { return; }
+
+                    tcpServer_->close();
+                    tcpServer_.clear();
+                }
+    );
+
+    socketThreadPool_->waitRunEach(
+                [ & ]()
+                {
+                    connectPools_[ QThread::currentThread() ].clear();
+                }
+    );
+}
+
+bool JQNetworkServer::begin()
+{
+    bool listenSucceed = false;
+
+    serverThreadPool_->waitRun(
+                [
+                    this,
+                    &listenSucceed
+                ]()
+                {
+                    this->tcpServer_ = QSharedPointer< QTcpServer >( new JQNetworkServerHelper( [ this ]( auto socketDescriptor ){ this->incomingConnection( socketDescriptor ); } ) );
+
+                    listenSucceed = this->tcpServer_->listen(
+                                this->serverSettings_->listenAddress,
+                                this->serverSettings_->listenPort
+                            );
+                }
+    );
+
+    if ( !listenSucceed ) { return false; }
+
+    socketThreadPool_->waitRunEach(
+                [
+                    this
+                ]()
+                {
+                    QSharedPointer< JQNetworkConnectPoolSettings > connectPoolSettings( new JQNetworkConnectPoolSettings( *this->connectPoolSettings_ ) );
+                    QSharedPointer< JQNetworkConnectSettings > connectSettings( new JQNetworkConnectSettings( *this->connectSettings_ ) );
+
+                    connectPoolSettings->connectToHostErrorCallback   = [ this ](const auto &connect){ this->onConnectToHostError( connect ); };
+                    connectPoolSettings->connectToHostTimeoutCallback = [ this ](const auto &connect){ this->onConnectToHostTimeout( connect ); };
+                    connectPoolSettings->connectToHostSucceedCallback = [ this ](const auto &connect){ this->onConnectToHostSucceed( connect ); };
+                    connectPoolSettings->remoteHostClosedCallback     = [ this ](const auto &connect){ this->onRemoteHostClosed( connect ); };
+                    connectPoolSettings->readyToDeleteCallback        = [ this ](const auto &connect){ this->onReadyToDelete( connect ); };
+
+                    connectPools_[ QThread::currentThread() ] = QSharedPointer< JQNetworkConnectPool >(
+                                new JQNetworkConnectPool(
+                                    connectPoolSettings,
+                                    connectSettings
+                                )
+                            );
+                }
+    );
+
+    return true;
+}
+
+void JQNetworkServer::incomingConnection(const qintptr &socketDescriptor)
+{
+    socketThreadPool_->run(
+                [
+                    this,
+                    socketDescriptor
+                ]()
+                {
+                    this->connectPools_[ QThread::currentThread() ]->createConnectBySocketDescriptor( socketDescriptor );
+                }
+    );
+}
+
+void JQNetworkServer::onConnectToHostError(const QPointer< JQNetworkConnect > &connect)
+{
+    if ( !serverSettings_->connectToHostErrorCallback ) { return; }
+
+    processorThreadPool_->run(
+                [
+                    connect,
+                    callback = serverSettings_->connectToHostErrorCallback
+                ]()
+                {
+                    callback( connect );
+                }
+    );
+}
+
+void JQNetworkServer::onConnectToHostTimeout(const QPointer< JQNetworkConnect > &connect)
+{
+    if ( !serverSettings_->connectToHostTimeoutCallback ) { return; }
+
+    processorThreadPool_->run(
+                [
+                    connect,
+                    callback = serverSettings_->connectToHostTimeoutCallback
+                ]()
+                {
+                    callback( connect );
+                }
+    );
+}
+
+void JQNetworkServer::onConnectToHostSucceed(const QPointer< JQNetworkConnect > &connect)
+{
+    if ( !serverSettings_->connectToHostSucceedCallback ) { return; }
+
+    processorThreadPool_->run(
+                [
+                    connect,
+                    callback = serverSettings_->connectToHostSucceedCallback
+                ]()
+                {
+                    callback( connect );
+                }
+    );
+}
+
+void JQNetworkServer::onRemoteHostClosed(const QPointer< JQNetworkConnect > &connect)
+{
+    if ( !serverSettings_->remoteHostClosedCallback ) { return; }
+
+    processorThreadPool_->run(
+                [
+                    connect,
+                    callback = serverSettings_->remoteHostClosedCallback
+                ]()
+                {
+                    callback( connect );
+                }
+    );
+}
+
+void JQNetworkServer::onReadyToDelete(const QPointer< JQNetworkConnect > &connect)
+{
+    if ( !serverSettings_->readyToDeleteCallback ) { return; }
+
+    processorThreadPool_->run(
+                [
+                    connect,
+                    callback = serverSettings_->readyToDeleteCallback
+                ]()
+                {
+                    callback( connect );
+                }
+    );
 }

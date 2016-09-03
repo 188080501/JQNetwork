@@ -22,6 +22,7 @@
 #include <QString>
 #include <QByteArray>
 #include <QSharedPointer>
+#include <QWeakPointer>
 #include <QPointer>
 #include <QHostAddress>
 
@@ -48,6 +49,11 @@ class JQNetworkConnectPool;
 class JQNetworkServer;
 class JQNetworkProcessor;
 class JQNetworkClient;
+
+struct JQNetworkConnectSettings;
+struct JQNetworkConnectPoolSettings;
+struct JQNetworkServerSettings;
+struct JQNetworkClientSettings;
 
 namespace JQNetwork
 { }
@@ -88,7 +94,13 @@ public:
     JQNetworkThreadPool &operator =(const JQNetworkThreadPool &) = delete;
 
 public:
-    void run(const std::function< void() > &callback);
+    void run(const std::function< void() > &callback, const int &threadIndex = -1);
+
+    void runEach(const std::function< void() > &callback);
+
+    void waitRun(const std::function< void() > &callback, const int &threadIndex = -1);
+
+    void waitRunEach(const std::function< void() > &callback);
 
 private:
     QSharedPointer< QThreadPool > threadPool_;

@@ -60,7 +60,21 @@ private:
     JQNetworkConnect &operator =(const JQNetworkConnect &) = delete;
 
 public:
-    ~JQNetworkConnect() = default;
+    ~JQNetworkConnect()  { qDebug("~JQNetworkConnect"); }
+
+public:
+    static void createConnectByHostAndPort(
+            const std::function< void(const QSharedPointer< JQNetworkConnect > &) > &onConnectCreatedCallback,
+            const QSharedPointer< JQNetworkConnectSettings > &connectSettings,
+            const QString &hostName,
+            const quint16 &port
+        );
+
+    static void createConnectBySocketDescriptor(
+            const std::function< void(const QSharedPointer< JQNetworkConnect > &) > &onConnectCreatedCallback,
+            const QSharedPointer< JQNetworkConnectSettings > &connectSettings,
+            const qintptr &socketDescriptor
+        );
 
 private Q_SLOTS:
     void onTcpSocketStateChanged();
@@ -72,13 +86,6 @@ private Q_SLOTS:
     void onTcpSocketReadyRead();
 
     void onReadyToDelete();
-
-public:
-    static QSharedPointer< JQNetworkConnect > createConnectByHostAndPort(
-            const QSharedPointer< JQNetworkConnectSettings > &connectSettings,
-            const QString &hostName,
-            const quint16 &port
-        );
 
 private:
     // Settings

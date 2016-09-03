@@ -22,6 +22,7 @@
 
 using namespace JQNetwork;
 
+// JQNetworkThreadPoolHelper
 JQNetworkThreadPoolHelper::JQNetworkThreadPoolHelper():
     mutex_( new QMutex )
 { }
@@ -95,7 +96,12 @@ JQNetworkThreadPool::JQNetworkThreadPool(const int &threadCount):
     {
         QtConcurrent::run(
                     threadPool_.data(),
-                    [ this, index, &semaphoreForThreadStart ](){
+                    [
+                        this,
+                        index,
+                        &semaphoreForThreadStart
+                    ]()
+                    {
                         QEventLoop eventLoop;
                         JQNetworkThreadPoolHelper helper;
 
@@ -121,9 +127,50 @@ JQNetworkThreadPool::~JQNetworkThreadPool()
     threadPool_->waitForDone();
 }
 
-void JQNetworkThreadPool::run(const std::function< void() > &callback)
+void JQNetworkThreadPool::run(const std::function< void() > &callback, const int &threadIndex)
 {
-    rotaryIndex_ = ( rotaryIndex_ + 1 ) % helpers_->size();
+    if ( threadIndex == -1 )
+    {
+        rotaryIndex_ = ( rotaryIndex_ + 1 ) % helpers_->size();
+        ( *helpers_ )[ rotaryIndex_ ]->run( callback );
+    }
+    else
+    {
+        ( *helpers_ )[ threadIndex ]->run( callback );
+    }
+}
 
-    ( *helpers_ )[ rotaryIndex_ ]->run( callback );
+void JQNetworkThreadPool::runEach(const std::function<void ()> &callback)
+{
+    for ( auto index = 0; index < helpers_->size(); ++index )
+    {
+        ( *helpers_ )[ index ]->run( callback );
+    }
+}
+
+void JQNetworkThreadPool::waitRun(const std::function<void ()> &callback, const int &threadIndex)
+{
+    QSemaphore semaphore;
+
+    this->run(
+                [
+                    &semaphore,
+                    &callback
+                ]()
+                {
+                    callback();
+                    semaphore.release( 1 );
+                },
+                threadIndex
+    );
+
+    semaphore.acquire( 1 );
+}
+
+void JQNetworkThreadPool::waitRunEach(const std::function<void ()> &callback)
+{
+    for ( auto index = 0; index < helpers_->size(); ++index )
+    {
+        this->waitRun( callback, index );
+    }
 }

@@ -3,6 +3,7 @@
 // Qt lib import
 #include <QtTest>
 #include <QtConcurrent>
+#include <QTcpSocket>
 
 // JQNetwork lib import
 #include <JQNetworkFoundation>
@@ -24,18 +25,22 @@ void JQNetworkTest::jqNetworkThreadPoolTest()
     {
         JQNetworkThreadPool threadPool( 3 );
 
-        threadPool.run( [ & ](){ mutex.lock(); ++flag[ QThread::currentThread() ]; mutex.unlock(); } );
-        threadPool.run( [ & ](){ mutex.lock(); ++flag[ QThread::currentThread() ]; mutex.unlock(); } );
-        threadPool.run( [ & ](){ mutex.lock(); ++flag[ QThread::currentThread() ]; mutex.unlock(); } );
-        threadPool.run( [ & ](){ mutex.lock(); ++flag[ QThread::currentThread() ]; mutex.unlock(); } );
-        threadPool.run( [ & ](){ mutex.lock(); ++flag[ QThread::currentThread() ]; mutex.unlock(); } );
-        threadPool.run( [ & ](){ mutex.lock(); ++flag[ QThread::currentThread() ]; mutex.unlock(); } );
+        threadPool.runEach( [ & ](){ mutex.lock(); ++flag[ QThread::currentThread() ]; mutex.unlock(); } );
+        threadPool.runEach( [ & ](){ mutex.lock(); ++flag[ QThread::currentThread() ]; mutex.unlock(); } );
     }
 
     QCOMPARE( flag.size(), 4 );
     for ( auto value: flag )
     {
         QCOMPARE( value, 2 );
+    }
+
+    {
+        JQNetworkThreadPool threadPool( 1 );
+        int flag = 0;
+
+        threadPool.waitRun( [ & ](){ ++flag; } );
+        QCOMPARE( flag, 1 );
     }
 }
 
@@ -54,6 +59,61 @@ void JQNetworkTest::jqNetworkThreadPoolBenchmark()
     }
 
     qDebug() << number;
+    QCOMPARE( ( number != 10000000 ), true );
+}
+
+void JQNetworkTest::jqNetworkThreadPoolBenchmark2()
+{
+    int number = 0;
+
+    QBENCHMARK_ONCE
+    {
+        JQNetworkThreadPool threadPool( 3 );
+
+        for ( auto count = 0; count < 30000; ++count )
+        {
+            threadPool.waitRunEach( [ & ](){ ++number; } );
+        }
+    }
+
+    qDebug() << number;
+    QCOMPARE( number, 90000 );
+}
+
+void JQNetworkTest::jqNetworkServerTest()
+{
+    auto serverSettings = QSharedPointer< JQNetworkServerSettings >( new JQNetworkServerSettings );
+    auto connectPoolSettings = QSharedPointer< JQNetworkConnectPoolSettings >( new JQNetworkConnectPoolSettings );
+    auto connectSettings = QSharedPointer< JQNetworkConnectSettings >( new JQNetworkConnectSettings );
+
+    serverSettings->listenPort = 42821;
+
+    JQNetworkServer server( serverSettings, connectPoolSettings, connectSettings );
+
+    QCOMPARE( server.begin(), true );
+
+    int succeedCount = 0;
+
+    QtConcurrent::run(
+                [
+                    &succeedCount
+                ]()
+                {
+                    QTcpSocket socket;
+                    socket.connectToHost( "127.0.0.1", 42821 );
+                    succeedCount += socket.waitForConnected();
+
+                    for ( auto count = 0; count < 3; ++count )
+                    {
+                        QThread::msleep( 100 );
+                        socket.write( "Hello,JQNetwork!" );
+                        socket.waitForBytesWritten();
+                    }
+                }
+    );
+
+    QThread::sleep( 1 );
+    QCOMPARE( succeedCount, 1 );
 }
 
 void JQNetworkTest::jqNetworkConnectTest()
@@ -74,6 +134,7 @@ void JQNetworkTest::jqNetworkConnectTest()
 
     {
         JQNetworkConnect::createConnectByHostAndPort(
+                    [](const auto &){},
                     connectSettings,
                     "127.0.0.1",
                     0
@@ -93,7 +154,10 @@ void JQNetworkTest::jqNetworkConnectTest()
     flag5 = false;
 
     {
-        auto connect = JQNetworkConnect::createConnectByHostAndPort(
+        QSharedPointer< JQNetworkConnect > connect;
+
+        JQNetworkConnect::createConnectByHostAndPort(
+                    [ &connect ](const auto &connect_){ connect = connect_; },
                     connectSettings,
                     "www.baidu.com",
                     80
@@ -116,8 +180,12 @@ void JQNetworkTest::jqNetworkConnectTest()
     flag5 = false;
 
     {
+        QSharedPointer< JQNetworkConnect > connect;
+
         connectSettings->maximumConnectToHostWaitTime = 1;
-        auto connect = JQNetworkConnect::createConnectByHostAndPort(
+
+        JQNetworkConnect::createConnectByHostAndPort(
+                    [ &connect ](const auto &connect_){ connect = connect_; },
                     connectSettings,
                     "www.baidu.com",
                     80
@@ -133,4 +201,9 @@ void JQNetworkTest::jqNetworkConnectTest()
     QCOMPARE( flag3, false );
     QCOMPARE( flag4, false );
     QCOMPARE( flag5, true );
+}
+
+void JQNetworkTest::jeNetworkPackageTest()
+{
+    //...
 }

@@ -28,7 +28,8 @@ JQNetworkConnect::JQNetworkConnect():
     connect( tcpSocket_.data(), &QTcpSocket::readyRead, this, &JQNetworkConnect::onTcpSocketReadyRead, Qt::DirectConnection );
 }
 
-QSharedPointer< JQNetworkConnect > JQNetworkConnect::createConnectByHostAndPort(
+void JQNetworkConnect::createConnectByHostAndPort(
+        const std::function< void(const QSharedPointer< JQNetworkConnect > &) > &onConnectCreatedCallback,
         const QSharedPointer< JQNetworkConnectSettings > &connectSettings,
         const QString &hostName,
         const quint16 &port
@@ -36,6 +37,9 @@ QSharedPointer< JQNetworkConnect > JQNetworkConnect::createConnectByHostAndPort(
 {
     QSharedPointer< JQNetworkConnect > newConnect( new JQNetworkConnect );
     newConnect->connectSettings_ = connectSettings;
+
+    NULLPTR_CHECK( onConnectCreatedCallback );
+    onConnectCreatedCallback( newConnect );
 
     newConnect->tcpSocket_->connectToHost( hostName, port );
 
@@ -46,8 +50,29 @@ QSharedPointer< JQNetworkConnect > JQNetworkConnect::createConnectByHostAndPort(
         newConnect->timerForConnectToHostTimeOut_->setSingleShot( true );
         newConnect->timerForConnectToHostTimeOut_->start( newConnect->connectSettings_->maximumConnectToHostWaitTime );
     }
+}
 
-    return newConnect;
+void JQNetworkConnect::createConnectBySocketDescriptor(
+        const std::function< void(const QSharedPointer< JQNetworkConnect > &) > &onConnectCreatedCallback,
+        const QSharedPointer< JQNetworkConnectSettings > &connectSettings,
+        const qintptr &socketDescriptor
+    )
+{
+    QSharedPointer< JQNetworkConnect > newConnect( new JQNetworkConnect );
+    newConnect->connectSettings_ = connectSettings;
+
+    NULLPTR_CHECK( onConnectCreatedCallback );
+    onConnectCreatedCallback( newConnect );
+
+    newConnect->tcpSocket_->setSocketDescriptor( socketDescriptor );
+
+    if ( newConnect->connectSettings_->maximumConnectToHostWaitTime != -1 )
+    {
+        newConnect->timerForConnectToHostTimeOut_ = QSharedPointer< QTimer >( new QTimer );
+        connect( newConnect->timerForConnectToHostTimeOut_.data(), &QTimer::timeout, newConnect.data(), &JQNetworkConnect::onTcpSocketConnectToHostTimeOut, Qt::DirectConnection );
+        newConnect->timerForConnectToHostTimeOut_->setSingleShot( true );
+        newConnect->timerForConnectToHostTimeOut_->start( newConnect->connectSettings_->maximumConnectToHostWaitTime );
+    }
 }
 
 void JQNetworkConnect::onTcpSocketStateChanged()
