@@ -60,12 +60,34 @@ V0.1|2016-09
 
 ## 性能介绍
 
-本库性能只能说一般般，底层是poll注定了性能不是强项，以下是我在我电脑（ MacBookPro + 127.0.0.1 ）上，测出的性能。
+本库性能只能说一般般，底层是poll注定了性能不是强项，以下是我在我电脑（ iMac(i5-4670) + 127.0.0.1 ）上，测出的性能。
 
-TCP长连接可以达到 x 个
+* TCP短连接（127.0.0.1）每次发送 128B 的数据并且返回 128B 的数据，每秒可以达 x 次
 
-TCP短连接，每次连接来回发送 128B 数据，每秒可以达到 x 个
+* TCP长连接（127.0.0.1）可以达到 x 个
 
-本地（127.0.0.1）单个TCP长连接：以单包 128B 来回发送算，每秒可以达 x 次；以单包 32KB 来回发送算，每秒可以达 x 次。
+* 1个TCP长连接（127.0.0.1）与服务器来回发送（PingPong） 128B 数据，每秒可以达 x 次；以 32KB 计，每秒可以达 x 次。
+
+* 1个TCP长连接（127.0.0.1）发送 512MB 数据到服务器，耗时 x 毫秒
+
+* 5000个TCP长连接（127.0.0.1），每个连接每 500ms 向服务器发送 128B 数据，CPU 使用率在 x%
 
 ## 模块介绍
+
+* JQNetworkFoundation
+
+* JQNetworkEncrypt
+
+* JQNetworkPackage
+
+* JQNetworkConnect
+
+* JQNetworkConnectPool
+
+* JQNetworkServer
+
+* JQNetworkProcessor
+
+* JQNetworkClient
+
+* JQNetworkForwarf
