@@ -12,4 +12,5 @@
 
 TEMPLATE = subdirs
 
-SUBDIRS +=
+SUBDIRS += \
+    PingPongDemo

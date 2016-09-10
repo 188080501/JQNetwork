@@ -41,11 +41,12 @@ struct JQNetworkConnectSettings
     int maximumNoCommunicationTime = 30 * 1000;
     int maximumConnectionTime = -1;
 
-    std::function< void( QPointer< JQNetworkConnect > ) > connectToHostErrorCallback = nullptr;
-    std::function< void( QPointer< JQNetworkConnect > ) > connectToHostTimeoutCallback = nullptr;
-    std::function< void( QPointer< JQNetworkConnect > ) > connectToHostSucceedCallback = nullptr;
-    std::function< void( QPointer< JQNetworkConnect > ) > remoteHostClosedCallback = nullptr;
-    std::function< void( QPointer< JQNetworkConnect > ) > readyToDeleteCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer ) > connectToHostErrorCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer ) > connectToHostTimeoutCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer ) > connectToHostSucceedCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer ) > remoteHostClosedCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer ) > readyToDeleteCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer, JQNetworkPackageSharedPointer ) > onPackageReceivedCallback = nullptr;
 };
 
 class JQNetworkConnect: public QObject
@@ -60,21 +61,26 @@ private:
     JQNetworkConnect &operator =(const JQNetworkConnect &) = delete;
 
 public:
-    ~JQNetworkConnect()  { qDebug("~JQNetworkConnect"); }
+    ~JQNetworkConnect() = default;
 
-public:
     static void createConnectByHostAndPort(
-            const std::function< void(const QSharedPointer< JQNetworkConnect > &) > &onConnectCreatedCallback,
-            const QSharedPointer< JQNetworkConnectSettings > &connectSettings,
+            const std::function< void(const JQNetworkConnectSharedPointer &) > &onConnectCreatedCallback,
+            const std::function< void( std::function< void() > ) > runOnConnectThreadCallback,
+            const JQNetworkConnectSettingsSharedPointer &connectSettings,
             const QString &hostName,
             const quint16 &port
         );
 
     static void createConnectBySocketDescriptor(
-            const std::function< void(const QSharedPointer< JQNetworkConnect > &) > &onConnectCreatedCallback,
-            const QSharedPointer< JQNetworkConnectSettings > &connectSettings,
+            const std::function< void(const JQNetworkConnectSharedPointer &) > &onConnectCreatedCallback,
+            const std::function< void( std::function< void() > ) > runOnConnectThreadCallback,
+            const JQNetworkConnectSettingsSharedPointer &connectSettings,
             const qintptr &socketDescriptor
         );
+
+    inline bool isAbandonTcpSocket() const;
+
+    qint32 sendPayloadData(const QByteArray &payloadData);
 
 private Q_SLOTS:
     void onTcpSocketStateChanged();
@@ -87,17 +93,27 @@ private Q_SLOTS:
 
     void onReadyToDelete();
 
+    void sendPayloadData(const QByteArray &payloadData, const qint32 &randomFlag);
+
 private:
     // Settings
-    QSharedPointer< JQNetworkConnectSettings > connectSettings_;
+    JQNetworkConnectSettingsSharedPointer connectSettings_;
+    std::function< void( std::function< void() > ) > runOnConnectThreadCallback_;
 
     // Socket
     QSharedPointer< QTcpSocket > tcpSocket_;
     bool onceConnectSucceed_ = false;
-    bool abandonTcpSocket = false;
+    bool isAbandonTcpSocket_ = false;
+    QByteArray tcpSocketBuffer_;
 
     // Timer
     QSharedPointer< QTimer > timerForConnectToHostTimeOut_;
+
+    // Package
+    QSharedPointer< QMutex > mutexForSend_;
+    qint32 sendRotaryIndex_ = 0;
+    QMap< qint32, JQNetworkPackageSharedPointer > sendPackagePool_; // randomFlag -> package
+    QMap< qint32, JQNetworkPackageSharedPointer > receivePackagePool_; // randomFlag -> package
 };
 
 #include "jqnetwork_connect.inc"

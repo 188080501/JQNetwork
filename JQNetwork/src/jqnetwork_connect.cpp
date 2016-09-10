@@ -16,12 +16,17 @@
 #include <QDebug>
 #include <QTcpSocket>
 #include <QTimer>
+#include <QThread>
+
+// JQNetwork lib import
+#include <JQNetworkPackage>
 
 using namespace JQNetwork;
 
 // JQNetworkConnect
 JQNetworkConnect::JQNetworkConnect():
-    tcpSocket_( new QTcpSocket )
+    tcpSocket_( new QTcpSocket ),
+    mutexForSend_( new QMutex )
 {
     connect( tcpSocket_.data(), &QAbstractSocket::stateChanged, this, &JQNetworkConnect::onTcpSocketStateChanged, Qt::DirectConnection );
     connect( tcpSocket_.data(), &QAbstractSocket::bytesWritten, this, &JQNetworkConnect::onTcpSocketBytesWritten, Qt::DirectConnection );
@@ -29,14 +34,16 @@ JQNetworkConnect::JQNetworkConnect():
 }
 
 void JQNetworkConnect::createConnectByHostAndPort(
-        const std::function< void(const QSharedPointer< JQNetworkConnect > &) > &onConnectCreatedCallback,
-        const QSharedPointer< JQNetworkConnectSettings > &connectSettings,
+        const std::function< void(const JQNetworkConnectSharedPointer &) > &onConnectCreatedCallback,
+        const std::function< void( std::function< void() > ) > runOnConnectThreadCallback,
+        const JQNetworkConnectSettingsSharedPointer &connectSettings,
         const QString &hostName,
         const quint16 &port
     )
 {
-    QSharedPointer< JQNetworkConnect > newConnect( new JQNetworkConnect );
+    JQNetworkConnectSharedPointer newConnect( new JQNetworkConnect );
     newConnect->connectSettings_ = connectSettings;
+    newConnect->runOnConnectThreadCallback_ = runOnConnectThreadCallback;
 
     NULLPTR_CHECK( onConnectCreatedCallback );
     onConnectCreatedCallback( newConnect );
@@ -53,13 +60,15 @@ void JQNetworkConnect::createConnectByHostAndPort(
 }
 
 void JQNetworkConnect::createConnectBySocketDescriptor(
-        const std::function< void(const QSharedPointer< JQNetworkConnect > &) > &onConnectCreatedCallback,
-        const QSharedPointer< JQNetworkConnectSettings > &connectSettings,
+        const std::function< void(const JQNetworkConnectSharedPointer &) > &onConnectCreatedCallback,
+        const std::function< void( std::function< void() > ) > runOnConnectThreadCallback,
+        const JQNetworkConnectSettingsSharedPointer &connectSettings,
         const qintptr &socketDescriptor
     )
 {
-    QSharedPointer< JQNetworkConnect > newConnect( new JQNetworkConnect );
+    JQNetworkConnectSharedPointer newConnect( new JQNetworkConnect );
     newConnect->connectSettings_ = connectSettings;
+    newConnect->runOnConnectThreadCallback_ = runOnConnectThreadCallback;
 
     NULLPTR_CHECK( onConnectCreatedCallback );
     onConnectCreatedCallback( newConnect );
@@ -75,9 +84,46 @@ void JQNetworkConnect::createConnectBySocketDescriptor(
     }
 }
 
+qint32 JQNetworkConnect::sendPayloadData(const QByteArray &payloadData)
+{
+    NULLPTR_CHECK( runOnConnectThreadCallback_, 0 );
+
+    mutexForSend_->lock();
+
+    ++sendRotaryIndex_;
+    if ( sendRotaryIndex_ >= 1000000000 )
+    {
+        sendRotaryIndex_ = 1;
+    }
+
+    const auto currentRandomFlag = sendRotaryIndex_;
+
+    mutexForSend_->unlock();
+
+    if ( this->thread() == QThread::currentThread() )
+    {
+        this->sendPayloadData( payloadData, currentRandomFlag );
+    }
+    else
+    {
+        runOnConnectThreadCallback_(
+                    [
+                        this,
+                        payloadData,
+                        currentRandomFlag
+                    ]()
+            {
+                this->sendPayloadData( payloadData, currentRandomFlag );
+            }
+        );
+    }
+
+    return currentRandomFlag;
+}
+
 void JQNetworkConnect::onTcpSocketStateChanged()
 {
-    if ( abandonTcpSocket ) { return; }
+    if ( isAbandonTcpSocket_ ) { return; }
     NULLPTR_CHECK( tcpSocket_ );
 
     const auto &&state = tcpSocket_->state();
@@ -142,7 +188,7 @@ void JQNetworkConnect::onTcpSocketStateChanged()
 
 void JQNetworkConnect::onTcpSocketConnectToHostTimeOut()
 {
-    if ( abandonTcpSocket ) { return; }
+    if ( isAbandonTcpSocket_ ) { return; }
     NULLPTR_CHECK( timerForConnectToHostTimeOut_ );
     NULLPTR_CHECK( tcpSocket_ );
 
@@ -156,29 +202,79 @@ void JQNetworkConnect::onTcpSocketConnectToHostTimeOut()
 
 void JQNetworkConnect::onTcpSocketReadyRead()
 {
-    if ( abandonTcpSocket ) { return; }
+    if ( isAbandonTcpSocket_ ) { return; }
     NULLPTR_CHECK( tcpSocket_ );
 
     const auto &&data = tcpSocket_->readAll();
 
     qDebug() << __func__ << ": size:" << data.size();
+
+    if ( tcpSocketBuffer_.isEmpty() )
+    {
+        tcpSocketBuffer_ = data;
+    }
+    else
+    {
+        tcpSocketBuffer_.append( data );
+    }
+
+    forever
+    {
+        const auto &&checkReply = JQNetworkPackage::checkDataIsReadyReceive( tcpSocketBuffer_ );
+        if ( checkReply > 0 ) { return; }
+        else if ( checkReply < 0 ) { tcpSocketBuffer_.remove( 0, checkReply * -1 ); }
+        else { break; }
+    }
+
+    auto package = JQNetworkPackage::createPackageFromRawData( tcpSocketBuffer_ );
+    if ( package->isCompletePackage() )
+    {
+        NULLPTR_CHECK( connectSettings_->onPackageReceivedCallback );
+
+        connectSettings_->onPackageReceivedCallback( this, package );
+    }
+
+    const auto &&itForPackage = receivePackagePool_.find( package->randomFlag() );
+    if ( itForPackage != receivePackagePool_.end() )
+    {
+        if ( !(*itForPackage)->mixPackage( package ) )
+        {
+            receivePackagePool_.erase( itForPackage );
+            return;
+        }
+
+        if ( (*itForPackage)->isCompletePackage() && !(*itForPackage)->isAbandonPackage() )
+        {
+            NULLPTR_CHECK( connectSettings_->onPackageReceivedCallback );
+
+            connectSettings_->onPackageReceivedCallback( this, *itForPackage );
+
+            receivePackagePool_.erase( itForPackage );
+        }
+    }
+    else
+    {
+        receivePackagePool_[ package->randomFlag() ] = package;
+    }
 }
 
 void JQNetworkConnect::onTcpSocketBytesWritten(const qint64 &bytes)
 {
-    if ( abandonTcpSocket ) { return; }
+    if ( isAbandonTcpSocket_ ) { return; }
     NULLPTR_CHECK( tcpSocket_ );
 
     static qint64 total = 0;
     total += bytes;
 
     qDebug() << __func__ << ":" << bytes << total;
+
+    // TODO
 }
 
 void JQNetworkConnect::onReadyToDelete()
 {
-    if ( abandonTcpSocket ) { return; }
-    abandonTcpSocket = true;
+    if ( isAbandonTcpSocket_ ) { return; }
+    isAbandonTcpSocket_ = true;
 
     if ( !timerForConnectToHostTimeOut_ )
     {
@@ -190,4 +286,15 @@ void JQNetworkConnect::onReadyToDelete()
 
     NULLPTR_CHECK( connectSettings_->readyToDeleteCallback );
     connectSettings_->readyToDeleteCallback( this );
+}
+
+void JQNetworkConnect::sendPayloadData(const QByteArray &payloadData, const qint32 &randomFlag)
+{
+    if ( isAbandonTcpSocket_ ) { return; }
+    NULLPTR_CHECK( tcpSocket_ );
+
+    auto package = JQNetworkPackage::createPackageFromPayloadData( payloadData, randomFlag );
+    auto buffer = package->toByteArray();
+
+    tcpSocket_->write( buffer );
 }

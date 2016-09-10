@@ -26,8 +26,11 @@
 #include <QPointer>
 #include <QHostAddress>
 
-#define NULLPTR_CHECK( ptr ) \
-    if ( !ptr ) { qDebug( "%s: %s is null", __func__, # ptr ); return; }
+#define JQNETWORKPACKAGE_BOOTFLAG 0x7d
+#define JQNETWORKPACKAGE_VERSION 1
+
+#define NULLPTR_CHECK( ptr, ... ) \
+    if ( !ptr ) { qDebug( "%s: %s is null", __func__, # ptr ); return __VA_ARGS__; }
 
 class QJsonObject;
 class QJsonArray;
@@ -54,6 +57,19 @@ struct JQNetworkConnectSettings;
 struct JQNetworkConnectPoolSettings;
 struct JQNetworkServerSettings;
 struct JQNetworkClientSettings;
+
+typedef QSharedPointer< JQNetworkPackage > JQNetworkPackageSharedPointer;
+typedef QSharedPointer< JQNetworkConnect > JQNetworkConnectSharedPointer;
+typedef QPointer< JQNetworkConnect > JQNetworkConnectPointer;
+typedef QSharedPointer< JQNetworkConnectPool > JQNetworkConnectPoolSharedPointer;
+typedef QSharedPointer< JQNetworkServer > JQNetworkServerSharedPointer;
+typedef QSharedPointer< JQNetworkProcessor > JQNetworkProcessorSharedPointer;
+typedef QSharedPointer< JQNetworkClient > JQNetworkClientSharedPointer;
+
+typedef QSharedPointer< JQNetworkConnectSettings > JQNetworkConnectSettingsSharedPointer;
+typedef QSharedPointer< JQNetworkConnectPoolSettings > JQNetworkConnectPoolSettingsSharedPointer;
+typedef QSharedPointer< JQNetworkServerSettings > JQNetworkServerSettingsSharedPointer;
+typedef QSharedPointer< JQNetworkClientSettings > JQNetworkClientSettingsSharedPointer;
 
 namespace JQNetwork
 { }
@@ -93,14 +109,15 @@ public:
 
     JQNetworkThreadPool &operator =(const JQNetworkThreadPool &) = delete;
 
-public:
-    void run(const std::function< void() > &callback, const int &threadIndex = -1);
+    inline int nextRotaryIndex();
 
-    void runEach(const std::function< void() > &callback);
+    int run(const std::function< void() > &callback, const int &threadIndex = -1);
 
-    void waitRun(const std::function< void() > &callback, const int &threadIndex = -1);
+    inline void runEach(const std::function< void() > &callback);
 
-    void waitRunEach(const std::function< void() > &callback);
+    int waitRun(const std::function< void() > &callback, const int &threadIndex = -1);
+
+    inline void waitRunEach(const std::function< void() > &callback);
 
 private:
     QSharedPointer< QThreadPool > threadPool_;

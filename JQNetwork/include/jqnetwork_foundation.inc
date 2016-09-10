@@ -16,4 +16,26 @@
 // JQNetwork lib import
 #include "jqnetwork_foundation.h"
 
+inline int JQNetworkThreadPool::nextRotaryIndex()
+{
+    rotaryIndex_ = ( rotaryIndex_ + 1 ) % helpers_->size();
+    return rotaryIndex_;
+}
+
+inline void JQNetworkThreadPool::runEach(const std::function<void ()> &callback)
+{
+    for ( auto index = 0; index < helpers_->size(); ++index )
+    {
+        ( *helpers_ )[ index ]->run( callback );
+    }
+}
+
+inline void JQNetworkThreadPool::waitRunEach(const std::function<void ()> &callback)
+{
+    for ( auto index = 0; index < helpers_->size(); ++index )
+    {
+        this->waitRun( callback, index );
+    }
+}
+
 #endif//JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_INC

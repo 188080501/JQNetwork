@@ -28,11 +28,12 @@ struct JQNetworkServerSettings
     QHostAddress listenAddress = QHostAddress::Any;
     quint16 listenPort = 0;
 
-    std::function< void( QPointer< JQNetworkConnect > ) > connectToHostErrorCallback = nullptr;
-    std::function< void( QPointer< JQNetworkConnect > ) > connectToHostTimeoutCallback = nullptr;
-    std::function< void( QPointer< JQNetworkConnect > ) > connectToHostSucceedCallback = nullptr;
-    std::function< void( QPointer< JQNetworkConnect > ) > remoteHostClosedCallback = nullptr;
-    std::function< void( QPointer< JQNetworkConnect > ) > readyToDeleteCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer ) > connectToHostErrorCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer ) > connectToHostTimeoutCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer ) > connectToHostSucceedCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer ) > remoteHostClosedCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer ) > readyToDeleteCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer, JQNetworkPackageSharedPointer ) > onPackageReceivedCallback = nullptr;
 };
 
 class JQNetworkServer: public QObject
@@ -41,9 +42,9 @@ class JQNetworkServer: public QObject
 
 public:
     JQNetworkServer(
-            const QSharedPointer< JQNetworkServerSettings > serverSettings,
-            const QSharedPointer< JQNetworkConnectPoolSettings > connectPoolSettings,
-            const QSharedPointer< JQNetworkConnectSettings > connectSettings
+            const JQNetworkServerSettingsSharedPointer serverSettings,
+            const JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings,
+            const JQNetworkConnectSettingsSharedPointer connectSettings
         );
 
     ~JQNetworkServer();
@@ -52,23 +53,29 @@ public:
 
     JQNetworkServer &operator =(const JQNetworkServer &) = delete;
 
+    static JQNetworkServerSharedPointer createServerByListenPort(const quint16 &listenPort, const QHostAddress &listenAddress = QHostAddress::Any);
+
+    void setOnPackageReceivedCallback(const std::function< void( JQNetworkConnectPointer, JQNetworkPackageSharedPointer ) > &callback);
+
     bool begin();
 
 private:
     void incomingConnection(const qintptr &socketDescriptor);
 
-    void onConnectToHostError(const QPointer< JQNetworkConnect > &connect);
+    inline void onConnectToHostError(const JQNetworkConnectPointer &connect);
 
-    void onConnectToHostTimeout(const QPointer< JQNetworkConnect > &connect);
+    inline void onConnectToHostTimeout(const JQNetworkConnectPointer &connect);
 
-    void onConnectToHostSucceed(const QPointer< JQNetworkConnect > &connect);
+    inline void onConnectToHostSucceed(const JQNetworkConnectPointer &connect);
 
-    void onRemoteHostClosed(const QPointer< JQNetworkConnect > &connect);
+    inline void onRemoteHostClosed(const JQNetworkConnectPointer &connect);
 
-    void onReadyToDelete(const QPointer< JQNetworkConnect > &connect);
+    inline void onReadyToDelete(const JQNetworkConnectPointer &connect);
+
+    inline void onPackageReceivedCallback(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package);
 
 private:
-    // Server thread
+    // Thread pool
     static QWeakPointer< JQNetworkThreadPool > globalServerThreadPool_;
     QSharedPointer< JQNetworkThreadPool > serverThreadPool_;
     static QWeakPointer< JQNetworkThreadPool > globalSocketThreadPool_;
@@ -77,13 +84,13 @@ private:
     QSharedPointer< JQNetworkThreadPool > processorThreadPool_;
 
     // Settings
-    QSharedPointer< JQNetworkServerSettings > serverSettings_;
-    QSharedPointer< JQNetworkConnectPoolSettings > connectPoolSettings_;
-    QSharedPointer< JQNetworkConnectSettings > connectSettings_;
+    JQNetworkServerSettingsSharedPointer serverSettings_;
+    JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings_;
+    JQNetworkConnectSettingsSharedPointer connectSettings_;
 
     // Server
     QSharedPointer< QTcpServer > tcpServer_;
-    QMap< QThread *, QSharedPointer< JQNetworkConnectPool > > connectPools_;
+    QMap< QThread *, JQNetworkConnectPoolSharedPointer > connectPools_;
 };
 
 #include "jqnetwork_server.inc"

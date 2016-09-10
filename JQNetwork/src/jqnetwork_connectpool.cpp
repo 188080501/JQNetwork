@@ -22,8 +22,8 @@
 using namespace JQNetwork;
 
 JQNetworkConnectPool::JQNetworkConnectPool(
-        QSharedPointer< JQNetworkConnectPoolSettings > connectPoolSettings,
-        QSharedPointer< JQNetworkConnectSettings > connectSettings
+        JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings,
+        JQNetworkConnectSettingsSharedPointer connectSettings
     ):
     connectPoolSettings_( connectPoolSettings ),
     connectSettings_( connectSettings )
@@ -35,42 +35,28 @@ JQNetworkConnectPool::JQNetworkConnectPool(
     connectSettings_->readyToDeleteCallback        = [ this ](const auto &connect){ this->onReadyToDelete( connect ); };
 }
 
-void JQNetworkConnectPool::createConnectByHostAndPort(const QString &hostName, const quint16 &port)
+void JQNetworkConnectPool::createConnectByHostAndPort(const std::function< void( std::function< void() > ) > runOnConnectThreadCallback, const QString &hostName, const quint16 &port)
 {
     JQNetworkConnect::createConnectByHostAndPort(
                 [ this ](const auto &connect){ this->connectForConnecting_[ connect.data() ] = connect; },
+                runOnConnectThreadCallback,
                 connectSettings_,
                 hostName,
                 port
             );
 }
 
-void JQNetworkConnectPool::createConnectBySocketDescriptor(const qintptr &socketDescriptor)
+void JQNetworkConnectPool::createConnectBySocketDescriptor(const std::function< void( std::function< void() > ) > runOnConnectThreadCallback, const qintptr &socketDescriptor)
 {
     JQNetworkConnect::createConnectBySocketDescriptor(
                 [ this ](const auto &connect){ this->connectForConnecting_[ connect.data() ] = connect; },
+                runOnConnectThreadCallback,
                 connectSettings_,
                 socketDescriptor
             );
 }
 
-void JQNetworkConnectPool::onConnectToHostError(const QPointer< JQNetworkConnect > &connect)
-{
-    qDebug() << __func__ << connect.data();
-
-    NULLPTR_CHECK( connectPoolSettings_->connectToHostErrorCallback );
-    connectPoolSettings_->connectToHostErrorCallback( connect );
-}
-
-void JQNetworkConnectPool::onConnectToHostTimeout(const QPointer< JQNetworkConnect > &connect)
-{
-    qDebug() << __func__ << connect.data();
-
-    NULLPTR_CHECK( connectPoolSettings_->connectToHostTimeoutCallback );
-    connectPoolSettings_->connectToHostTimeoutCallback( connect );
-}
-
-void JQNetworkConnectPool::onConnectToHostSucceed(const QPointer< JQNetworkConnect > &connect)
+void JQNetworkConnectPool::onConnectToHostSucceed(const JQNetworkConnectPointer &connect)
 {
     qDebug() << __func__ << connect.data();
 
@@ -89,15 +75,7 @@ void JQNetworkConnectPool::onConnectToHostSucceed(const QPointer< JQNetworkConne
     connectPoolSettings_->connectToHostSucceedCallback( connect );
 }
 
-void JQNetworkConnectPool::onRemoteHostClosed(const QPointer< JQNetworkConnect > &connect)
-{
-    qDebug() << __func__ << connect.data();
-
-    NULLPTR_CHECK( connectPoolSettings_->remoteHostClosedCallback );
-    connectPoolSettings_->remoteHostClosedCallback( connect );
-}
-
-void JQNetworkConnectPool::onReadyToDelete(const QPointer< JQNetworkConnect > &connect)
+void JQNetworkConnectPool::onReadyToDelete(const JQNetworkConnectPointer &connect)
 {
     qDebug() << __func__ << connect.data();
 

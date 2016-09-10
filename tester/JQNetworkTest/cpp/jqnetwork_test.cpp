@@ -82,9 +82,9 @@ void JQNetworkTest::jqNetworkThreadPoolBenchmark2()
 
 void JQNetworkTest::jqNetworkServerTest()
 {
-    auto serverSettings = QSharedPointer< JQNetworkServerSettings >( new JQNetworkServerSettings );
-    auto connectPoolSettings = QSharedPointer< JQNetworkConnectPoolSettings >( new JQNetworkConnectPoolSettings );
-    auto connectSettings = QSharedPointer< JQNetworkConnectSettings >( new JQNetworkConnectSettings );
+    auto serverSettings = JQNetworkServerSettingsSharedPointer( new JQNetworkServerSettings );
+    auto connectPoolSettings = JQNetworkConnectPoolSettingsSharedPointer( new JQNetworkConnectPoolSettings );
+    auto connectSettings = JQNetworkConnectSettingsSharedPointer( new JQNetworkConnectSettings );
 
     serverSettings->listenPort = 42821;
 
@@ -118,7 +118,7 @@ void JQNetworkTest::jqNetworkServerTest()
 
 void JQNetworkTest::jqNetworkConnectTest()
 {
-    auto connectSettings = QSharedPointer< JQNetworkConnectSettings >( new JQNetworkConnectSettings );
+    auto connectSettings = JQNetworkConnectSettingsSharedPointer( new JQNetworkConnectSettings );
 
     bool flag1 = false;
     bool flag2 = false;
@@ -135,6 +135,7 @@ void JQNetworkTest::jqNetworkConnectTest()
     {
         JQNetworkConnect::createConnectByHostAndPort(
                     [](const auto &){},
+                    {},
                     connectSettings,
                     "127.0.0.1",
                     0
@@ -154,10 +155,11 @@ void JQNetworkTest::jqNetworkConnectTest()
     flag5 = false;
 
     {
-        QSharedPointer< JQNetworkConnect > connect;
+        JQNetworkConnectSharedPointer connect;
 
         JQNetworkConnect::createConnectByHostAndPort(
                     [ &connect ](const auto &connect_){ connect = connect_; },
+                    {},
                     connectSettings,
                     "www.baidu.com",
                     80
@@ -180,12 +182,13 @@ void JQNetworkTest::jqNetworkConnectTest()
     flag5 = false;
 
     {
-        QSharedPointer< JQNetworkConnect > connect;
+        JQNetworkConnectSharedPointer connect;
 
         connectSettings->maximumConnectToHostWaitTime = 1;
 
         JQNetworkConnect::createConnectByHostAndPort(
                     [ &connect ](const auto &connect_){ connect = connect_; },
+                    {},
                     connectSettings,
                     "www.baidu.com",
                     80
@@ -205,5 +208,57 @@ void JQNetworkTest::jqNetworkConnectTest()
 
 void JQNetworkTest::jeNetworkPackageTest()
 {
-    //...
+    {
+        QCOMPARE( JQNetworkPackage::headSize(), 24 );
+        QCOMPARE( JQNetworkPackage::checkDataIsReadyReceive( QByteArray::fromHex( "" ) ), 24 );
+        QCOMPARE( JQNetworkPackage::checkDataIsReadyReceive( QByteArray::fromHex( "7e 01 04030201 01 02000000 02000000 01 03000000 03000000" ) ), -1 );
+        QCOMPARE( JQNetworkPackage::checkDataIsReadyReceive( QByteArray::fromHex( "7d 00 04030201 00 02000000 02000000 00 03000000 03000000" ) ), -1 );
+        QCOMPARE( JQNetworkPackage::checkDataIsReadyReceive( QByteArray::fromHex( "7d 01 04030201 01 02000000 02000000 01 03000000 03000000" ) ), 5 );
+        QCOMPARE( JQNetworkPackage::checkDataIsReadyReceive( QByteArray::fromHex( "7d 01 04030201 01 02000000 02000000 01 03000000 03000000 112233" ) ), 2 );
+        QCOMPARE( JQNetworkPackage::checkDataIsReadyReceive( QByteArray::fromHex( "7d 01 04030201 01 02000000 02000000 01 03000000 03000000 1122334455" ) ), 0 );
+
+        {
+            auto rawData = QByteArray::fromHex( "7d 01 04030201 01 02000000 02000000 01 03000000 03000000 1122334455" );
+            const auto &&package = JQNetworkPackage::createPackageFromRawData( rawData );
+
+            QCOMPARE( rawData.size(), 0 );
+            QCOMPARE( package->isCompletePackage(), true );
+            QCOMPARE( package->isAbandonPackage(), false );
+            QCOMPARE( (int)package->bootFlag(), 0x7d );
+            QCOMPARE( (int)package->versionFlag(), 0x1 );
+            QCOMPARE( package->randomFlag(), 0x01020304 );
+            QCOMPARE( (int)package->metaDataFlag(), 0x1 );
+            QCOMPARE( package->metaDataTotalSize(), 0x2 );
+            QCOMPARE( package->metaDataCurrentSize(), 2 );
+            QCOMPARE( (int)package->payloadDataFlag(), 0x1 );
+            QCOMPARE( package->payloadDataTotalSize(), 3 );
+            QCOMPARE( package->payloadDataCurrentSize(), 3 );
+            QCOMPARE( package->metaData(), QByteArray::fromHex( "1122" ) );
+            QCOMPARE( package->payloadData(), QByteArray::fromHex( "334455" ) );
+        }
+
+        {
+            auto rawData1 = QByteArray::fromHex( "7d 01 04030201 01 05000000 02000000 01 05000000 03000000 1122334455" );
+            auto rawData2 = QByteArray::fromHex( "7d 01 04030201 01 05000000 03000000 01 05000000 02000000 1122334455" );
+            auto rawData3 = QByteArray::fromHex( "7d 01 04030201 01 05000000 03000000 01 05000000 02000000 1122334455" );
+            const auto &&package1 = JQNetworkPackage::createPackageFromRawData( rawData1 );
+            const auto &&package2 = JQNetworkPackage::createPackageFromRawData( rawData2 );
+            const auto &&package3 = JQNetworkPackage::createPackageFromRawData( rawData3 );
+
+            QCOMPARE( package1->isCompletePackage(), false );
+            QCOMPARE( package1->isAbandonPackage(), false );
+            QCOMPARE( package2->isCompletePackage(), false );
+            QCOMPARE( package2->isAbandonPackage(), false );
+
+            QCOMPARE( package1->mixPackage( package2 ), true );
+            QCOMPARE( package1->isCompletePackage(), true );
+            QCOMPARE( package1->isAbandonPackage(), false );
+            QCOMPARE( package1->metaData(), QByteArray::fromHex( "1122112233" ) );
+            QCOMPARE( package1->payloadData(), QByteArray::fromHex( "3344554455" ) );
+
+            QCOMPARE( package1->mixPackage( package3 ), false );
+            QCOMPARE( package1->isAbandonPackage(), true );
+            QCOMPARE( package3->isAbandonPackage(), true );
+        }
+    }
 }

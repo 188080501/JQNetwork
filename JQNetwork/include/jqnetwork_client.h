@@ -21,7 +21,7 @@ namespace JQNetwork
 
 struct JQNetworkClientSettings
 {
-    //...
+    int globalSocketThreadCount = 2;
 };
 
 class JQNetworkClient: public QObject
@@ -29,13 +29,26 @@ class JQNetworkClient: public QObject
     Q_OBJECT
 
 public:
-    JQNetworkClient() = default;
+    JQNetworkClient(
+            const JQNetworkClientSettingsSharedPointer &clientSettings
+        );
 
     ~JQNetworkClient() = default;
 
     JQNetworkClient(const JQNetworkClient &) = delete;
 
     JQNetworkClient &operator =(const JQNetworkClient &) = delete;
+
+private:
+    // Thread pool
+    static QWeakPointer< JQNetworkThreadPool > globalSocketThreadPool_;
+    QSharedPointer< JQNetworkThreadPool > socketThreadPool_;
+
+    // Settings
+    JQNetworkClientSettingsSharedPointer clientSettings_;
+
+    // Client
+    QMap< QThread *, JQNetworkConnectPoolSharedPointer > connectPools_;
 };
 
 #include "jqnetwork_client.inc"

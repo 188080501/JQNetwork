@@ -21,14 +21,82 @@ namespace JQNetwork
 
 class JQNetworkPackage
 {
-public:
+private:
     JQNetworkPackage() = default;
 
+public:
     ~JQNetworkPackage() = default;
 
     JQNetworkPackage(const JQNetworkPackage &) = delete;
 
     JQNetworkPackage &operator =(const JQNetworkPackage &) = delete;
+
+public:
+    static inline int headSize();
+
+    static qint32 checkDataIsReadyReceive(const QByteArray &rawData);
+
+    static JQNetworkPackageSharedPointer createPackageFromRawData(QByteArray &rawData);
+
+    static JQNetworkPackageSharedPointer createPackageFromPayloadData(const QByteArray &payloadData, const qint32 &randomFlag);
+
+    inline bool isCompletePackage() const;
+
+    inline bool isAbandonPackage() const;
+
+    inline qint8 bootFlag() const;
+
+    inline qint8 versionFlag() const;
+
+    inline qint32 randomFlag() const;
+
+    inline qint8 metaDataFlag() const;
+
+    inline qint32 metaDataTotalSize() const;
+
+    inline qint32 metaDataCurrentSize() const;
+
+    inline qint8 payloadDataFlag() const;
+
+    inline qint32 payloadDataTotalSize() const;
+
+    inline qint32 payloadDataCurrentSize() const;
+
+    inline QByteArray metaData() const;
+
+    inline QByteArray payloadData() const;
+
+    inline QByteArray toByteArray() const;
+
+    bool mixPackage(const JQNetworkPackageSharedPointer &mixPackage);
+
+private:
+    inline void refreshPackage();
+
+private:
+    bool isCompletePackage_ = false;
+    bool isAbandonPackage_ = false;
+
+#pragma pack(push)
+#pragma pack(1)
+    struct Head
+    {
+        qint8 bootFlag_ = 0;
+        qint8 versionFlag_ = 0;
+        qint32 randomFlag_ = 0;
+
+        qint8 metaDataFlag_ = 0;
+        qint32 metaDataTotalSize_ = -1;
+        qint32 metaDataCurrentSize_ = -1;
+
+        qint8 payloadDataFlag_ = 0;
+        qint32 payloadDataTotalSize_ = -1;
+        qint32 payloadDataCurrentSize_ = -1;
+    } head_;
+#pragma pack(pop)
+
+    QByteArray metaData_;
+    QByteArray payloadData_;
 };
 
 #include "jqnetwork_package.inc"

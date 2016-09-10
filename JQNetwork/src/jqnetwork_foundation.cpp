@@ -127,32 +127,25 @@ JQNetworkThreadPool::~JQNetworkThreadPool()
     threadPool_->waitForDone();
 }
 
-void JQNetworkThreadPool::run(const std::function< void() > &callback, const int &threadIndex)
+int JQNetworkThreadPool::run(const std::function< void() > &callback, const int &threadIndex)
 {
     if ( threadIndex == -1 )
     {
         rotaryIndex_ = ( rotaryIndex_ + 1 ) % helpers_->size();
-        ( *helpers_ )[ rotaryIndex_ ]->run( callback );
     }
-    else
-    {
-        ( *helpers_ )[ threadIndex ]->run( callback );
-    }
+
+    const auto index = ( threadIndex == -1 ) ? ( rotaryIndex_ ) : ( threadIndex );
+
+    ( *helpers_ )[ index ]->run( callback );
+
+    return index;
 }
 
-void JQNetworkThreadPool::runEach(const std::function<void ()> &callback)
-{
-    for ( auto index = 0; index < helpers_->size(); ++index )
-    {
-        ( *helpers_ )[ index ]->run( callback );
-    }
-}
-
-void JQNetworkThreadPool::waitRun(const std::function<void ()> &callback, const int &threadIndex)
+int JQNetworkThreadPool::waitRun(const std::function<void ()> &callback, const int &threadIndex)
 {
     QSemaphore semaphore;
 
-    this->run(
+    auto index = this->run(
                 [
                     &semaphore,
                     &callback
@@ -165,12 +158,6 @@ void JQNetworkThreadPool::waitRun(const std::function<void ()> &callback, const 
     );
 
     semaphore.acquire( 1 );
-}
 
-void JQNetworkThreadPool::waitRunEach(const std::function<void ()> &callback)
-{
-    for ( auto index = 0; index < helpers_->size(); ++index )
-    {
-        this->waitRun( callback, index );
-    }
+    return index;
 }

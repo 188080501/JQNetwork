@@ -10,10 +10,14 @@
 #   GitHub: https://github.com/188080501/
 #
 
-TEMPLATE = subdirs
+QT       += core testlib
 
-CONFIG += ordered
+TEMPLATE = app
 
-SUBDIRS += tester
-#SUBDIRS += builder
-SUBDIRS += demos
+include( $$PWD/../../JQNetwork/JQNetworkSrc.pri )
+#include( $$PWD/../../JQNetwork/JQNetworkLib.pri )
+
+SOURCES += \
+    $$PWD/cpp/main.cpp
+
+HEADERS +=

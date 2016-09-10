@@ -16,4 +16,22 @@
 // JQNetwork lib import
 #include "jqnetwork_connectpool.h"
 
+inline void JQNetworkConnectPool::onConnectToHostError(const JQNetworkConnectPointer &connect)
+{
+    NULLPTR_CHECK( connectPoolSettings_->connectToHostErrorCallback );
+    connectPoolSettings_->connectToHostErrorCallback( connect );
+}
+
+inline void JQNetworkConnectPool::onConnectToHostTimeout(const JQNetworkConnectPointer &connect)
+{
+    NULLPTR_CHECK( connectPoolSettings_->connectToHostTimeoutCallback );
+    connectPoolSettings_->connectToHostTimeoutCallback( connect );
+}
+
+inline void JQNetworkConnectPool::onRemoteHostClosed(const JQNetworkConnectPointer &connect)
+{
+    NULLPTR_CHECK( connectPoolSettings_->remoteHostClosedCallback );
+    connectPoolSettings_->remoteHostClosedCallback( connect );
+}
+
 #endif//JQNETWORK_INCLUDE_JQNETWORK_CONNECTPOOL_INC

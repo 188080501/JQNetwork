@@ -24,11 +24,11 @@ struct JQNetworkConnectPoolSettings
     bool autoReconnect = true;
     bool reconnectIntervalTime = 15 * 1000;
 
-    std::function< void( QPointer< JQNetworkConnect > ) > connectToHostErrorCallback = nullptr;
-    std::function< void( QPointer< JQNetworkConnect > ) > connectToHostTimeoutCallback = nullptr;
-    std::function< void( QPointer< JQNetworkConnect > ) > connectToHostSucceedCallback = nullptr;
-    std::function< void( QPointer< JQNetworkConnect > ) > remoteHostClosedCallback = nullptr;
-    std::function< void( QPointer< JQNetworkConnect > ) > readyToDeleteCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer ) > connectToHostErrorCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer ) > connectToHostTimeoutCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer ) > connectToHostSucceedCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer ) > remoteHostClosedCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer ) > readyToDeleteCallback = nullptr;
 };
 
 class JQNetworkConnectPool: public QObject
@@ -37,8 +37,8 @@ class JQNetworkConnectPool: public QObject
 
 public:
     JQNetworkConnectPool(
-            QSharedPointer< JQNetworkConnectPoolSettings > connectPoolSettings,
-            QSharedPointer< JQNetworkConnectSettings > connectSettings
+            JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings,
+            JQNetworkConnectSettingsSharedPointer connectSettings
         );
 
     ~JQNetworkConnectPool() = default;
@@ -47,30 +47,29 @@ public:
 
     JQNetworkConnectPool &operator =(const JQNetworkConnectPool &) = delete;
 
-public:
-    void createConnectByHostAndPort(const QString &hostName, const quint16 &port);
+    void createConnectByHostAndPort(const std::function< void( std::function< void() > ) > runOnConnectThreadCallback, const QString &hostName, const quint16 &port);
 
-    void createConnectBySocketDescriptor(const qintptr &socketDescriptor);
+    void createConnectBySocketDescriptor(const std::function< void( std::function< void() > ) > runOnConnectThreadCallback, const qintptr &socketDescriptor);
 
 private:
-    void onConnectToHostError(const QPointer< JQNetworkConnect > &connect);
+    inline void onConnectToHostError(const JQNetworkConnectPointer &connect);
 
-    void onConnectToHostTimeout(const QPointer< JQNetworkConnect > &connect);
+    inline void onConnectToHostTimeout(const JQNetworkConnectPointer &connect);
 
-    void onConnectToHostSucceed(const QPointer< JQNetworkConnect > &connect);
+    void onConnectToHostSucceed(const JQNetworkConnectPointer &connect);
 
-    void onRemoteHostClosed(const QPointer< JQNetworkConnect > &connect);
+    inline void onRemoteHostClosed(const JQNetworkConnectPointer &connect);
 
-    void onReadyToDelete(const QPointer< JQNetworkConnect > &connect);
+    void onReadyToDelete(const JQNetworkConnectPointer &connect);
 
 private:
     // Settings
-    QSharedPointer< JQNetworkConnectPoolSettings > connectPoolSettings_;
-    QSharedPointer< JQNetworkConnectSettings > connectSettings_;
+    JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings_;
+    JQNetworkConnectSettingsSharedPointer connectSettings_;
 
     // Connect
-    QMap< JQNetworkConnect *, QSharedPointer< JQNetworkConnect > > connectForConnecting_;
-    QMap< JQNetworkConnect *, QSharedPointer< JQNetworkConnect > > connectForConnected_;
+    QMap< JQNetworkConnect *, JQNetworkConnectSharedPointer > connectForConnecting_;
+    QMap< JQNetworkConnect *, JQNetworkConnectSharedPointer > connectForConnected_;
 };
 
 #include "jqnetwork_connectpool.inc"

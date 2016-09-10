@@ -27,7 +27,7 @@ public slots:
 public slots:
     void jqNetworkConnectTest();
 
-private:
+public slots:
     void jeNetworkPackageTest();
 };
 

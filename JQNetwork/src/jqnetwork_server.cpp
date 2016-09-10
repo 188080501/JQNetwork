@@ -49,9 +49,9 @@ QWeakPointer< JQNetworkThreadPool > JQNetworkServer::globalSocketThreadPool_;
 QWeakPointer< JQNetworkThreadPool > JQNetworkServer::globalProcessorThreadPool_;
 
 JQNetworkServer::JQNetworkServer(
-        const QSharedPointer< JQNetworkServerSettings > serverSettings,
-        const QSharedPointer< JQNetworkConnectPoolSettings > connectPoolSettings,
-        const QSharedPointer< JQNetworkConnectSettings > connectSettings
+        const JQNetworkServerSettingsSharedPointer serverSettings,
+        const JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings,
+        const JQNetworkConnectSettingsSharedPointer connectSettings
     ):
     serverSettings_( serverSettings ),
     connectPoolSettings_( connectPoolSettings ),
@@ -110,6 +110,29 @@ JQNetworkServer::~JQNetworkServer()
     );
 }
 
+JQNetworkServerSharedPointer JQNetworkServer::createServerByListenPort(const quint16 &listenPort, const QHostAddress &listenAddress)
+{
+    JQNetworkServerSettingsSharedPointer serverSettings( new JQNetworkServerSettings );
+    JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings( new JQNetworkConnectPoolSettings );
+    JQNetworkConnectSettingsSharedPointer connectSettings( new JQNetworkConnectSettings );
+
+    serverSettings->listenAddress = listenAddress;
+    serverSettings->listenPort = listenPort;
+
+    return JQNetworkServerSharedPointer( new JQNetworkServer( serverSettings, connectPoolSettings, connectSettings ) );
+}
+
+void JQNetworkServer::setOnPackageReceivedCallback(const std::function<void (QPointer<JQNetworkConnect>, JQNetworkPackageSharedPointer)> &callback)
+{
+    if ( !tcpServer_.isNull() )
+    {
+        qDebug() << __func__ << "set error: already begin";
+        return;
+    }
+
+    serverSettings_->onPackageReceivedCallback = callback;
+}
+
 bool JQNetworkServer::begin()
 {
     bool listenSucceed = false;
@@ -136,8 +159,8 @@ bool JQNetworkServer::begin()
                     this
                 ]()
                 {
-                    QSharedPointer< JQNetworkConnectPoolSettings > connectPoolSettings( new JQNetworkConnectPoolSettings( *this->connectPoolSettings_ ) );
-                    QSharedPointer< JQNetworkConnectSettings > connectSettings( new JQNetworkConnectSettings( *this->connectSettings_ ) );
+                    JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings( new JQNetworkConnectPoolSettings( *this->connectPoolSettings_ ) );
+                    JQNetworkConnectSettingsSharedPointer connectSettings( new JQNetworkConnectSettings( *this->connectSettings_ ) );
 
                     connectPoolSettings->connectToHostErrorCallback   = [ this ](const auto &connect){ this->onConnectToHostError( connect ); };
                     connectPoolSettings->connectToHostTimeoutCallback = [ this ](const auto &connect){ this->onConnectToHostTimeout( connect ); };
@@ -145,7 +168,7 @@ bool JQNetworkServer::begin()
                     connectPoolSettings->remoteHostClosedCallback     = [ this ](const auto &connect){ this->onRemoteHostClosed( connect ); };
                     connectPoolSettings->readyToDeleteCallback        = [ this ](const auto &connect){ this->onReadyToDelete( connect ); };
 
-                    connectPools_[ QThread::currentThread() ] = QSharedPointer< JQNetworkConnectPool >(
+                    connectPools_[ QThread::currentThread() ] = JQNetworkConnectPoolSharedPointer(
                                 new JQNetworkConnectPool(
                                     connectPoolSettings,
                                     connectSettings
@@ -159,88 +182,26 @@ bool JQNetworkServer::begin()
 
 void JQNetworkServer::incomingConnection(const qintptr &socketDescriptor)
 {
+    const auto &&rotaryIndex = socketThreadPool_->nextRotaryIndex();
     socketThreadPool_->run(
                 [
                     this,
+                    runOnConnectThreadCallback =
+                        [
+                            this,
+                            rotaryIndex
+                        ](const std::function< void() > &callback)
+                        {
+                            this->socketThreadPool_->run( callback, rotaryIndex );
+                        },
                     socketDescriptor
                 ]()
                 {
-                    this->connectPools_[ QThread::currentThread() ]->createConnectBySocketDescriptor( socketDescriptor );
-                }
-    );
-}
-
-void JQNetworkServer::onConnectToHostError(const QPointer< JQNetworkConnect > &connect)
-{
-    if ( !serverSettings_->connectToHostErrorCallback ) { return; }
-
-    processorThreadPool_->run(
-                [
-                    connect,
-                    callback = serverSettings_->connectToHostErrorCallback
-                ]()
-                {
-                    callback( connect );
-                }
-    );
-}
-
-void JQNetworkServer::onConnectToHostTimeout(const QPointer< JQNetworkConnect > &connect)
-{
-    if ( !serverSettings_->connectToHostTimeoutCallback ) { return; }
-
-    processorThreadPool_->run(
-                [
-                    connect,
-                    callback = serverSettings_->connectToHostTimeoutCallback
-                ]()
-                {
-                    callback( connect );
-                }
-    );
-}
-
-void JQNetworkServer::onConnectToHostSucceed(const QPointer< JQNetworkConnect > &connect)
-{
-    if ( !serverSettings_->connectToHostSucceedCallback ) { return; }
-
-    processorThreadPool_->run(
-                [
-                    connect,
-                    callback = serverSettings_->connectToHostSucceedCallback
-                ]()
-                {
-                    callback( connect );
-                }
-    );
-}
-
-void JQNetworkServer::onRemoteHostClosed(const QPointer< JQNetworkConnect > &connect)
-{
-    if ( !serverSettings_->remoteHostClosedCallback ) { return; }
-
-    processorThreadPool_->run(
-                [
-                    connect,
-                    callback = serverSettings_->remoteHostClosedCallback
-                ]()
-                {
-                    callback( connect );
-                }
-    );
-}
-
-void JQNetworkServer::onReadyToDelete(const QPointer< JQNetworkConnect > &connect)
-{
-    if ( !serverSettings_->readyToDeleteCallback ) { return; }
-
-    processorThreadPool_->run(
-                [
-                    connect,
-                    callback = serverSettings_->readyToDeleteCallback
-                ]()
-                {
-                    callback( connect );
-                }
+                    this->connectPools_[ QThread::currentThread() ]->createConnectBySocketDescriptor(
+                        runOnConnectThreadCallback,
+                        socketDescriptor
+                    );
+                },
+                rotaryIndex
     );
 }
