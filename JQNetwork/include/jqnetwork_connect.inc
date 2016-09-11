@@ -16,6 +16,9 @@
 // JQNetwork lib import
 #include "jqnetwork_connect.h"
 
-inline bool JQNetworkConnect::isAbandonTcpSocket() const { return isAbandonTcpSocket_; }
+inline bool JQNetworkConnect::isAbandonTcpSocket() const 
+{ 
+    return isAbandonTcpSocket_; 
+}
 
 #endif//JQNETWORK_INCLUDE_JQNETWORK_CONNECT_INC
