@@ -81,9 +81,19 @@ inline QByteArray JQNetworkPackage::metaData() const
     return metaData_; 
 }
 
+inline int JQNetworkPackage::metaDataSize() const
+{
+    return metaData_.size();
+}
+
 inline QByteArray JQNetworkPackage::payloadData() const 
 { 
     return payloadData_; 
+}
+
+inline int JQNetworkPackage::payloadDataSize() const
+{
+    return payloadData_.size();
 }
 
 inline QByteArray JQNetworkPackage::toByteArray() const

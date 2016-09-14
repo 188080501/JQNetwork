@@ -36,7 +36,9 @@ HEADERS *= \
     $$PWD/include/jqnetwork_client.h \
     $$PWD/include/jqnetwork_client.inc \
     $$PWD/include/jqnetwork_forwarf.h \
-    $$PWD/include/jqnetwork_forwarf.inc 
+    $$PWD/include/jqnetwork_forwarf.inc \ 
+    $$PWD/include/jqnetwork_lan.h \
+    $$PWD/include/jqnetwork_lan.inc 
 
 SOURCES += \
     $$PWD/src/jqnetwork_foundation.cpp \
@@ -47,4 +49,5 @@ SOURCES += \
     $$PWD/src/jqnetwork_server.cpp \
     $$PWD/src/jqnetwork_processor.cpp \
     $$PWD/src/jqnetwork_client.cpp \
-    $$PWD/src/jqnetwork_forwarf.cpp 
+    $$PWD/src/jqnetwork_forwarf.cpp \
+    $$PWD/src/jqnetwork_lan.cpp 

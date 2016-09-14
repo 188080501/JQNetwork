@@ -16,6 +16,28 @@
 // JQNetwork lib import
 #include "jqnetwork_connectpool.h"
 
+inline bool JQNetworkConnectPool::containsConnect(const QString &hostName, const quint16 &port)
+{
+    mutex_.lock();
+
+    auto contains = bimapForHostAndPort1.contains( QString( "%1:%2" ).arg( hostName ).arg( port ) );
+
+    mutex_.unlock();
+
+    return contains;
+}
+
+inline bool JQNetworkConnectPool::containsConnect(const qintptr &socketDescriptor)
+{
+    mutex_.lock();
+
+    auto contains = bimapForSocketDescriptor1.contains( socketDescriptor );
+
+    mutex_.unlock();
+
+    return contains;
+}
+
 inline void JQNetworkConnectPool::onConnectToHostError(const JQNetworkConnectPointer &connect)
 {
     NULLPTR_CHECK( connectPoolSettings_->connectToHostErrorCallback );
@@ -32,6 +54,12 @@ inline void JQNetworkConnectPool::onRemoteHostClosed(const JQNetworkConnectPoint
 {
     NULLPTR_CHECK( connectPoolSettings_->remoteHostClosedCallback );
     connectPoolSettings_->remoteHostClosedCallback( connect );
+}
+
+inline void JQNetworkConnectPool::onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package)
+{
+    NULLPTR_CHECK( connectPoolSettings_->onPackageReceivedCallback );
+    connectPoolSettings_->onPackageReceivedCallback( connect, package );
 }
 
 #endif//JQNETWORK_INCLUDE_JQNETWORK_CONNECTPOOL_INC

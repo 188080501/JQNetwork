@@ -19,9 +19,13 @@ using namespace JQNetwork;
 QWeakPointer< JQNetworkThreadPool > JQNetworkClient::globalSocketThreadPool_;
 
 JQNetworkClient::JQNetworkClient(
-        const JQNetworkClientSettingsSharedPointer &clientSettings
+        const JQNetworkClientSettingsSharedPointer &clientSettings,
+        const JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings,
+        const JQNetworkConnectSettingsSharedPointer connectSettings
     ):
-    clientSettings_( clientSettings )
+    clientSettings_( clientSettings ),
+    connectPoolSettings_( connectPoolSettings ),
+    connectSettings_( connectSettings )
 {
     if ( globalSocketThreadPool_ )
     {

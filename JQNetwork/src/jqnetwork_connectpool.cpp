@@ -33,12 +33,40 @@ JQNetworkConnectPool::JQNetworkConnectPool(
     connectSettings_->connectToHostSucceedCallback = [ this ](const auto &connect){ this->onConnectToHostSucceed( connect ); };
     connectSettings_->remoteHostClosedCallback     = [ this ](const auto &connect){ this->onRemoteHostClosed( connect ); };
     connectSettings_->readyToDeleteCallback        = [ this ](const auto &connect){ this->onReadyToDelete( connect ); };
+    connectSettings_->packageReceivedCallback      = [ this ](const auto &connect, const auto &package){ this->onPackageReceived( connect, package ); };
 }
 
-void JQNetworkConnectPool::createConnectByHostAndPort(const std::function< void( std::function< void() > ) > runOnConnectThreadCallback, const QString &hostName, const quint16 &port)
+void JQNetworkConnectPool::createConnect(const std::function< void( std::function< void() > ) > runOnConnectThreadCallback, const QString &hostName, const quint16 &port)
 {
-    JQNetworkConnect::createConnectByHostAndPort(
-                [ this ](const auto &connect){ this->connectForConnecting_[ connect.data() ] = connect; },
+    auto connectKey = QString( "%1:%2" ).arg( hostName ).arg( port );
+
+    mutex_.lock();
+
+    if ( bimapForHostAndPort1.contains( connectKey ) )
+    {
+        mutex_.unlock();
+
+        return;
+    }
+
+    mutex_.unlock();
+
+    JQNetworkConnect::createConnect(
+                [
+                    this,
+                    connectKey,
+                    hostName,
+                    port
+                ](const auto &connect)
+                {
+                    this->mutex_.lock();
+
+                    this->connectForConnecting_[ connect.data() ] = connect;
+                    this->bimapForHostAndPort1[ connectKey ] = connect.data();
+                    this->bimapForHostAndPort2[ connect.data() ] = connectKey;
+
+                    this->mutex_.unlock();
+                },
                 runOnConnectThreadCallback,
                 connectSettings_,
                 hostName,
@@ -46,10 +74,33 @@ void JQNetworkConnectPool::createConnectByHostAndPort(const std::function< void(
             );
 }
 
-void JQNetworkConnectPool::createConnectBySocketDescriptor(const std::function< void( std::function< void() > ) > runOnConnectThreadCallback, const qintptr &socketDescriptor)
+void JQNetworkConnectPool::createConnect(const std::function< void( std::function< void() > ) > runOnConnectThreadCallback, const qintptr &socketDescriptor)
 {
-    JQNetworkConnect::createConnectBySocketDescriptor(
-                [ this ](const auto &connect){ this->connectForConnecting_[ connect.data() ] = connect; },
+    mutex_.lock();
+
+    if ( bimapForSocketDescriptor1.contains( socketDescriptor ) )
+    {
+        mutex_.unlock();
+
+        return;
+    }
+
+    mutex_.unlock();
+
+    JQNetworkConnect::createConnect(
+                [
+                    this,
+                    socketDescriptor
+                ](const auto &connect)
+                {
+                    this->mutex_.lock();
+
+                    this->connectForConnecting_[ connect.data() ] = connect;
+                    this->bimapForSocketDescriptor1[ socketDescriptor ] = connect.data();
+                    this->bimapForSocketDescriptor2[ connect.data() ] = socketDescriptor;
+
+                    this->mutex_.unlock();
+                },
                 runOnConnectThreadCallback,
                 connectSettings_,
                 socketDescriptor
@@ -60,16 +111,22 @@ void JQNetworkConnectPool::onConnectToHostSucceed(const JQNetworkConnectPointer 
 {
     qDebug() << __func__ << connect.data();
 
+    mutex_.lock();
+
     auto containsInConnecting = connectForConnecting_.contains( connect.data() );
 
     if ( !containsInConnecting )
     {
+        mutex_.unlock();
+
         qDebug() << __func__ << ": error: connect not contains" << connect.data();
         return;
     }
 
     connectForConnected_[ connect.data() ] = connectForConnecting_[ connect.data() ];
     connectForConnecting_.remove( connect.data() );
+
+    mutex_.unlock();
 
     NULLPTR_CHECK( connectPoolSettings_->connectToHostSucceedCallback );
     connectPoolSettings_->connectToHostSucceedCallback( connect );
@@ -79,11 +136,17 @@ void JQNetworkConnectPool::onReadyToDelete(const JQNetworkConnectPointer &connec
 {
     qDebug() << __func__ << connect.data();
 
+    mutex_.lock();
+
     auto containsInConnecting = connectForConnecting_.contains( connect.data() );
     auto containsInConnected = connectForConnected_.contains( connect.data() );
+    auto containsInBimapForHostAndPort = bimapForHostAndPort2.contains( connect.data() );
+    auto containsInBimapForSocketDescriptor = bimapForSocketDescriptor2.contains( connect.data() );
 
-    if ( !containsInConnecting && !containsInConnected )
+    if ( ( !containsInConnecting && !containsInConnected ) || ( !containsInBimapForHostAndPort && !containsInBimapForSocketDescriptor ) )
     {
+        mutex_.unlock();
+
         qDebug() << __func__ << ": error: connect not contains" << connect.data();
         return;
     }
@@ -99,6 +162,20 @@ void JQNetworkConnectPool::onReadyToDelete(const JQNetworkConnectPointer &connec
         QTimer::singleShot( 0, [ connect = connectForConnected_[ connect.data() ] ](){} );
         connectForConnected_.remove( connect.data() );
     }
+
+    if ( containsInBimapForHostAndPort )
+    {
+        bimapForHostAndPort1.remove( bimapForHostAndPort2[ connect.data() ] );
+        bimapForHostAndPort2.remove( connect.data() );
+    }
+
+    if ( containsInBimapForSocketDescriptor )
+    {
+        bimapForSocketDescriptor1.remove( bimapForSocketDescriptor2[ connect.data() ] );
+        bimapForSocketDescriptor2.remove( connect.data() );
+    }
+
+    mutex_.unlock();
 
     NULLPTR_CHECK( connectPoolSettings_->readyToDeleteCallback );
     connectPoolSettings_->readyToDeleteCallback( connect );

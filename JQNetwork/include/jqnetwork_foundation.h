@@ -25,6 +25,7 @@
 #include <QWeakPointer>
 #include <QPointer>
 #include <QHostAddress>
+#include <QMutex>
 
 #define JQNETWORKPACKAGE_BOOTFLAG 0x7d
 #define JQNETWORKPACKAGE_VERSION 1
@@ -79,7 +80,7 @@ class JQNetworkThreadPoolHelper: public QObject
     Q_OBJECT
 
 public:
-    JQNetworkThreadPoolHelper();
+    JQNetworkThreadPoolHelper() = default;
 
     ~JQNetworkThreadPoolHelper() = default;
 
@@ -89,7 +90,7 @@ public Q_SLOTS:
     void onRun();
 
 private:
-    QSharedPointer< QMutex > mutex_;
+    QMutex mutex_;
     QSharedPointer< std::vector< std::function< void() > > > waitForRunCallbacks_;
     bool alreadyCall_ = false;
     qint64 lastRunTime_ = 0;

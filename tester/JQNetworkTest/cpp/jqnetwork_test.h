@@ -24,6 +24,9 @@ public slots:
 public slots:
     void jqNetworkServerTest();
 
+private slots:
+    void jqNetworkClientTest();
+
 public slots:
     void jqNetworkConnectTest();
 

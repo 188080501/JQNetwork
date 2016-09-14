@@ -25,15 +25,14 @@ using namespace JQNetwork;
 
 // JQNetworkConnect
 JQNetworkConnect::JQNetworkConnect():
-    tcpSocket_( new QTcpSocket ),
-    mutexForSend_( new QMutex )
+    tcpSocket_( new QTcpSocket )
 {
     connect( tcpSocket_.data(), &QAbstractSocket::stateChanged, this, &JQNetworkConnect::onTcpSocketStateChanged, Qt::DirectConnection );
     connect( tcpSocket_.data(), &QAbstractSocket::bytesWritten, this, &JQNetworkConnect::onTcpSocketBytesWritten, Qt::DirectConnection );
     connect( tcpSocket_.data(), &QTcpSocket::readyRead, this, &JQNetworkConnect::onTcpSocketReadyRead, Qt::DirectConnection );
 }
 
-void JQNetworkConnect::createConnectByHostAndPort(
+void JQNetworkConnect::createConnect(
         const std::function< void(const JQNetworkConnectSharedPointer &) > &onConnectCreatedCallback,
         const std::function< void( std::function< void() > ) > runOnConnectThreadCallback,
         const JQNetworkConnectSettingsSharedPointer &connectSettings,
@@ -59,7 +58,7 @@ void JQNetworkConnect::createConnectByHostAndPort(
     }
 }
 
-void JQNetworkConnect::createConnectBySocketDescriptor(
+void JQNetworkConnect::createConnect(
         const std::function< void(const JQNetworkConnectSharedPointer &) > &onConnectCreatedCallback,
         const std::function< void( std::function< void() > ) > runOnConnectThreadCallback,
         const JQNetworkConnectSettingsSharedPointer &connectSettings,
@@ -88,7 +87,7 @@ qint32 JQNetworkConnect::sendPayloadData(const QByteArray &payloadData)
 {
     NULLPTR_CHECK( runOnConnectThreadCallback_, 0 );
 
-    mutexForSend_->lock();
+    mutexForSend_.lock();
 
     ++sendRotaryIndex_;
     if ( sendRotaryIndex_ >= 1000000000 )
@@ -98,7 +97,7 @@ qint32 JQNetworkConnect::sendPayloadData(const QByteArray &payloadData)
 
     const auto currentRandomFlag = sendRotaryIndex_;
 
-    mutexForSend_->unlock();
+    mutexForSend_.unlock();
 
     if ( this->thread() == QThread::currentThread() )
     {
@@ -229,9 +228,9 @@ void JQNetworkConnect::onTcpSocketReadyRead()
     auto package = JQNetworkPackage::createPackageFromRawData( tcpSocketBuffer_ );
     if ( package->isCompletePackage() )
     {
-        NULLPTR_CHECK( connectSettings_->onPackageReceivedCallback );
+        NULLPTR_CHECK( connectSettings_->packageReceivedCallback );
 
-        connectSettings_->onPackageReceivedCallback( this, package );
+        connectSettings_->packageReceivedCallback( this, package );
     }
 
     const auto &&itForPackage = receivePackagePool_.find( package->randomFlag() );
@@ -245,9 +244,9 @@ void JQNetworkConnect::onTcpSocketReadyRead()
 
         if ( (*itForPackage)->isCompletePackage() && !(*itForPackage)->isAbandonPackage() )
         {
-            NULLPTR_CHECK( connectSettings_->onPackageReceivedCallback );
+            NULLPTR_CHECK( connectSettings_->packageReceivedCallback );
 
-            connectSettings_->onPackageReceivedCallback( this, *itForPackage );
+            connectSettings_->packageReceivedCallback( this, *itForPackage );
 
             receivePackagePool_.erase( itForPackage );
         }

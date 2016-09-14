@@ -46,7 +46,7 @@ struct JQNetworkConnectSettings
     std::function< void( JQNetworkConnectPointer ) > connectToHostSucceedCallback = nullptr;
     std::function< void( JQNetworkConnectPointer ) > remoteHostClosedCallback = nullptr;
     std::function< void( JQNetworkConnectPointer ) > readyToDeleteCallback = nullptr;
-    std::function< void( JQNetworkConnectPointer, JQNetworkPackageSharedPointer ) > onPackageReceivedCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer, JQNetworkPackageSharedPointer ) > packageReceivedCallback = nullptr;
 };
 
 class JQNetworkConnect: public QObject
@@ -63,7 +63,7 @@ private:
 public:
     ~JQNetworkConnect() = default;
 
-    static void createConnectByHostAndPort(
+    static void createConnect(
             const std::function< void(const JQNetworkConnectSharedPointer &) > &onConnectCreatedCallback,
             const std::function< void( std::function< void() > ) > runOnConnectThreadCallback,
             const JQNetworkConnectSettingsSharedPointer &connectSettings,
@@ -71,7 +71,7 @@ public:
             const quint16 &port
         );
 
-    static void createConnectBySocketDescriptor(
+    static void createConnect(
             const std::function< void(const JQNetworkConnectSharedPointer &) > &onConnectCreatedCallback,
             const std::function< void( std::function< void() > ) > runOnConnectThreadCallback,
             const JQNetworkConnectSettingsSharedPointer &connectSettings,
@@ -110,7 +110,7 @@ private:
     QSharedPointer< QTimer > timerForConnectToHostTimeOut_;
 
     // Package
-    QSharedPointer< QMutex > mutexForSend_;
+    QMutex mutexForSend_;
     qint32 sendRotaryIndex_ = 0;
     QMap< qint32, JQNetworkPackageSharedPointer > sendPackagePool_; // randomFlag -> package
     QMap< qint32, JQNetworkPackageSharedPointer > receivePackagePool_; // randomFlag -> package

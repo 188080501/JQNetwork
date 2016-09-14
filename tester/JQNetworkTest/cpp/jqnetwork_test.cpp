@@ -86,6 +86,10 @@ void JQNetworkTest::jqNetworkServerTest()
     auto connectPoolSettings = JQNetworkConnectPoolSettingsSharedPointer( new JQNetworkConnectPoolSettings );
     auto connectSettings = JQNetworkConnectSettingsSharedPointer( new JQNetworkConnectSettings );
 
+    {
+        JQNetworkServer server( serverSettings, connectPoolSettings, connectSettings );
+    }
+
     serverSettings->listenPort = 42821;
 
     JQNetworkServer server( serverSettings, connectPoolSettings, connectSettings );
@@ -116,6 +120,13 @@ void JQNetworkTest::jqNetworkServerTest()
     QCOMPARE( succeedCount, 1 );
 }
 
+void JQNetworkTest::jqNetworkClientTest()
+{
+    auto clientSettings = JQNetworkClientSettingsSharedPointer( new JQNetworkClientSettings );
+    auto connectPoolSettings = JQNetworkConnectPoolSettingsSharedPointer( new JQNetworkConnectPoolSettings );
+    auto connectSettings = JQNetworkConnectSettingsSharedPointer( new JQNetworkConnectSettings );
+}
+
 void JQNetworkTest::jqNetworkConnectTest()
 {
     auto connectSettings = JQNetworkConnectSettingsSharedPointer( new JQNetworkConnectSettings );
@@ -133,7 +144,7 @@ void JQNetworkTest::jqNetworkConnectTest()
     connectSettings->readyToDeleteCallback        = [ & ]( auto ){ flag5 = true; qDebug( "readyToDeleteCallback" ); };
 
     {
-        JQNetworkConnect::createConnectByHostAndPort(
+        JQNetworkConnect::createConnect(
                     [](const auto &){},
                     {},
                     connectSettings,
@@ -157,7 +168,7 @@ void JQNetworkTest::jqNetworkConnectTest()
     {
         JQNetworkConnectSharedPointer connect;
 
-        JQNetworkConnect::createConnectByHostAndPort(
+        JQNetworkConnect::createConnect(
                     [ &connect ](const auto &connect_){ connect = connect_; },
                     {},
                     connectSettings,
@@ -186,7 +197,7 @@ void JQNetworkTest::jqNetworkConnectTest()
 
         connectSettings->maximumConnectToHostWaitTime = 1;
 
-        JQNetworkConnect::createConnectByHostAndPort(
+        JQNetworkConnect::createConnect(
                     [ &connect ](const auto &connect_){ connect = connect_; },
                     {},
                     connectSettings,

@@ -1,8 +1,10 @@
 ﻿// Qt lib import
 #include <QCoreApplication>
 #include <QtTest>
+#include <QTcpSocket>
 
 // JQNetwork lib improt
+#include <JQNetworkPackage>
 #include <JQNetworkServer>
 #include <JQNetworkConnect>
 
@@ -13,9 +15,9 @@ int main(int argc, char *argv[])
     const quint16 &&listenPort = 34543;
     auto server = JQNetworkServer::createServerByListenPort( listenPort );
 
-    server->setOnPackageReceivedCallback( [](const auto &, const JQNetworkPackageSharedPointer &)
+    server->setOnPackageReceivedCallback( [](const auto &, const JQNetworkPackageSharedPointer &package)
     {
-        qDebug() << "onPackageReceived";
+        qDebug() << "onPackageReceived:" << package->payloadDataSize();
 
         //...
     } );
@@ -27,6 +29,9 @@ int main(int argc, char *argv[])
     }
 
     qDebug() << "begin succeed, listen on:" << listenPort;
+
+    QTcpSocket socket;
+    socket.connectToHost( "127.0.0.1", 34543 );
 
     return a.exec();
 }

@@ -90,13 +90,13 @@ JQNetworkServer::JQNetworkServer(
 
 JQNetworkServer::~JQNetworkServer()
 {
+    if ( !this->tcpServer_ ) { return; }
+
     serverThreadPool_->waitRun(
                 [
                     this
                 ]()
                 {
-                    if ( !this->tcpServer_ ) { return; }
-
                     tcpServer_->close();
                     tcpServer_.clear();
                 }
@@ -167,6 +167,7 @@ bool JQNetworkServer::begin()
                     connectPoolSettings->connectToHostSucceedCallback = [ this ](const auto &connect){ this->onConnectToHostSucceed( connect ); };
                     connectPoolSettings->remoteHostClosedCallback     = [ this ](const auto &connect){ this->onRemoteHostClosed( connect ); };
                     connectPoolSettings->readyToDeleteCallback        = [ this ](const auto &connect){ this->onReadyToDelete( connect ); };
+                    connectPoolSettings->onPackageReceivedCallback    = [ this ](const auto &connect, const auto &package){ this->onPackageReceived( connect, package ); };
 
                     connectPools_[ QThread::currentThread() ] = JQNetworkConnectPoolSharedPointer(
                                 new JQNetworkConnectPool(
@@ -197,7 +198,7 @@ void JQNetworkServer::incomingConnection(const qintptr &socketDescriptor)
                     socketDescriptor
                 ]()
                 {
-                    this->connectPools_[ QThread::currentThread() ]->createConnectBySocketDescriptor(
+                    this->connectPools_[ QThread::currentThread() ]->createConnect(
                         runOnConnectThreadCallback,
                         socketDescriptor
                     );

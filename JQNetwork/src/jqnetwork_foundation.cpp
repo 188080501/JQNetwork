@@ -23,13 +23,9 @@
 using namespace JQNetwork;
 
 // JQNetworkThreadPoolHelper
-JQNetworkThreadPoolHelper::JQNetworkThreadPoolHelper():
-    mutex_( new QMutex )
-{ }
-
 void JQNetworkThreadPoolHelper::run(const std::function< void() > &callback)
 {
-    mutex_->lock();
+    mutex_.lock();
 
     if ( !waitForRunCallbacks_ )
     {
@@ -48,7 +44,7 @@ void JQNetworkThreadPoolHelper::run(const std::function< void() > &callback)
                 );
     }
 
-    mutex_->unlock();
+    mutex_.unlock();
 }
 
 void JQNetworkThreadPoolHelper::onRun()
@@ -62,7 +58,7 @@ void JQNetworkThreadPoolHelper::onRun()
 
     QSharedPointer< std::vector< std::function< void() > > > buf;
 
-    mutex_->lock();
+    mutex_.lock();
 
     buf = waitForRunCallbacks_;
     waitForRunCallbacks_.clear();
@@ -72,7 +68,7 @@ void JQNetworkThreadPoolHelper::onRun()
     lastRunTime_ = currentTime;
     lastRunCallbackCount_ = buf->size();
 
-    mutex_->unlock();
+    mutex_.unlock();
 
     for ( const auto &callback: *buf )
     {

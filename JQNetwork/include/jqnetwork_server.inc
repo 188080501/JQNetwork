@@ -91,7 +91,7 @@ inline void JQNetworkServer::onReadyToDelete(const JQNetworkConnectPointer &conn
     );
 }
 
-inline void JQNetworkServer::onPackageReceivedCallback(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package)
+inline void JQNetworkServer::onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package)
 {
     NULLPTR_CHECK( serverSettings_->onPackageReceivedCallback );
 

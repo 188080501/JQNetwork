@@ -64,7 +64,11 @@ public:
 
     inline QByteArray metaData() const;
 
+    inline int metaDataSize() const;
+
     inline QByteArray payloadData() const;
+
+    inline int payloadDataSize() const;
 
     inline QByteArray toByteArray() const;
 

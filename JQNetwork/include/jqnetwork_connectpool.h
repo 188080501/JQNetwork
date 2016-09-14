@@ -29,6 +29,7 @@ struct JQNetworkConnectPoolSettings
     std::function< void( JQNetworkConnectPointer ) > connectToHostSucceedCallback = nullptr;
     std::function< void( JQNetworkConnectPointer ) > remoteHostClosedCallback = nullptr;
     std::function< void( JQNetworkConnectPointer ) > readyToDeleteCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer, JQNetworkPackageSharedPointer ) > onPackageReceivedCallback = nullptr;
 };
 
 class JQNetworkConnectPool: public QObject
@@ -47,9 +48,13 @@ public:
 
     JQNetworkConnectPool &operator =(const JQNetworkConnectPool &) = delete;
 
-    void createConnectByHostAndPort(const std::function< void( std::function< void() > ) > runOnConnectThreadCallback, const QString &hostName, const quint16 &port);
+    void createConnect(const std::function< void( std::function< void() > ) > runOnConnectThreadCallback, const QString &hostName, const quint16 &port);
 
-    void createConnectBySocketDescriptor(const std::function< void( std::function< void() > ) > runOnConnectThreadCallback, const qintptr &socketDescriptor);
+    void createConnect(const std::function< void( std::function< void() > ) > runOnConnectThreadCallback, const qintptr &socketDescriptor);
+
+    inline bool containsConnect(const QString &hostName, const quint16 &port);
+
+    inline bool containsConnect(const qintptr &socketDescriptor);
 
 private:
     inline void onConnectToHostError(const JQNetworkConnectPointer &connect);
@@ -62,6 +67,8 @@ private:
 
     void onReadyToDelete(const JQNetworkConnectPointer &connect);
 
+    inline void onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package);
+
 private:
     // Settings
     JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings_;
@@ -70,6 +77,14 @@ private:
     // Connect
     QMap< JQNetworkConnect *, JQNetworkConnectSharedPointer > connectForConnecting_;
     QMap< JQNetworkConnect *, JQNetworkConnectSharedPointer > connectForConnected_;
+
+    QMap< QString, JQNetworkConnectPointer > bimapForHostAndPort1; // "127.0.0.1:34543" -> Connect
+    QMap< JQNetworkConnect *, QString > bimapForHostAndPort2; // Connect -> "127.0.0.1:34543"
+    QMap< qintptr, JQNetworkConnectPointer > bimapForSocketDescriptor1; // socketDescriptor -> Connect
+    QMap< JQNetworkConnect *, qintptr > bimapForSocketDescriptor2; // Connect -> socketDescriptor
+
+    // Other
+    QMutex mutex_;
 };
 
 #include "jqnetwork_connectpool.inc"

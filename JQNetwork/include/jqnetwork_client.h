@@ -30,7 +30,9 @@ class JQNetworkClient: public QObject
 
 public:
     JQNetworkClient(
-            const JQNetworkClientSettingsSharedPointer &clientSettings
+            const JQNetworkClientSettingsSharedPointer &clientSettings,
+            const JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings,
+            const JQNetworkConnectSettingsSharedPointer connectSettings
         );
 
     ~JQNetworkClient() = default;
@@ -46,6 +48,8 @@ private:
 
     // Settings
     JQNetworkClientSettingsSharedPointer clientSettings_;
+    JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings_;
+    JQNetworkConnectSettingsSharedPointer connectSettings_;
 
     // Client
     QMap< QThread *, JQNetworkConnectPoolSharedPointer > connectPools_;

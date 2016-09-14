@@ -72,7 +72,7 @@ private:
 
     inline void onReadyToDelete(const JQNetworkConnectPointer &connect);
 
-    inline void onPackageReceivedCallback(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package);
+    inline void onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package);
 
 private:
     // Thread pool
