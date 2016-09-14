@@ -56,8 +56,7 @@ JQNetwork，从TCP开始封装的网络库，目的是为了让Qt开发者更加
 ---|---
 功能确定|已完成
 架构确定|已完成
-开始开发|正在开发
-V0.1|2016-09
+V0.1|正在开发，预计 2016-09 完成
 
 ## 性能介绍
 
@@ -77,20 +76,40 @@ V0.1|2016-09
 
 * JQNetworkFoundation
 
+	基础库
+
 * JQNetworkEncrypt
+
+	加密库（私有加密，可选）
 
 * JQNetworkPackage
 
+	数据包
+
 * JQNetworkConnect
+
+	连接对象
 
 * JQNetworkConnectPool
 
+	连接池
+
 * JQNetworkServer
+
+	服务端
 
 * JQNetworkProcessor
 
+	服务器处理器（配合处理数据）
+
 * JQNetworkClient
+
+	客户端
 
 * JQNetworkForwarf
 
+	转发器
+
 * JQNetworkLan
+
+	局域网功能
