@@ -58,8 +58,8 @@ inline void JQNetworkConnectPool::onRemoteHostClosed(const JQNetworkConnectPoint
 
 inline void JQNetworkConnectPool::onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package)
 {
-    NULLPTR_CHECK( connectPoolSettings_->onPackageReceivedCallback );
-    connectPoolSettings_->onPackageReceivedCallback( connect, package );
+    NULLPTR_CHECK( connectPoolSettings_->packageReceivedCallback );
+    connectPoolSettings_->packageReceivedCallback( connect, package );
 }
 
 #endif//JQNETWORK_INCLUDE_JQNETWORK_CONNECTPOOL_INC

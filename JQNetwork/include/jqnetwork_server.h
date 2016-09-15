@@ -33,7 +33,7 @@ struct JQNetworkServerSettings
     std::function< void( JQNetworkConnectPointer ) > connectToHostSucceedCallback = nullptr;
     std::function< void( JQNetworkConnectPointer ) > remoteHostClosedCallback = nullptr;
     std::function< void( JQNetworkConnectPointer ) > readyToDeleteCallback = nullptr;
-    std::function< void( JQNetworkConnectPointer, JQNetworkPackageSharedPointer ) > onPackageReceivedCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer, JQNetworkPackageSharedPointer ) > packageReceivedCallback = nullptr;
 };
 
 class JQNetworkServer: public QObject
@@ -55,7 +55,7 @@ public:
 
     static JQNetworkServerSharedPointer createServerByListenPort(const quint16 &listenPort, const QHostAddress &listenAddress = QHostAddress::Any);
 
-    void setOnPackageReceivedCallback(const std::function< void( JQNetworkConnectPointer, JQNetworkPackageSharedPointer ) > &callback);
+    inline void setOnPackageReceivedCallback(const std::function< void( JQNetworkConnectPointer, JQNetworkPackageSharedPointer ) > &callback);
 
     bool begin();
 

@@ -85,15 +85,15 @@ private:
 #pragma pack(1)
     struct Head
     {
-        qint8 bootFlag_ = 0;
-        qint8 versionFlag_ = 0;
+        qint8 bootFlag_ = JQNETWORKPACKAGE_BOOTFLAG;
+        qint8 versionFlag_ = JQNETWORKPACKAGE_VERSION;
         qint32 randomFlag_ = 0;
 
-        qint8 metaDataFlag_ = 0;
+        qint8 metaDataFlag_ = 0x1;
         qint32 metaDataTotalSize_ = -1;
         qint32 metaDataCurrentSize_ = -1;
 
-        qint8 payloadDataFlag_ = 0;
+        qint8 payloadDataFlag_ = 0x1;
         qint32 payloadDataTotalSize_ = -1;
         qint32 payloadDataCurrentSize_ = -1;
     } head_;

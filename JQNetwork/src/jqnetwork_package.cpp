@@ -99,11 +99,8 @@ JQNetworkPackageSharedPointer JQNetworkPackage::createPackageFromPayloadData(con
 {
     auto newPackage = JQNetworkPackageSharedPointer( new JQNetworkPackage );
 
-    newPackage->head_.bootFlag_ = JQNETWORKPACKAGE_BOOTFLAG;
-    newPackage->head_.versionFlag_ = JQNETWORKPACKAGE_VERSION;
     newPackage->head_.randomFlag_ = randomFlag;
 
-    newPackage->head_.payloadDataFlag_ = 0x1;
     newPackage->head_.payloadDataTotalSize_ = payloadData.size();
     newPackage->head_.payloadDataCurrentSize_ = payloadData.size();
 

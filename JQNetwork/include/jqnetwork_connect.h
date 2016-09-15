@@ -114,6 +114,10 @@ private:
     qint32 sendRotaryIndex_ = 0;
     QMap< qint32, JQNetworkPackageSharedPointer > sendPackagePool_; // randomFlag -> package
     QMap< qint32, JQNetworkPackageSharedPointer > receivePackagePool_; // randomFlag -> package
+
+    // Statistics
+    qint64 waitForSendBytes_ = 0;
+    qint64 alreadyWrittenBytes_ = 0;
 };
 
 #include "jqnetwork_connect.inc"

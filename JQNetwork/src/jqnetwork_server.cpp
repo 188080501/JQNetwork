@@ -122,17 +122,6 @@ JQNetworkServerSharedPointer JQNetworkServer::createServerByListenPort(const qui
     return JQNetworkServerSharedPointer( new JQNetworkServer( serverSettings, connectPoolSettings, connectSettings ) );
 }
 
-void JQNetworkServer::setOnPackageReceivedCallback(const std::function<void (QPointer<JQNetworkConnect>, JQNetworkPackageSharedPointer)> &callback)
-{
-    if ( !tcpServer_.isNull() )
-    {
-        qDebug() << __func__ << "set error: already begin";
-        return;
-    }
-
-    serverSettings_->onPackageReceivedCallback = callback;
-}
-
 bool JQNetworkServer::begin()
 {
     bool listenSucceed = false;
@@ -167,7 +156,7 @@ bool JQNetworkServer::begin()
                     connectPoolSettings->connectToHostSucceedCallback = [ this ](const auto &connect){ this->onConnectToHostSucceed( connect ); };
                     connectPoolSettings->remoteHostClosedCallback     = [ this ](const auto &connect){ this->onRemoteHostClosed( connect ); };
                     connectPoolSettings->readyToDeleteCallback        = [ this ](const auto &connect){ this->onReadyToDelete( connect ); };
-                    connectPoolSettings->onPackageReceivedCallback    = [ this ](const auto &connect, const auto &package){ this->onPackageReceived( connect, package ); };
+                    connectPoolSettings->packageReceivedCallback    = [ this ](const auto &connect, const auto &package){ this->onPackageReceived( connect, package ); };
 
                     connectPools_[ QThread::currentThread() ] = JQNetworkConnectPoolSharedPointer(
                                 new JQNetworkConnectPool(

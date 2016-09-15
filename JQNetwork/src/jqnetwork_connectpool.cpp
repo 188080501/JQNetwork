@@ -107,6 +107,88 @@ void JQNetworkConnectPool::createConnect(const std::function< void( std::functio
             );
 }
 
+QPair< QString, quint16 > JQNetworkConnectPool::getHostAndPortByConnect(const JQNetworkConnectPointer &connect)
+{
+    QPair< QString, quint16 > reply;
+
+    mutex_.lock();
+
+    {
+        auto it = bimapForHostAndPort2.find( connect.data() );
+        if ( it != bimapForHostAndPort2.end() )
+        {
+            auto index = it.value().lastIndexOf( ":" );
+
+            if ( ( index > 0 ) && ( ( index + 1 ) < it.value().size() ) )
+            {
+                reply.first = it.value().mid( 0, index );
+                reply.second = it.value().mid( index + 1 ).toUShort();
+            }
+        }
+    }
+
+    mutex_.unlock();
+
+    return reply;
+}
+
+qintptr JQNetworkConnectPool::getSocketDescriptorByConnect(const JQNetworkConnectPointer &connect)
+{
+    qintptr reply = { };
+
+    mutex_.lock();
+
+    {
+        auto it = bimapForSocketDescriptor2.find( connect.data() );
+        if ( it != bimapForSocketDescriptor2.end() )
+        {
+            reply = it.value();
+        }
+    }
+
+    mutex_.unlock();
+
+    return reply;
+}
+
+JQNetworkConnectPointer JQNetworkConnectPool::getConnectByHostAndPort(const QString &hostName, const quint16 &port)
+{
+    JQNetworkConnectPointer reply;
+
+    mutex_.lock();
+
+    {
+        auto it = bimapForHostAndPort1.find( QString( "%1:%2" ).arg( hostName ).arg( port ) );
+        if ( it != bimapForHostAndPort1.end() )
+        {
+            reply = it.value();
+        }
+    }
+
+    mutex_.unlock();
+
+    return reply;
+}
+
+JQNetworkConnectPointer JQNetworkConnectPool::getConnectBySocketDescriptor(const qintptr &socketDescriptor)
+{
+    JQNetworkConnectPointer reply;
+
+    mutex_.lock();
+
+    {
+        auto it = bimapForSocketDescriptor1.find( socketDescriptor );
+        if ( it != bimapForSocketDescriptor1.end() )
+        {
+            reply = it.value();
+        }
+    }
+
+    mutex_.unlock();
+
+    return reply;
+}
+
 void JQNetworkConnectPool::onConnectToHostSucceed(const JQNetworkConnectPointer &connect)
 {
     qDebug() << __func__ << connect.data();

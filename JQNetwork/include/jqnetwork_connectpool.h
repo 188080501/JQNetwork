@@ -29,7 +29,7 @@ struct JQNetworkConnectPoolSettings
     std::function< void( JQNetworkConnectPointer ) > connectToHostSucceedCallback = nullptr;
     std::function< void( JQNetworkConnectPointer ) > remoteHostClosedCallback = nullptr;
     std::function< void( JQNetworkConnectPointer ) > readyToDeleteCallback = nullptr;
-    std::function< void( JQNetworkConnectPointer, JQNetworkPackageSharedPointer ) > onPackageReceivedCallback = nullptr;
+    std::function< void( JQNetworkConnectPointer, JQNetworkPackageSharedPointer ) > packageReceivedCallback = nullptr;
 };
 
 class JQNetworkConnectPool: public QObject
@@ -55,6 +55,14 @@ public:
     inline bool containsConnect(const QString &hostName, const quint16 &port);
 
     inline bool containsConnect(const qintptr &socketDescriptor);
+
+    QPair< QString, quint16 > getHostAndPortByConnect(const JQNetworkConnectPointer &connect);
+
+    qintptr getSocketDescriptorByConnect(const JQNetworkConnectPointer &connect);
+
+    JQNetworkConnectPointer getConnectByHostAndPort(const QString &hostName, const quint16 &port);
+
+    JQNetworkConnectPointer getConnectBySocketDescriptor(const qintptr &socketDescriptor);
 
 private:
     inline void onConnectToHostError(const JQNetworkConnectPointer &connect);
