@@ -50,7 +50,8 @@ int main(int argc, char *argv[])
         QTimer timer;
         QObject::connect( &timer, &QTimer::timeout, [ client ]()
         {
-            client->sendPayloadData( "127.0.0.1", 34543, "Ping" );
+            const auto &&randomFlag = client->sendPayloadData( "127.0.0.1", 34543, "Ping", { } );
+            qDebug() << "Client: send randomFlag:" << randomFlag;
         } );
 
         // 设置连接到服务端后的回调

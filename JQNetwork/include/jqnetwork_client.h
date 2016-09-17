@@ -58,7 +58,12 @@ public:
 
     void createConnect(const QString &hostName, const quint16 &port);
 
-    int sendPayloadData(const QString &hostName, const quint16 &port, const QByteArray &payloadData);
+    int sendPayloadData(
+            const QString &hostName,
+            const quint16 &port,
+            const QByteArray &payloadData,
+            const JQNetworkClientSendCallbackPackage &callbackPackage
+        );
 
 private:
     inline void onConnectToHostError(const JQNetworkConnectPointer &connect);

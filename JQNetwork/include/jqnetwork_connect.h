@@ -82,6 +82,8 @@ public:
 
     qint32 sendPayloadData(const QByteArray &payloadData);
 
+    qint32 replyPayloadData(const QByteArray &payloadData, const qint32 &randomFlag);
+
 private Q_SLOTS:
     void onTcpSocketStateChanged();
 

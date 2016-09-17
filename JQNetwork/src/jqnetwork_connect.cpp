@@ -120,6 +120,13 @@ qint32 JQNetworkConnect::sendPayloadData(const QByteArray &payloadData)
     return currentRandomFlag;
 }
 
+qint32 JQNetworkConnect::replyPayloadData(const QByteArray &payloadData, const qint32 &randomFlag)
+{
+    NULLPTR_CHECK( runOnConnectThreadCallback_, 0 );
+
+    //...
+}
+
 void JQNetworkConnect::onTcpSocketStateChanged()
 {
     if ( isAbandonTcpSocket_ ) { return; }

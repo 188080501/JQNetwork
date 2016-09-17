@@ -121,7 +121,12 @@ void JQNetworkClient::createConnect(const QString &hostName, const quint16 &port
     );
 }
 
-int JQNetworkClient::sendPayloadData(const QString &hostName, const quint16 &port, const QByteArray &payloadData)
+int JQNetworkClient::sendPayloadData(
+        const QString &hostName,
+        const quint16 &port,
+        const QByteArray &payloadData,
+        const JQNetworkClientSendCallbackPackage &callbackPackagea
+    )
 {
     for ( const auto &connectPool: this->connectPools_ )
     {
@@ -129,7 +134,13 @@ int JQNetworkClient::sendPayloadData(const QString &hostName, const quint16 &por
 
         if ( !connect ) { continue; }
 
-        return connect->sendPayloadData( payloadData );
+        auto randomFlag = connect->sendPayloadData( payloadData );
+
+        if ( !randomFlag ) { return randomFlag; }
+
+        sendCallbackPackages_[ randomFlag ] = callbackPackagea;
+
+        return randomFlag;
     }
 
     return 0;
