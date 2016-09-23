@@ -25,12 +25,12 @@ struct JQNetworkServerSettings
     QHostAddress listenAddress = QHostAddress::Any;
     quint16 listenPort = 0;
 
-    std::function< void( JQNetworkConnectPointer ) > connectToHostErrorCallback = nullptr;
-    std::function< void( JQNetworkConnectPointer ) > connectToHostTimeoutCallback = nullptr;
-    std::function< void( JQNetworkConnectPointer ) > connectToHostSucceedCallback = nullptr;
-    std::function< void( JQNetworkConnectPointer ) > remoteHostClosedCallback = nullptr;
-    std::function< void( JQNetworkConnectPointer ) > readyToDeleteCallback = nullptr;
-    std::function< void( JQNetworkConnectPointer, JQNetworkPackageSharedPointer ) > packageReceivedCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer & ) > connectToHostErrorCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer & ) > connectToHostTimeoutCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer & ) > connectToHostSucceedCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer & ) > remoteHostClosedCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer & ) > readyToDeleteCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer & ) > packageReceivedCallback = nullptr;
 };
 
 class JQNetworkServer: public QObject

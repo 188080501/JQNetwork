@@ -42,6 +42,25 @@ void JQNetworkTest::jqNetworkThreadPoolTest()
         threadPool.waitRun( [ & ](){ ++flag; } );
         QCOMPARE( flag, 1 );
     }
+
+    {
+        QMap< QThread *, int > flags;
+
+        JQNetworkThreadPool threadPool( 3 );
+
+        threadPool.waitRunEach( [ &flags ](){ flags[ QThread::currentThread() ] = 0; } );
+
+        for ( auto count = 0; count < 100000; ++count )
+        {
+            threadPool.run( [ &flags ](){ ++flags[ QThread::currentThread() ]; } );
+        }
+
+        QThread::msleep( 1000 );
+
+        QCOMPARE( *( flags.begin() + 0 ), 33334 );
+        QCOMPARE( *( flags.begin() + 1 ), 33333 );
+        QCOMPARE( *( flags.begin() + 2 ), 33333 );
+    }
 }
 
 void JQNetworkTest::jqNetworkThreadPoolBenchmark()

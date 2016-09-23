@@ -27,24 +27,4 @@ inline void JQNetworkClient::setOnConnectToHostSucceedCallback(const std::functi
     clientSettings_->connectToHostSucceedCallback = callback;
 }
 
-inline void JQNetworkClient::onConnectToHostError(const JQNetworkConnectPointer &)
-{
-    // TODO
-}
-
-inline void JQNetworkClient::onConnectToHostTimeout(const JQNetworkConnectPointer &)
-{
-    // TODO
-}
-
-inline void JQNetworkClient::onRemoteHostClosed(const JQNetworkConnectPointer &)
-{
-    // TODO
-}
-
-inline void JQNetworkClient::onReadyToDelete(const JQNetworkConnectPointer &)
-{
-    // TODO
-}
-
 #endif//JQNETWORK_INCLUDE_JQNETWORK_CLIENG_INC

@@ -13,7 +13,7 @@ public:
 
     ~JQNetworkTest() = default;
 
-public slots:
+private slots:
     void jqNetworkThreadPoolTest();
 
 public slots:

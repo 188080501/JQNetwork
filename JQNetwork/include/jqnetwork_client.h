@@ -21,7 +21,12 @@ struct JQNetworkClientSettings
     int globalSocketThreadCount = 2;
     int globalProcessorThreadCount = 1;
 
-    std::function< void( JQNetworkConnectPointer, const QString &hostName, const quint16 &port ) > connectToHostSucceedCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer &, const QString &hostName, const quint16 &port ) > connectToHostErrorCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer &, const QString &hostName, const quint16 &port ) > connectToHostTimeoutCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer &, const QString &hostName, const quint16 &port ) > connectToHostSucceedCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer &, const QString &hostName, const quint16 &port ) > remoteHostClosedCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer &, const QString &hostName, const quint16 &port ) > readyToDeleteCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer &, const QString &hostName, const quint16 &port ) > packageReceivedCallback = nullptr;
 };
 
 class JQNetworkClient: public QObject
@@ -53,21 +58,32 @@ public:
             const QString &hostName,
             const quint16 &port,
             const QByteArray &payloadData,
-            const JQNetworkOnReceivedCallbackPackage &callbackPackage
+            const JQNetworkOnReceivedCallbackPackage &callbackPackage = JQNetworkOnReceivedCallbackPackage()
         );
 
 private:
-    inline void onConnectToHostError(const JQNetworkConnectPointer &connect);
+    void onConnectToHostError(const JQNetworkConnectPointer &connect);
 
-    inline void onConnectToHostTimeout(const JQNetworkConnectPointer &connect);
+    void onConnectToHostTimeout(const JQNetworkConnectPointer &connect);
 
     void onConnectToHostSucceed(const JQNetworkConnectPointer &connect);
 
-    inline void onRemoteHostClosed(const JQNetworkConnectPointer &connect);
+    void onRemoteHostClosed(const JQNetworkConnectPointer &connect);
 
-    inline void onReadyToDelete(const JQNetworkConnectPointer &connect);
+    void onReadyToDelete(const JQNetworkConnectPointer &connect);
 
     void onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package);
+
+    void onWaitReplySucceedPackage(
+            const JQNetworkConnectPointer &connect,
+            const JQNetworkPackageSharedPointer &package,
+            const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &callback
+        );
+
+    void onWaitReplyPackageFail(
+            const JQNetworkConnectPointer &connect,
+            const std::function< void(const JQNetworkConnectPointer &connect) > &callback
+        );
 
 private:
     // Thread pool

@@ -62,4 +62,23 @@ inline void JQNetworkConnectPool::onPackageReceived(const JQNetworkConnectPointe
     connectPoolSettings_->packageReceivedCallback( connect, package );
 }
 
+inline void JQNetworkConnectPool::onWaitReplySucceedPackage(
+        const JQNetworkConnectPointer &connect,
+        const JQNetworkPackageSharedPointer &package,
+        const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &callback
+    )
+{
+    NULLPTR_CHECK( connectPoolSettings_->waitReplyPackageSucceedCallback );
+    connectPoolSettings_->waitReplyPackageSucceedCallback( connect, package, callback );
+}
+
+inline void JQNetworkConnectPool::onWaitReplyPackageFail(
+        const JQNetworkConnectPointer &connect,
+        const std::function< void(const JQNetworkConnectPointer &connect) > &callback
+    )
+{
+    NULLPTR_CHECK( connectPoolSettings_->waitReplyPackageFailCallback );
+    connectPoolSettings_->waitReplyPackageFailCallback( connect, callback );
+}
+
 #endif//JQNETWORK_INCLUDE_JQNETWORK_CONNECTPOOL_INC

@@ -20,14 +20,13 @@
 #include <QtConcurrent>
 
 // JQNetworkThreadPoolHelper
+JQNetworkThreadPoolHelper::JQNetworkThreadPoolHelper():
+    waitForRunCallbacks_( new std::vector< std::function< void() > > )
+{ }
+
 void JQNetworkThreadPoolHelper::run(const std::function< void() > &callback)
 {
     mutex_.lock();
-
-    if ( !waitForRunCallbacks_ )
-    {
-        waitForRunCallbacks_ = QSharedPointer< std::vector< std::function< void() > > >( new std::vector< std::function< void() > > );
-    }
 
     waitForRunCallbacks_->push_back( callback );
 
@@ -53,21 +52,21 @@ void JQNetworkThreadPoolHelper::onRun()
         QThread::msleep( 5 );
     }
 
-    QSharedPointer< std::vector< std::function< void() > > > buf;
+    std::vector< std::function< void() > > callbacks;
 
     mutex_.lock();
 
-    buf = waitForRunCallbacks_;
-    waitForRunCallbacks_.clear();
+    callbacks = *waitForRunCallbacks_;
+    waitForRunCallbacks_->clear();
 
     alreadyCall_ = false;
 
     lastRunTime_ = currentTime;
-    lastRunCallbackCount_ = buf->size();
+    lastRunCallbackCount_ = callbacks.size();
 
     mutex_.unlock();
 
-    for ( const auto &callback: *buf )
+    for ( const auto &callback: callbacks )
     {
         callback();
     }

@@ -21,12 +21,14 @@ struct JQNetworkConnectPoolSettings
     bool autoReconnect = true;
     bool reconnectIntervalTime = 15 * 1000;
 
-    std::function< void( JQNetworkConnectPointer ) > connectToHostErrorCallback = nullptr;
-    std::function< void( JQNetworkConnectPointer ) > connectToHostTimeoutCallback = nullptr;
-    std::function< void( JQNetworkConnectPointer ) > connectToHostSucceedCallback = nullptr;
-    std::function< void( JQNetworkConnectPointer ) > remoteHostClosedCallback = nullptr;
-    std::function< void( JQNetworkConnectPointer ) > readyToDeleteCallback = nullptr;
-    std::function< void( JQNetworkConnectPointer, JQNetworkPackageSharedPointer ) > packageReceivedCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer & ) > connectToHostErrorCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer & ) > connectToHostTimeoutCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer & ) > connectToHostSucceedCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer & ) > remoteHostClosedCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer & ) > readyToDeleteCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer & ) > packageReceivedCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer &, const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > & ) > waitReplyPackageSucceedCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer &, const std::function< void(const JQNetworkConnectPointer &connect) > & ) > waitReplyPackageFailCallback = nullptr;
 };
 
 class JQNetworkConnectPool: public QObject
@@ -73,6 +75,17 @@ private:
     void onReadyToDelete(const JQNetworkConnectPointer &connect);
 
     inline void onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package);
+
+    inline void onWaitReplySucceedPackage(
+            const JQNetworkConnectPointer &connect,
+            const JQNetworkPackageSharedPointer &package,
+            const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &callback
+        );
+
+    inline void onWaitReplyPackageFail(
+            const JQNetworkConnectPointer &connect,
+            const std::function< void(const JQNetworkConnectPointer &connect) > &callback
+        );
 
 private:
     // Settings

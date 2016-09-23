@@ -26,12 +26,14 @@ JQNetworkConnectPool::JQNetworkConnectPool(
     connectPoolSettings_( connectPoolSettings ),
     connectSettings_( connectSettings )
 {
-    connectSettings_->connectToHostErrorCallback   = [ this ](const auto &connect){ this->onConnectToHostError( connect ); };
-    connectSettings_->connectToHostTimeoutCallback = [ this ](const auto &connect){ this->onConnectToHostTimeout( connect ); };
-    connectSettings_->connectToHostSucceedCallback = [ this ](const auto &connect){ this->onConnectToHostSucceed( connect ); };
-    connectSettings_->remoteHostClosedCallback     = [ this ](const auto &connect){ this->onRemoteHostClosed( connect ); };
-    connectSettings_->readyToDeleteCallback        = [ this ](const auto &connect){ this->onReadyToDelete( connect ); };
-    connectSettings_->packageReceivedCallback      = [ this ](const auto &connect, const auto &package){ this->onPackageReceived( connect, package ); };
+    connectSettings_->connectToHostErrorCallback        = [ this ](const auto &connect){ this->onConnectToHostError( connect ); };
+    connectSettings_->connectToHostTimeoutCallback      = [ this ](const auto &connect){ this->onConnectToHostTimeout( connect ); };
+    connectSettings_->connectToHostSucceedCallback      = [ this ](const auto &connect){ this->onConnectToHostSucceed( connect ); };
+    connectSettings_->remoteHostClosedCallback          = [ this ](const auto &connect){ this->onRemoteHostClosed( connect ); };
+    connectSettings_->readyToDeleteCallback             = [ this ](const auto &connect){ this->onReadyToDelete( connect ); };
+    connectSettings_->packageReceivedCallback           = [ this ](const auto &connect, const auto &package){ this->onPackageReceived( connect, package ); };
+    connectSettings_->waitReplyPackageSucceedCallback   = [ this ](const auto &connect, const auto &package, const auto &callback){ this->onWaitReplySucceedPackage( connect, package, callback ); };
+    connectSettings_->waitReplyPackageFailCallback      = [ this ](const auto &connect, const auto &callback){ this->onWaitReplyPackageFail( connect, callback ); };
 }
 
 void JQNetworkConnectPool::createConnect(const std::function< void( std::function< void() > ) > runOnConnectThreadCallback, const QString &hostName, const quint16 &port)
@@ -189,7 +191,7 @@ JQNetworkConnectPointer JQNetworkConnectPool::getConnectBySocketDescriptor(const
 
 void JQNetworkConnectPool::onConnectToHostSucceed(const JQNetworkConnectPointer &connect)
 {
-    qDebug() << __func__ << connect.data();
+//    qDebug() << __func__ << connect.data();
 
     mutex_.lock();
 
@@ -214,7 +216,7 @@ void JQNetworkConnectPool::onConnectToHostSucceed(const JQNetworkConnectPointer 
 
 void JQNetworkConnectPool::onReadyToDelete(const JQNetworkConnectPointer &connect)
 {
-    qDebug() << __func__ << connect.data();
+//    qDebug() << __func__ << connect.data();
 
     mutex_.lock();
 
