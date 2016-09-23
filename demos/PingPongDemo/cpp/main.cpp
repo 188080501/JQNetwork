@@ -22,11 +22,10 @@ int main(int argc, char *argv[])
         // 设置接收到数据包后的回调
         server->setOnPackageReceivedCallback( [](const auto &connect, const auto &package)
         {
-            qDebug() << "Server: onPackageReceived:" << QString( package->payloadData() );
+            qDebug() << "Server: onPackageReceived:" << package->payloadData() << package->randomFlag();
 
-            // 发送数据
-            // 返回 0 表示发送失败，发送成功返回非0的一个随机标记（1~999999999）
-            connect->sendPayloadData( "Pong" );
+            // 返回一个数据，需要指定 randomFlag 以告知客户端
+            connect->replyPayloadData( "Pong", package->randomFlag() );
         } );
 
         // 初始化服务端
@@ -50,6 +49,7 @@ int main(int argc, char *argv[])
         QTimer timer;
         QObject::connect( &timer, &QTimer::timeout, [ client ]()
         {
+            // 发送数据，返回0表示失败，其余数表示发送成功
             const auto &&randomFlag = client->sendPayloadData( "127.0.0.1", 34543, "Ping", { } );
             qDebug() << "Client: send randomFlag:" << randomFlag;
         } );

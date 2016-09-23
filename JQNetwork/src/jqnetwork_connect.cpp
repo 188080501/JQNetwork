@@ -21,8 +21,6 @@
 // JQNetwork lib import
 #include <JQNetworkPackage>
 
-using namespace JQNetwork;
-
 // JQNetworkConnect
 JQNetworkConnect::JQNetworkConnect():
     tcpSocket_( new QTcpSocket )
@@ -43,6 +41,7 @@ void JQNetworkConnect::createConnect(
     JQNetworkConnectSharedPointer newConnect( new JQNetworkConnect );
     newConnect->connectSettings_ = connectSettings;
     newConnect->runOnConnectThreadCallback_ = runOnConnectThreadCallback;
+    newConnect->sendRandomFlagRotaryIndex_ = connectSettings->randomFlagRangeStart;
 
     NULLPTR_CHECK( onConnectCreatedCallback );
     onConnectCreatedCallback( newConnect );
@@ -68,6 +67,7 @@ void JQNetworkConnect::createConnect(
     JQNetworkConnectSharedPointer newConnect( new JQNetworkConnect );
     newConnect->connectSettings_ = connectSettings;
     newConnect->runOnConnectThreadCallback_ = runOnConnectThreadCallback;
+    newConnect->sendRandomFlagRotaryIndex_ = connectSettings->randomFlagRangeStart;
 
     NULLPTR_CHECK( onConnectCreatedCallback );
     onConnectCreatedCallback( newConnect );
@@ -89,13 +89,13 @@ qint32 JQNetworkConnect::sendPayloadData(const QByteArray &payloadData)
 
     mutexForSend_.lock();
 
-    ++sendRotaryIndex_;
-    if ( sendRotaryIndex_ >= 1000000000 )
+    ++sendRandomFlagRotaryIndex_;
+    if ( sendRandomFlagRotaryIndex_ >= connectSettings_->randomFlagRangeEnd )
     {
-        sendRotaryIndex_ = 1;
+        sendRandomFlagRotaryIndex_ = connectSettings_->randomFlagRangeStart;
     }
 
-    const auto currentRandomFlag = sendRotaryIndex_;
+    const auto currentRandomFlag = sendRandomFlagRotaryIndex_;
 
     mutexForSend_.unlock();
 
@@ -124,7 +124,25 @@ qint32 JQNetworkConnect::replyPayloadData(const QByteArray &payloadData, const q
 {
     NULLPTR_CHECK( runOnConnectThreadCallback_, 0 );
 
-    //...
+    if ( this->thread() == QThread::currentThread() )
+    {
+        this->sendPayloadData( payloadData, randomFlag );
+    }
+    else
+    {
+        runOnConnectThreadCallback_(
+                    [
+                        this,
+                        payloadData,
+                        randomFlag
+                    ]()
+            {
+                this->sendPayloadData( payloadData, randomFlag );
+            }
+        );
+    }
+
+    return randomFlag;
 }
 
 void JQNetworkConnect::onTcpSocketStateChanged()
@@ -134,7 +152,7 @@ void JQNetworkConnect::onTcpSocketStateChanged()
 
     const auto &&state = tcpSocket_->state();
 
-    qDebug() << __func__ << this << ": state:" << state;
+    qDebug() << "onTcpSocketStateChanged:" << this << ": state:" << state;
 
     switch ( state )
     {
@@ -180,7 +198,7 @@ void JQNetworkConnect::onTcpSocketStateChanged()
                 }
                 default:
                 {
-                    qDebug() << __func__ << ": unknow error:" << tcpSocket_->error();
+                    qDebug() << "onTcpSocketStateChanged: unknow error:" << tcpSocket_->error();
                     break;
                 }
             }
@@ -198,7 +216,7 @@ void JQNetworkConnect::onTcpSocketConnectToHostTimeOut()
     NULLPTR_CHECK( timerForConnectToHostTimeOut_ );
     NULLPTR_CHECK( tcpSocket_ );
 
-    qDebug() << __func__;
+//    qDebug() << __func__;
 
     NULLPTR_CHECK( connectSettings_->connectToHostTimeoutCallback );
     connectSettings_->connectToHostTimeoutCallback( this );
@@ -213,7 +231,7 @@ void JQNetworkConnect::onTcpSocketReadyRead()
 
     const auto &&data = tcpSocket_->readAll();
 
-    qDebug() << __func__ << ": size:" << data.size() << this << QThread::currentThread();
+//    qDebug() << __func__ << ": size:" << data.size() << this << QThread::currentThread();
 
     if ( tcpSocketBuffer_.isEmpty() )
     {
@@ -272,7 +290,7 @@ void JQNetworkConnect::onTcpSocketBytesWritten(const qint64 &bytes)
     waitForSendBytes_ -= bytes;
     alreadyWrittenBytes_ += bytes;
 
-    qDebug() << __func__ << ":" << waitForSendBytes_ << alreadyWrittenBytes_;
+//    qDebug() << __func__ << ":" << waitForSendBytes_ << alreadyWrittenBytes_;
 }
 
 void JQNetworkConnect::onReadyToDelete()

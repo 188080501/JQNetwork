@@ -16,9 +16,6 @@
 // JQNetwork lib import
 #include <JQNetworkFoundation>
 
-namespace JQNetwork
-{ }
-
 class JQNetworkProcessor: public QObject
 {
     Q_OBJECT

@@ -24,8 +24,6 @@
         return false;                           \
     }
 
-using namespace JQNetwork;
-
 qint32 JQNetworkPackage::checkDataIsReadyReceive(const QByteArray &rawData)
 {
     /*

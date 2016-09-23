@@ -16,8 +16,6 @@
 // JQNetwork lib import
 #include <JQNetworkFoundation>
 
-namespace JQNetwork
-{ }
 
 struct JQNetworkConnectSettings
 {
@@ -35,6 +33,9 @@ struct JQNetworkConnectSettings
     qint64 maximumReceivePackageByteCount = -1;
     qint64 maximumReceiveSpeed = -1;
 
+    qint32 randomFlagRangeStart = -1;
+    qint32 randomFlagRangeEnd = -1;
+
     int maximumConnectToHostWaitTime = 15 * 1000;
     int maximumSendPackageWaitTime = 30 * 1000;
     int maximumReceivePackageWaitTime = 30 * 1000;
@@ -47,6 +48,7 @@ struct JQNetworkConnectSettings
     std::function< void( JQNetworkConnectPointer ) > remoteHostClosedCallback = nullptr;
     std::function< void( JQNetworkConnectPointer ) > readyToDeleteCallback = nullptr;
     std::function< void( JQNetworkConnectPointer, JQNetworkPackageSharedPointer ) > packageReceivedCallback = nullptr;
+//    std::function< void( JQNetworkConnectPointer ) >
 };
 
 class JQNetworkConnect: public QObject
@@ -113,7 +115,7 @@ private:
 
     // Package
     QMutex mutexForSend_;
-    qint32 sendRotaryIndex_ = 0;
+    qint32 sendRandomFlagRotaryIndex_ = 0;
     QMap< qint32, JQNetworkPackageSharedPointer > sendPackagePool_; // randomFlag -> package
     QMap< qint32, JQNetworkPackageSharedPointer > receivePackagePool_; // randomFlag -> package
 

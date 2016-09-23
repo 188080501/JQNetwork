@@ -16,9 +16,6 @@
 // JQNetwork lib import
 #include <JQNetworkFoundation>
 
-namespace JQNetwork
-{ }
-
 class JQNetworkLan: public QObject
 {
     Q_OBJECT

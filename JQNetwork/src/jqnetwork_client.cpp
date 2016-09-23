@@ -21,7 +21,6 @@
 #include <JQNetworkConnect>
 #include <JQNetworkPackage>
 
-using namespace JQNetwork;
 QWeakPointer< JQNetworkThreadPool > JQNetworkClient::globalSocketThreadPool_;
 QWeakPointer< JQNetworkThreadPool > JQNetworkClient::globalProcessorThreadPool_;
 
@@ -81,6 +80,9 @@ bool JQNetworkClient::begin()
                     connectPoolSettings->readyToDeleteCallback        = [ this ](const auto &connect){ this->onReadyToDelete( connect ); };
                     connectPoolSettings->packageReceivedCallback    = [ this ](const auto &connect, const auto &package){ this->onPackageReceived( connect, package ); };
 
+                    connectSettings->randomFlagRangeStart = 1;
+                    connectSettings->randomFlagRangeEnd = 999999999;
+
                     connectPools_[ QThread::currentThread() ] = JQNetworkConnectPoolSharedPointer(
                                 new JQNetworkConnectPool(
                                     connectPoolSettings,
@@ -125,7 +127,7 @@ int JQNetworkClient::sendPayloadData(
         const QString &hostName,
         const quint16 &port,
         const QByteArray &payloadData,
-        const JQNetworkClientSendCallbackPackage &callbackPackagea
+        const JQNetworkOnReceivedCallbackPackage &callbackPackagea
     )
 {
     for ( const auto &connectPool: this->connectPools_ )
@@ -137,8 +139,6 @@ int JQNetworkClient::sendPayloadData(
         auto randomFlag = connect->sendPayloadData( payloadData );
 
         if ( !randomFlag ) { return randomFlag; }
-
-        sendCallbackPackages_[ randomFlag ] = callbackPackagea;
 
         return randomFlag;
     }

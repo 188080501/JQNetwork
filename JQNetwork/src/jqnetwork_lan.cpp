@@ -14,5 +14,3 @@
 
 // Qt lib import
 #include <QDebug>
-
-using namespace JQNetwork;

@@ -16,21 +16,12 @@
 // JQNetwork lib import
 #include <JQNetworkFoundation>
 
-namespace JQNetwork
-{ }
-
 struct JQNetworkClientSettings
 {
     int globalSocketThreadCount = 2;
     int globalProcessorThreadCount = 1;
 
     std::function< void( JQNetworkConnectPointer, const QString &hostName, const quint16 &port ) > connectToHostSucceedCallback = nullptr;
-};
-
-struct JQNetworkClientSendCallbackPackage
-{
-    std::function< void(const JQNetworkConnectPointer &connect) > succeedCallback;
-    std::function< void(const JQNetworkConnectPointer &connect) > failCallback;
 };
 
 class JQNetworkClient: public QObject
@@ -62,7 +53,7 @@ public:
             const QString &hostName,
             const quint16 &port,
             const QByteArray &payloadData,
-            const JQNetworkClientSendCallbackPackage &callbackPackage
+            const JQNetworkOnReceivedCallbackPackage &callbackPackage
         );
 
 private:
@@ -89,9 +80,6 @@ private:
     JQNetworkClientSettingsSharedPointer clientSettings_;
     JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings_;
     JQNetworkConnectSettingsSharedPointer connectSettings_;
-
-    // Callbacks
-    QMap< int, JQNetworkClientSendCallbackPackage > sendCallbackPackages_;
 
     // Client
     QMap< QThread *, JQNetworkConnectPoolSharedPointer > connectPools_;

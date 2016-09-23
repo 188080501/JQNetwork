@@ -17,10 +17,7 @@
 #include <QThreadPool>
 #include <QSemaphore>
 #include <QVector>
-
 #include <QtConcurrent>
-
-using namespace JQNetwork;
 
 // JQNetworkThreadPoolHelper
 void JQNetworkThreadPoolHelper::run(const std::function< void() > &callback)

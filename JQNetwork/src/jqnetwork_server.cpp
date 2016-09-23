@@ -21,8 +21,6 @@
 #include <JQNetworkConnectPool>
 #include <JQNetworkConnect>
 
-using namespace JQNetwork;
-
 // JQNetworkServerHelper
 class JQNetworkServerHelper: public QTcpServer
 {
@@ -156,7 +154,10 @@ bool JQNetworkServer::begin()
                     connectPoolSettings->connectToHostSucceedCallback = [ this ](const auto &connect){ this->onConnectToHostSucceed( connect ); };
                     connectPoolSettings->remoteHostClosedCallback     = [ this ](const auto &connect){ this->onRemoteHostClosed( connect ); };
                     connectPoolSettings->readyToDeleteCallback        = [ this ](const auto &connect){ this->onReadyToDelete( connect ); };
-                    connectPoolSettings->packageReceivedCallback    = [ this ](const auto &connect, const auto &package){ this->onPackageReceived( connect, package ); };
+                    connectPoolSettings->packageReceivedCallback      = [ this ](const auto &connect, const auto &package){ this->onPackageReceived( connect, package ); };
+
+                    connectSettings->randomFlagRangeStart = 1000000000;
+                    connectSettings->randomFlagRangeEnd = 1999999999;
 
                     connectPools_[ QThread::currentThread() ] = JQNetworkConnectPoolSharedPointer(
                                 new JQNetworkConnectPool(

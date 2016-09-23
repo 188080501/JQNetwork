@@ -72,8 +72,11 @@ typedef QSharedPointer< JQNetworkConnectPoolSettings > JQNetworkConnectPoolSetti
 typedef QSharedPointer< JQNetworkServerSettings > JQNetworkServerSettingsSharedPointer;
 typedef QSharedPointer< JQNetworkClientSettings > JQNetworkClientSettingsSharedPointer;
 
-namespace JQNetwork
-{ }
+struct JQNetworkOnReceivedCallbackPackage
+{
+    std::function< void(const JQNetworkConnectPointer &connect) > succeedCallback;
+    std::function< void(const JQNetworkConnectPointer &connect) > failCallback;
+};
 
 class JQNetworkThreadPoolHelper: public QObject
 {

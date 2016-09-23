@@ -16,9 +16,6 @@
 // JQNetwork lib import
 #include <JQNetworkFoundation>
 
-namespace JQNetwork
-{ }
-
 #include "jqnetwork_encrypt.inc"
 
 #endif//JQNETWORK_INCLUDE_JQNETWORK_ENCRYPT_H

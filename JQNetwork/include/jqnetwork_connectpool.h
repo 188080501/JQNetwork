@@ -16,9 +16,6 @@
 // JQNetwork lib import
 #include <JQNetworkFoundation>
 
-namespace JQNetwork
-{ }
-
 struct JQNetworkConnectPoolSettings
 {
     bool autoReconnect = true;

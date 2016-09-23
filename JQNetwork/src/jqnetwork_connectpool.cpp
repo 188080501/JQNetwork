@@ -19,8 +19,6 @@
 // JQNetwork lib import
 #include <JQNetworkConnect>
 
-using namespace JQNetwork;
-
 JQNetworkConnectPool::JQNetworkConnectPool(
         JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings,
         JQNetworkConnectSettingsSharedPointer connectSettings

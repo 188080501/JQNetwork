@@ -16,9 +16,6 @@
 // JQNetwork lib import
 #include <JQNetworkFoundation>
 
-namespace JQNetwork
-{ }
-
 class JQNetworkForwarf: public QObject
 {
     Q_OBJECT

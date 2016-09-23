@@ -16,9 +16,6 @@
 // JQNetwork lib import
 #include <JQNetworkFoundation>
 
-namespace JQNetwork
-{ }
-
 struct JQNetworkServerSettings
 {
     int globalServerThreadCount = 1;
