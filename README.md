@@ -32,11 +32,7 @@ GitHub地址：https://github.com/188080501/JQNetwork
 或者直接在GitHub上提交问题：
 https://github.com/188080501/JQNetwork/issues
 
-## 功能介绍
-
-JQNetwork，从TCP开始封装的网络库，目的是为了让Qt开发者更加方便的开发出更加高效、稳定的C/S架构网络程序。
-
-#### 本网络库特性：
+## 功能
 
 功能|加入版本
 ---|---
