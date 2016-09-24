@@ -14,6 +14,6 @@ TEMPLATE = subdirs
 
 CONFIG += ordered
 
-SUBDIRS += tester
 #SUBDIRS += builder
+SUBDIRS += tester
 SUBDIRS += demos

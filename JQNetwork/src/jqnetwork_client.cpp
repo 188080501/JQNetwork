@@ -15,6 +15,7 @@
 // Qt lib import
 #include <QDebug>
 #include <QThread>
+#include <QSemaphore>
 
 // JQNetwork lib import
 #include <JQNetworkConnectPool>
@@ -52,6 +53,16 @@ JQNetworkClient::JQNetworkClient(
         processorThreadPool_ = QSharedPointer< JQNetworkThreadPool >( new JQNetworkThreadPool( clientSettings->globalProcessorThreadCount ) );
         globalProcessorThreadPool_ = processorThreadPool_.toWeakRef();
     }
+}
+
+JQNetworkClient::~JQNetworkClient()
+{
+    socketThreadPool_->waitRunEach(
+                [ & ]()
+                {
+                    connectPools_[ QThread::currentThread() ].clear();
+                }
+    );
 }
 
 JQNetworkClientSharedPointer JQNetworkClient::createClient()
@@ -125,6 +136,29 @@ void JQNetworkClient::createConnect(const QString &hostName, const quint16 &port
     );
 }
 
+bool JQNetworkClient::waitForCreateConnect(const QString &hostName, const quint16 &port, const int &timeout)
+{
+    QSharedPointer< QSemaphore > semaphore( new QSemaphore );
+    const auto &&hostKey = QString( "%1:%2" ).arg( hostName, QString::number( port ) );
+
+    mutex_.lock();
+
+    waitConnectSucceedSemaphore_[ hostKey ] = semaphore;
+    this->createConnect( hostName, port );
+
+    mutex_.unlock();
+
+    const auto &&acquireSucceed = semaphore->tryAcquire( 1, timeout );
+
+    mutex_.lock();
+
+    waitConnectSucceedSemaphore_.remove( hostKey );
+
+    mutex_.unlock();
+
+    return acquireSucceed;
+}
+
 int JQNetworkClient::sendPayloadData(
         const QString &hostName,
         const quint16 &port,
@@ -167,8 +201,6 @@ void JQNetworkClient::onConnectToHostTimeout(const JQNetworkConnectPointer &)
 
 void JQNetworkClient::onConnectToHostSucceed(const JQNetworkConnectPointer &connect)
 {
-    if ( !clientSettings_->connectToHostSucceedCallback ) { return; }
-
     processorThreadPool_->run(
                 [
                     this,
@@ -180,6 +212,20 @@ void JQNetworkClient::onConnectToHostSucceed(const JQNetworkConnectPointer &conn
                         auto reply = connectPool->getHostAndPortByConnect( connect );
 
                         if ( reply.first.isEmpty() || !reply.second ) { continue; }
+
+                        const auto &&hostKey = QString( "%1:%2" ).arg( reply.first, QString::number( reply.second ) );
+
+                        mutex_.lock();
+
+                        auto it = waitConnectSucceedSemaphore_.find( hostKey );
+                        if ( it != waitConnectSucceedSemaphore_.end() )
+                        {
+                            ( *it )->release( 1 );
+                        }
+
+                        mutex_.unlock();
+
+                        if ( !clientSettings_->connectToHostSucceedCallback ) { break; }
 
                         this->clientSettings_->connectToHostSucceedCallback( connect, reply.first, reply.second );
 

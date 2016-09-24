@@ -16,7 +16,7 @@
 #include <JQNetworkClient>
 #include <JQNetworkForwarf>
 
-void JQNetworkTest::jqNetworkThreadPoolTest()
+void JQNetworkBenchmark::jqNetworkThreadPoolTest()
 {
     QMutex mutex;
     QMap< QThread *, int > flag;
@@ -57,13 +57,11 @@ void JQNetworkTest::jqNetworkThreadPoolTest()
 
         QThread::msleep( 1000 );
 
-        QCOMPARE( *( flags.begin() + 0 ), 33334 );
-        QCOMPARE( *( flags.begin() + 1 ), 33333 );
-        QCOMPARE( *( flags.begin() + 2 ), 33333 );
+        QCOMPARE( ( *( flags.begin() + 0 ) + *( flags.begin() + 1 ) + *( flags.begin() + 2 ) ), 100000 );
     }
 }
 
-void JQNetworkTest::jqNetworkThreadPoolBenchmark()
+void JQNetworkBenchmark::jqNetworkThreadPoolBenchmark()
 {
     int number = 0;
 
@@ -81,7 +79,7 @@ void JQNetworkTest::jqNetworkThreadPoolBenchmark()
     QCOMPARE( ( number != 10000000 ), true );
 }
 
-void JQNetworkTest::jqNetworkThreadPoolBenchmark2()
+void JQNetworkBenchmark::jqNetworkThreadPoolBenchmark2()
 {
     int number = 0;
 
@@ -99,7 +97,7 @@ void JQNetworkTest::jqNetworkThreadPoolBenchmark2()
     QCOMPARE( number, 90000 );
 }
 
-void JQNetworkTest::jqNetworkServerTest()
+void JQNetworkBenchmark::jqNetworkServerTest()
 {
     auto serverSettings = JQNetworkServerSettingsSharedPointer( new JQNetworkServerSettings );
     auto connectPoolSettings = JQNetworkConnectPoolSettingsSharedPointer( new JQNetworkConnectPoolSettings );
@@ -139,14 +137,14 @@ void JQNetworkTest::jqNetworkServerTest()
     QCOMPARE( succeedCount, 1 );
 }
 
-void JQNetworkTest::jqNetworkClientTest()
+void JQNetworkBenchmark::jqNetworkClientTest()
 {
     auto clientSettings = JQNetworkClientSettingsSharedPointer( new JQNetworkClientSettings );
     auto connectPoolSettings = JQNetworkConnectPoolSettingsSharedPointer( new JQNetworkConnectPoolSettings );
     auto connectSettings = JQNetworkConnectSettingsSharedPointer( new JQNetworkConnectSettings );
 }
 
-void JQNetworkTest::jqNetworkConnectTest()
+void JQNetworkBenchmark::jqNetworkConnectTest()
 {
     auto connectSettings = JQNetworkConnectSettingsSharedPointer( new JQNetworkConnectSettings );
 
@@ -236,7 +234,7 @@ void JQNetworkTest::jqNetworkConnectTest()
     QCOMPARE( flag5, true );
 }
 
-void JQNetworkTest::jeNetworkPackageTest()
+void JQNetworkBenchmark::jeNetworkPackageTest()
 {
     {
         QCOMPARE( JQNetworkPackage::headSize(), 24 );

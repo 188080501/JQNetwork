@@ -40,7 +40,7 @@ public:
             const JQNetworkConnectSettingsSharedPointer connectSettings
         );
 
-    ~JQNetworkClient() = default;
+    ~JQNetworkClient();
 
     JQNetworkClient(const JQNetworkClient &) = delete;
 
@@ -53,6 +53,8 @@ public:
     bool begin();
 
     void createConnect(const QString &hostName, const quint16 &port);
+
+    bool waitForCreateConnect(const QString &hostName, const quint16 &port, const int &timeout = 30 * 1000);
 
     int sendPayloadData(
             const QString &hostName,
@@ -99,6 +101,10 @@ private:
 
     // Client
     QMap< QThread *, JQNetworkConnectPoolSharedPointer > connectPools_;
+
+    // Other
+    QMutex mutex_;
+    QMap< QString, QSharedPointer< QSemaphore > > waitConnectSucceedSemaphore_; // "127.0.0.1:34543" -> Connect
 };
 
 #include "jqnetwork_client.inc"

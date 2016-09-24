@@ -41,7 +41,7 @@ public:
             JQNetworkConnectSettingsSharedPointer connectSettings
         );
 
-    ~JQNetworkConnectPool() = default;
+    ~JQNetworkConnectPool();
 
     JQNetworkConnectPool(const JQNetworkConnectPool &) = delete;
 

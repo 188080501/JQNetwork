@@ -36,6 +36,26 @@ JQNetworkConnectPool::JQNetworkConnectPool(
     connectSettings_->waitReplyPackageFailCallback      = [ this ](const auto &connect, const auto &callback){ this->onWaitReplyPackageFail( connect, callback ); };
 }
 
+JQNetworkConnectPool::~JQNetworkConnectPool()
+{
+    QVector< JQNetworkConnectSharedPointer > waitForCloseConnects;
+
+    for ( const auto &connect: connectForConnecting_ )
+    {
+        waitForCloseConnects.push_back( connect );
+    }
+
+    for ( const auto &connect: connectForConnected_ )
+    {
+        waitForCloseConnects.push_back( connect );
+    }
+
+    for ( const auto &connect: waitForCloseConnects )
+    {
+        connect->close();
+    }
+}
+
 void JQNetworkConnectPool::createConnect(const std::function< void( std::function< void() > ) > runOnConnectThreadCallback, const QString &hostName, const quint16 &port)
 {
     auto connectKey = QString( "%1:%2" ).arg( hostName ).arg( port );
@@ -216,7 +236,7 @@ void JQNetworkConnectPool::onConnectToHostSucceed(const JQNetworkConnectPointer 
 
 void JQNetworkConnectPool::onReadyToDelete(const JQNetworkConnectPointer &connect)
 {
-//    qDebug() << __func__ << connect.data();
+//    qDebug() << "onReadyToDelete:" << connect.data();
 
     mutex_.lock();
 

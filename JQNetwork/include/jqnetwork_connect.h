@@ -83,6 +83,8 @@ public:
 
     inline bool isAbandonTcpSocket() const;
 
+    void close();
+
     qint32 sendPayloadData(
             const QByteArray &payloadData,
             const JQNetworkOnReceivedCallbackPackage &callbackPackage = JQNetworkOnReceivedCallbackPackage()

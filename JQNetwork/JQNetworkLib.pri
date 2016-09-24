@@ -9,3 +9,18 @@
 #
 #   GitHub: https://github.com/188080501/
 #
+
+QT *= core network concurrent
+
+CONFIG *= c++11
+CONFIG *= c++14
+
+INCLUDEPATH *= \
+    $$PWD/include/
+
+macx {
+
+    exists( $$OUT_PWD/../../builder/JQNetworkLibBuilder/libJQNetwork.a ) {
+        LIBS += $$OUT_PWD/../../builder/JQNetworkLibBuilder/libJQNetwork.a
+    }
+}

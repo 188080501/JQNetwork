@@ -1,37 +1,37 @@
-﻿#ifndef JQNetworkTest_H
-#define JQNetworkTest_H
+﻿#ifndef __CPP_JQNETWORK_TEST_H__
+#define __CPP_JQNETWORK_TEST_H__
 
 // Qt lib import
 #include <QObject>
 
-class JQNetworkTest: public QObject
+class JQNetworkBenchmark: public QObject
 {
      Q_OBJECT
 
 public:
-    JQNetworkTest() = default;
+    JQNetworkBenchmark() = default;
 
-    ~JQNetworkTest() = default;
+    ~JQNetworkBenchmark() = default;
 
 private slots:
     void jqNetworkThreadPoolTest();
 
-public slots:
+private slots:
     void jqNetworkThreadPoolBenchmark();
 
     void jqNetworkThreadPoolBenchmark2();
 
-public slots:
+private slots:
     void jqNetworkServerTest();
 
-public slots:
+private slots:
     void jqNetworkClientTest();
 
-public slots:
+private slots:
     void jqNetworkConnectTest();
 
-public slots:
+private slots:
     void jeNetworkPackageTest();
 };
 
-#endif // JQNetworkTest_H
+#endif//__CPP_JQNETWORK_TEST_H__

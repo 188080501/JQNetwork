@@ -83,6 +83,14 @@ void JQNetworkConnect::createConnect(
     newConnect->tcpSocket_->setSocketDescriptor( socketDescriptor );
 }
 
+void JQNetworkConnect::close()
+{
+    if ( isAbandonTcpSocket_ ) { return; }
+    NULLPTR_CHECK( tcpSocket_ );
+
+    this->onReadyToDelete();
+}
+
 qint32 JQNetworkConnect::sendPayloadData(
         const QByteArray &payloadData,
         const JQNetworkOnReceivedCallbackPackage &callbackPackage
