@@ -16,6 +16,21 @@
 // JQNetwork lib import
 #include "jqnetwork_server.h"
 
+inline JQNetworkServerSettingsSharedPointer JQNetworkServer::serverSettings()
+{
+    return serverSettings_;
+}
+
+inline JQNetworkConnectPoolSettingsSharedPointer JQNetworkServer::connectPoolSettings()
+{
+    return connectPoolSettings_;
+}
+
+inline JQNetworkConnectSettingsSharedPointer JQNetworkServer::connectSettings()
+{
+    return connectSettings_;
+}
+
 inline void JQNetworkServer::setOnPackageReceivedCallback(
         const std::function<void (QPointer<JQNetworkConnect>, JQNetworkPackageSharedPointer)> &callback
     )

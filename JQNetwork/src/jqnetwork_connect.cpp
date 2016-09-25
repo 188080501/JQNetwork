@@ -47,13 +47,7 @@ void JQNetworkConnect::createConnect(
     NULLPTR_CHECK( onConnectCreatedCallback );
     onConnectCreatedCallback( newConnect );
 
-    if ( newConnect->connectSettings_->maximumConnectToHostWaitTime != -1 )
-    {
-        newConnect->timerForConnectToHostTimeOut_ = QSharedPointer< QTimer >( new QTimer );
-        connect( newConnect->timerForConnectToHostTimeOut_.data(), &QTimer::timeout, newConnect.data(), &JQNetworkConnect::onTcpSocketConnectToHostTimeOut, Qt::DirectConnection );
-        newConnect->timerForConnectToHostTimeOut_->setSingleShot( true );
-        newConnect->timerForConnectToHostTimeOut_->start( newConnect->connectSettings_->maximumConnectToHostWaitTime );
-    }
+    newConnect->startTimerForConnectToHostTimeOut();
 
     newConnect->tcpSocket_->connectToHost( hostName, port );
 }
@@ -73,13 +67,7 @@ void JQNetworkConnect::createConnect(
     NULLPTR_CHECK( onConnectCreatedCallback );
     onConnectCreatedCallback( newConnect );
 
-    if ( newConnect->connectSettings_->maximumConnectToHostWaitTime != -1 )
-    {
-        newConnect->timerForConnectToHostTimeOut_ = QSharedPointer< QTimer >( new QTimer );
-        connect( newConnect->timerForConnectToHostTimeOut_.data(), &QTimer::timeout, newConnect.data(), &JQNetworkConnect::onTcpSocketConnectToHostTimeOut, Qt::DirectConnection );
-        newConnect->timerForConnectToHostTimeOut_->setSingleShot( true );
-        newConnect->timerForConnectToHostTimeOut_->start( newConnect->connectSettings_->maximumConnectToHostWaitTime );
-    }
+    newConnect->startTimerForConnectToHostTimeOut();
 
     newConnect->tcpSocket_->setSocketDescriptor( socketDescriptor );
 }
@@ -231,20 +219,6 @@ void JQNetworkConnect::onTcpSocketStateChanged()
     }
 }
 
-void JQNetworkConnect::onTcpSocketConnectToHostTimeOut()
-{
-    if ( isAbandonTcpSocket_ ) { return; }
-    NULLPTR_CHECK( timerForConnectToHostTimeOut_ );
-    NULLPTR_CHECK( tcpSocket_ );
-
-//    qDebug() << __func__;
-
-    NULLPTR_CHECK( connectSettings_->connectToHostTimeoutCallback );
-    connectSettings_->connectToHostTimeoutCallback( this );
-
-    this->onReadyToDelete();
-}
-
 void JQNetworkConnect::onTcpSocketReadyRead()
 {
     if ( isAbandonTcpSocket_ ) { return; }
@@ -302,9 +276,88 @@ void JQNetworkConnect::onTcpSocketReadyRead()
     }
 }
 
+void JQNetworkConnect::onTcpSocketConnectToHostTimeOut()
+{
+    if ( isAbandonTcpSocket_ ) { return; }
+    NULLPTR_CHECK( timerForConnectToHostTimeOut_ );
+    NULLPTR_CHECK( tcpSocket_ );
+
+    NULLPTR_CHECK( connectSettings_->connectToHostTimeoutCallback );
+    connectSettings_->connectToHostTimeoutCallback( this );
+
+    this->onReadyToDelete();
+}
+
 void JQNetworkConnect::onSendPackageCheck()
 {
-    //...
+//    qDebug() << "onSendPackageCheck:" << QThread::currentThread() << this->thread();
+
+    if ( onReceivedCallbacks_.isEmpty() )
+    {
+        timerForSendPackageCheck_.clear();
+    }
+    else
+    {
+        const auto &&currentTime = QDateTime::currentMSecsSinceEpoch();
+
+        auto it = onReceivedCallbacks_.begin();
+
+        while ( ( it != onReceivedCallbacks_.end() ) &&
+                ( ( currentTime - it->sendTime ) > connectSettings_->maximumReceivePackageWaitTime ) )
+        {
+            if ( it->failCallback )
+            {
+                NULLPTR_CHECK( connectSettings_->waitReplyPackageFailCallback );
+                connectSettings_->waitReplyPackageFailCallback( this, it->failCallback );
+            }
+
+            onReceivedCallbacks_.erase( it );
+            it = onReceivedCallbacks_.begin();
+        }
+
+        if ( !onReceivedCallbacks_.isEmpty() )
+        {
+            timerForSendPackageCheck_->start();
+        }
+    }
+}
+
+void JQNetworkConnect::startTimerForConnectToHostTimeOut()
+{
+    if ( timerForConnectToHostTimeOut_ )
+    {
+        qDebug() << "startTimerForConnectToHostTimeOut: error, timer already started";
+        return;
+    }
+
+    if ( connectSettings_->maximumConnectToHostWaitTime == -1 ) { return; }
+
+    timerForConnectToHostTimeOut_.reset( new QTimer );
+    connect( timerForConnectToHostTimeOut_.data(), &QTimer::timeout,
+             this, &JQNetworkConnect::onTcpSocketConnectToHostTimeOut,
+             Qt::DirectConnection );
+
+    timerForConnectToHostTimeOut_->setSingleShot( true );
+    timerForConnectToHostTimeOut_->start( connectSettings_->maximumConnectToHostWaitTime );
+}
+
+void JQNetworkConnect::startTimerForSendPackageCheck()
+{
+    if ( timerForSendPackageCheck_ )
+    {
+        qDebug() << "startTimerForSendPackageCheck: error, timer already started";
+        return;
+    }
+
+    if ( connectSettings_->maximumSendPackageWaitTime == -1 ) { return; }
+
+    timerForSendPackageCheck_.reset( new QTimer );
+    connect( timerForSendPackageCheck_.data(), &QTimer::timeout,
+             this, &JQNetworkConnect::onSendPackageCheck,
+             Qt::DirectConnection );
+
+    timerForSendPackageCheck_->setSingleShot( true );
+    timerForSendPackageCheck_->start( 1000 );
 }
 
 void JQNetworkConnect::onPackageReceived(const JQNetworkPackageSharedPointer &package)
@@ -373,7 +426,6 @@ void JQNetworkConnect::reaySendPayloadData(
 
     waitForSendBytes_ += buffer.size();
     tcpSocket_->write( buffer );
-//    qDebug() << "write:" << tcpSocket_->write( buffer );
 
     if ( succeedCallback || failCallback )
     {
@@ -383,5 +435,10 @@ void JQNetworkConnect::reaySendPayloadData(
             succeedCallback,
             failCallback
         };
+
+        if ( !timerForSendPackageCheck_ )
+        {
+            this->startTimerForSendPackageCheck();
+        }
     }
 }

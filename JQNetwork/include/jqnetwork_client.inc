@@ -16,6 +16,21 @@
 // JQNetwork lib import
 #include "jqnetwork_client.h"
 
+inline JQNetworkClientSettingsSharedPointer JQNetworkClient::clientSettings()
+{
+    return clientSettings_;
+}
+
+inline JQNetworkConnectPoolSettingsSharedPointer JQNetworkClient::connectPoolSettings()
+{
+    return connectPoolSettings_;
+}
+
+inline JQNetworkConnectSettingsSharedPointer JQNetworkClient::connectSettings()
+{
+    return connectSettings_;
+}
+
 inline void JQNetworkClient::setOnConnectToHostSucceedCallback(
         const std::function< void( JQNetworkConnectPointer, const QString &hostName, const quint16 &port ) > &callback
     )

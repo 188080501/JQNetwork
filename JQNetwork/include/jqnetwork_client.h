@@ -48,6 +48,12 @@ public:
 
     static JQNetworkClientSharedPointer createClient();
 
+    inline JQNetworkClientSettingsSharedPointer clientSettings();
+
+    inline JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings();
+
+    inline JQNetworkConnectSettingsSharedPointer connectSettings();
+
     inline void setOnConnectToHostSucceedCallback(
             const std::function< void( JQNetworkConnectPointer, const QString &hostName, const quint16 &port ) > &callback
         );
@@ -57,6 +63,11 @@ public:
     void createConnect(const QString &hostName, const quint16 &port);
 
     bool waitForCreateConnect(const QString &hostName, const quint16 &port, const int &timeout = 30 * 1000);
+
+    bool getHostAndPortByConnect(
+            const JQNetworkConnectPointer &connect,
+            const std::function< void(const QString &hostName, const quint16 &port) > &callback
+        );
 
     int sendPayloadData(
             const QString &hostName,

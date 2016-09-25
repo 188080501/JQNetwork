@@ -4,6 +4,7 @@
 #include <QtTest>
 #include <QtConcurrent>
 #include <QTcpSocket>
+#include <QTcpServer>
 
 // JQNetwork lib import
 #include <JQNetworkFoundation>
@@ -95,53 +96,6 @@ void JQNetworkBenchmark::jqNetworkThreadPoolBenchmark2()
 
     qDebug() << number;
     QCOMPARE( number, 90000 );
-}
-
-void JQNetworkBenchmark::jqNetworkServerTest()
-{
-    auto serverSettings = JQNetworkServerSettingsSharedPointer( new JQNetworkServerSettings );
-    auto connectPoolSettings = JQNetworkConnectPoolSettingsSharedPointer( new JQNetworkConnectPoolSettings );
-    auto connectSettings = JQNetworkConnectSettingsSharedPointer( new JQNetworkConnectSettings );
-
-    {
-        JQNetworkServer server( serverSettings, connectPoolSettings, connectSettings );
-    }
-
-    serverSettings->listenPort = 42821;
-
-    JQNetworkServer server( serverSettings, connectPoolSettings, connectSettings );
-
-    QCOMPARE( server.begin(), true );
-
-    int succeedCount = 0;
-
-    QtConcurrent::run(
-                [
-                    &succeedCount
-                ]()
-                {
-                    QTcpSocket socket;
-                    socket.connectToHost( "127.0.0.1", 42821 );
-                    succeedCount += socket.waitForConnected();
-
-                    for ( auto count = 0; count < 3; ++count )
-                    {
-                        QThread::msleep( 100 );
-                        socket.write( "Hello,JQNetwork!" );
-                        socket.waitForBytesWritten();
-                    }
-                }
-    );
-
-    QThread::sleep( 1 );
-    QCOMPARE( succeedCount, 1 );
-}
-
-void JQNetworkBenchmark::jqNetworkClientTest()
-{
-    auto clientSettings = JQNetworkClientSettingsSharedPointer( new JQNetworkClientSettings );
-    auto connectPoolSettings = JQNetworkConnectPoolSettingsSharedPointer( new JQNetworkConnectPoolSettings );
-    auto connectSettings = JQNetworkConnectSettingsSharedPointer( new JQNetworkConnectSettings );
 }
 
 void JQNetworkBenchmark::jqNetworkConnectTest()
@@ -288,5 +242,76 @@ void JQNetworkBenchmark::jeNetworkPackageTest()
             QCOMPARE( package1->isAbandonPackage(), true );
             QCOMPARE( package3->isAbandonPackage(), true );
         }
+    }
+}
+
+void JQNetworkBenchmark::jqNetworkServerTest()
+{
+    auto serverSettings = JQNetworkServerSettingsSharedPointer( new JQNetworkServerSettings );
+    auto connectPoolSettings = JQNetworkConnectPoolSettingsSharedPointer( new JQNetworkConnectPoolSettings );
+    auto connectSettings = JQNetworkConnectSettingsSharedPointer( new JQNetworkConnectSettings );
+
+    {
+        JQNetworkServer server( serverSettings, connectPoolSettings, connectSettings );
+    }
+
+    serverSettings->listenPort = 42821;
+
+    JQNetworkServer server( serverSettings, connectPoolSettings, connectSettings );
+
+    QCOMPARE( server.begin(), true );
+
+    int succeedCount = 0;
+
+    QtConcurrent::run(
+                [
+                    &succeedCount
+                ]()
+                {
+                    QTcpSocket socket;
+                    socket.connectToHost( "127.0.0.1", 42821 );
+                    succeedCount += socket.waitForConnected();
+
+                    for ( auto count = 0; count < 3; ++count )
+                    {
+                        QThread::msleep( 100 );
+                        socket.write( "Hello,JQNetwork!" );
+                        socket.waitForBytesWritten();
+                    }
+                }
+    );
+
+    QThread::sleep( 1 );
+    QCOMPARE( succeedCount, 1 );
+}
+
+void JQNetworkBenchmark::jqNetworkClientTest()
+{
+    bool flag1 = false;
+
+    {
+        QTcpServer tcpServer;
+        QCOMPARE( tcpServer.listen( QHostAddress::Any, 12345 ), true );
+
+        JQNetworkClientSettingsSharedPointer clientSettings( new JQNetworkClientSettings );
+        JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings( new JQNetworkConnectPoolSettings );
+        JQNetworkConnectSettingsSharedPointer connectSettings( new JQNetworkConnectSettings );
+
+        clientSettings->readyToDeleteCallback = [](){};
+        connectSettings->maximumReceivePackageWaitTime = 500;
+
+        JQNetworkClient client( clientSettings, connectPoolSettings, connectSettings );
+        client.begin();
+
+        QCOMPARE( client.waitForCreateConnect( "127.0.0.1", 12344, 1000 ), false );
+        QCOMPARE( client.waitForCreateConnect( "127.0.0.1", 12345 ), true );
+
+        client.sendPayloadData( "127.0.0.1", 12345, "Test", nullptr, [ &flag1 ](const auto &){ flag1 = true; } );
+
+        QThread::msleep( 100 );
+        QCOMPARE( flag1, false );
+
+        QThread::msleep( 1000 );
+        QCOMPARE( flag1, true );
     }
 }

@@ -133,7 +133,8 @@ bool JQNetworkServer::begin()
                     &listenSucceed
                 ]()
                 {
-                    this->tcpServer_ = QSharedPointer< QTcpServer >( new JQNetworkServerHelper( [ this ]( auto socketDescriptor ){ this->incomingConnection( socketDescriptor ); } ) );
+                    this->tcpServer_ = QSharedPointer< QTcpServer >( new JQNetworkServerHelper( [ this ]( auto socketDescriptor )
+                        { this->incomingConnection( socketDescriptor ); } ) );
 
                     listenSucceed = this->tcpServer_->listen(
                                 this->serverSettings_->listenAddress,
@@ -152,12 +153,18 @@ bool JQNetworkServer::begin()
                     JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings( new JQNetworkConnectPoolSettings( *this->connectPoolSettings_ ) );
                     JQNetworkConnectSettingsSharedPointer connectSettings( new JQNetworkConnectSettings( *this->connectSettings_ ) );
 
-                    connectPoolSettings->connectToHostErrorCallback   = [ this ](const auto &connect){ this->onConnectToHostError( connect ); };
-                    connectPoolSettings->connectToHostTimeoutCallback = [ this ](const auto &connect){ this->onConnectToHostTimeout( connect ); };
-                    connectPoolSettings->connectToHostSucceedCallback = [ this ](const auto &connect){ this->onConnectToHostSucceed( connect ); };
-                    connectPoolSettings->remoteHostClosedCallback     = [ this ](const auto &connect){ this->onRemoteHostClosed( connect ); };
-                    connectPoolSettings->readyToDeleteCallback        = [ this ](const auto &connect){ this->onReadyToDelete( connect ); };
-                    connectPoolSettings->packageReceivedCallback      = [ this ](const auto &connect, const auto &package){ this->onPackageReceived( connect, package ); };
+                    connectPoolSettings->connectToHostErrorCallback   = [ this ](const auto &connect)
+                        { this->onConnectToHostError( connect ); };
+                    connectPoolSettings->connectToHostTimeoutCallback = [ this ](const auto &connect)
+                        { this->onConnectToHostTimeout( connect ); };
+                    connectPoolSettings->connectToHostSucceedCallback = [ this ](const auto &connect)
+                        { this->onConnectToHostSucceed( connect ); };
+                    connectPoolSettings->remoteHostClosedCallback     = [ this ](const auto &connect)
+                        { this->onRemoteHostClosed( connect ); };
+                    connectPoolSettings->readyToDeleteCallback        = [ this ](const auto &connect)
+                        { this->onReadyToDelete( connect ); };
+                    connectPoolSettings->packageReceivedCallback      = [ this ](const auto &connect, const auto &package)
+                        { this->onPackageReceived( connect, package ); };
 
                     connectSettings->randomFlagRangeStart = 1000000000;
                     connectSettings->randomFlagRangeEnd = 1999999999;

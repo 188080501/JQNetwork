@@ -55,6 +55,12 @@ public:
             const QHostAddress &listenAddress = QHostAddress::Any
         );
 
+    inline JQNetworkServerSettingsSharedPointer serverSettings();
+
+    inline JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings();
+
+    inline JQNetworkConnectSettingsSharedPointer connectSettings();
+
     inline void setOnPackageReceivedCallback(
             const std::function< void( JQNetworkConnectPointer, JQNetworkPackageSharedPointer ) > &callback
         );

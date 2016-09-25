@@ -21,16 +21,16 @@ struct JQNetworkConnectSettings
     bool longConnection = true;
     bool autoMaintainLongConnection = false;
 
-    qint64 cutPackageSize = -1;
     int streamFormat = -1;
+    qint64 cutPackageSize = 2 * 1024 * 1024;
     qint64 packageCompressionThresholdForBytes = -1;
     int packageCompressionThresholdForFirstCommunicationElapsed = -1;
     qint64 maximumSendForTotalByteCount = -1;
     qint64 maximumSendPackageByteCount = -1;
-    qint64 maximumSendSpeed = -1;
+    int maximumSendSpeed = -1; // Byte/s
     qint64 maximumReceiveForTotalByteCount = -1;
     qint64 maximumReceivePackageByteCount = -1;
-    qint64 maximumReceiveSpeed = -1;
+    int maximumReceiveSpeed = -1; // Byte/s
 
     qint32 randomFlagRangeStart = -1;
     qint32 randomFlagRangeEnd = -1;
@@ -106,15 +106,19 @@ public:
 private Q_SLOTS:
     void onTcpSocketStateChanged();
 
-    void onTcpSocketConnectToHostTimeOut();
-
     void onTcpSocketBytesWritten(const qint64 &bytes);
 
     void onTcpSocketReadyRead();
 
+    void onTcpSocketConnectToHostTimeOut();
+
     void onSendPackageCheck();
 
 private:
+    void startTimerForConnectToHostTimeOut();
+
+    void startTimerForSendPackageCheck();
+
     void onPackageReceived(const JQNetworkPackageSharedPointer &package);
 
     void onReadyToDelete();

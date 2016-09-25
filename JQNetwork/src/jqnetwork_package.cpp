@@ -118,10 +118,12 @@ bool JQNetworkPackage::mixPackage(const JQNetworkPackageSharedPointer &mixPackag
     BOOL_CHECK( this->randomFlag() == mixPackage->randomFlag(), ": randomFlag not same" );
 
     BOOL_CHECK( this->metaDataTotalSize() == mixPackage->metaDataTotalSize(), ": metaDataTotalSize not same" );
-    BOOL_CHECK( ( this->metaDataCurrentSize() + mixPackage->metaDataCurrentSize() ) <= this->metaDataTotalSize(), ": metaDataCurrentSize overmuch" );
+    BOOL_CHECK( ( this->metaDataCurrentSize() + mixPackage->metaDataCurrentSize() ) <= this->metaDataTotalSize(),
+                ": metaDataCurrentSize overmuch" );
 
     BOOL_CHECK( this->payloadDataTotalSize() == mixPackage->payloadDataTotalSize(), ": payloadDataTotalSize not same" );
-    BOOL_CHECK( ( this->payloadDataCurrentSize() + mixPackage->payloadDataCurrentSize() ) <= this->payloadDataTotalSize(), ": payloadDataCurrentSize overmuch" );
+    BOOL_CHECK( ( this->payloadDataCurrentSize() + mixPackage->payloadDataCurrentSize() ) <= this->payloadDataTotalSize(),
+                ": payloadDataCurrentSize overmuch" );
 
     BOOL_CHECK( ( ( this->metaDataTotalSize() > 0 ) || ( this->payloadDataTotalSize() > 0 ) ), ": data error" );
 

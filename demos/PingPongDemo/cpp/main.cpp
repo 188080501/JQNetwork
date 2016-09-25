@@ -46,7 +46,8 @@ int main(int argc, char *argv[])
     QTimer timer;
 
     // 创建PingPong测试
-    auto pingPong = [ &timer, client, &sendSucceedCount, &replySucceedCount ]()
+    std::function< void() > ping;
+    ping = [ &ping, &timer, client, &sendSucceedCount, &replySucceedCount ]()
     {
         // 发送数据，返回0表示失败，其余数表示发送成功
         const auto &&randomFlag = client->sendPayloadData(
@@ -54,7 +55,7 @@ int main(int argc, char *argv[])
                     34543,
                     "Ping",
                     // 成功接收回复的数据时的回调
-                    [ &timer, &sendSucceedCount, &replySucceedCount ](const auto & /*connect*/, const auto &package)
+                    [ &ping, &timer, &sendSucceedCount, &replySucceedCount ](const auto & /*connect*/, const auto &package)
                     {
                         // 回调会发生在一个专用的线程，请注意线程安全
 
@@ -71,6 +72,11 @@ int main(int argc, char *argv[])
                             // 因为这里在一个新的线程，所以通过 invokeMethod 去调用 stop
                             QMetaObject::invokeMethod( &timer, "stop" );
                         }
+                        else
+                        {
+                            // 成功接收回复后，再发出Ping
+                            QMetaObject::invokeMethod( &timer, "start" );
+                        }
                     },
                     // 未能成功接收回复的数据时的回调
                     [](const auto & /*connect*/)
@@ -78,6 +84,7 @@ int main(int argc, char *argv[])
                         // 回调会发生在一个专用的线程，请注意线程安全
 
                         qDebug() << "Client: received fail";
+                        qApp->quit();
                     }
                 );
 
@@ -92,7 +99,10 @@ int main(int argc, char *argv[])
         }
     };
 
-    QObject::connect( &timer, &QTimer::timeout, pingPong );
+    timer.setInterval( 500 );
+    timer.setSingleShot( true );
+
+    QObject::connect( &timer, &QTimer::timeout, ping );
 
     // 设置连接到服务端后的回调
     client->setOnConnectToHostSucceedCallback( [ &timer ](JQNetworkConnectPointer, const QString &hostName, const quint16 &port)
@@ -104,7 +114,7 @@ int main(int argc, char *argv[])
 
         // 开启 PingPong 测试的定时器，循环发送
         // 因为这里在一个新的线程，所以通过 invokeMethod 去调用 start
-        QMetaObject::invokeMethod( &timer, "start", Q_ARG( int, 500 ) );
+        QMetaObject::invokeMethod( &timer, "start" );
     } );
 
     // 初始化客户端

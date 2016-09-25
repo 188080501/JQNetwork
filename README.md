@@ -23,8 +23,6 @@ JQNetwork是基于Qt开发，并且未使用除了 C++标准库 和 Qt 之外的
 
 GitHub地址：https://github.com/188080501/JQNetwork
 
-本库的授权协议是：随便用
-
 方便的话，帮我点个星星，或者反馈一下使用意见，这是对我莫大的帮助。
 
 若你已经有了更好的建议，或者想要一些新功能，可以直接邮件我，我的邮箱是：Jason@JasonServer.com
