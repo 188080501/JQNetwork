@@ -163,7 +163,8 @@ int JQNetworkClient::sendPayloadData(
         const QString &hostName,
         const quint16 &port,
         const QByteArray &payloadData,
-        const JQNetworkOnReceivedCallbackPackage &callbackPackage
+        const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &succeedCallback,
+        const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback
     )
 {
     for ( const auto &connectPool: this->connectPools_ )
@@ -174,7 +175,8 @@ int JQNetworkClient::sendPayloadData(
 
         auto randomFlag = connect->sendPayloadData(
                     payloadData,
-                    callbackPackage
+                    succeedCallback,
+                    failCallback
                 );
 
         if ( !randomFlag ) { return randomFlag; }

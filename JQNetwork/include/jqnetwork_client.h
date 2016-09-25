@@ -48,7 +48,9 @@ public:
 
     static JQNetworkClientSharedPointer createClient();
 
-    inline void setOnConnectToHostSucceedCallback(const std::function< void( JQNetworkConnectPointer, const QString &hostName, const quint16 &port ) > &callback);
+    inline void setOnConnectToHostSucceedCallback(
+            const std::function< void( JQNetworkConnectPointer, const QString &hostName, const quint16 &port ) > &callback
+        );
 
     bool begin();
 
@@ -60,7 +62,8 @@ public:
             const QString &hostName,
             const quint16 &port,
             const QByteArray &payloadData,
-            const JQNetworkOnReceivedCallbackPackage &callbackPackage = JQNetworkOnReceivedCallbackPackage()
+            const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &succeedCallback = nullptr,
+            const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback = nullptr
         );
 
 private:

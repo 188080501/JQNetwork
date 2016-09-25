@@ -108,7 +108,10 @@ JQNetworkServer::~JQNetworkServer()
     );
 }
 
-JQNetworkServerSharedPointer JQNetworkServer::createServerByListenPort(const quint16 &listenPort, const QHostAddress &listenAddress)
+JQNetworkServerSharedPointer JQNetworkServer::createServerByListenPort(
+        const quint16 &listenPort,
+        const QHostAddress &listenAddress
+    )
 {
     JQNetworkServerSettingsSharedPointer serverSettings( new JQNetworkServerSettings );
     JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings( new JQNetworkConnectPoolSettings );
@@ -194,5 +197,21 @@ void JQNetworkServer::incomingConnection(const qintptr &socketDescriptor)
                     );
                 },
                 rotaryIndex
+    );
+}
+
+void JQNetworkServer::onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package)
+{
+    NULLPTR_CHECK( serverSettings_->packageReceivedCallback );
+
+    processorThreadPool_->run(
+                [
+                    connect,
+                    package,
+                    callback = serverSettings_->packageReceivedCallback
+                ]()
+                {
+                    callback( connect, package );
+                }
     );
 }

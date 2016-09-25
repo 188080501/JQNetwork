@@ -17,6 +17,7 @@
 #include <QTcpSocket>
 #include <QTimer>
 #include <QThread>
+#include <QDateTime>
 
 // JQNetwork lib import
 #include <JQNetworkPackage>
@@ -32,7 +33,7 @@ JQNetworkConnect::JQNetworkConnect():
 
 void JQNetworkConnect::createConnect(
         const std::function< void(const JQNetworkConnectSharedPointer &) > &onConnectCreatedCallback,
-        const std::function< void( std::function< void() > ) > runOnConnectThreadCallback,
+        const std::function< void( std::function< void() > ) > &runOnConnectThreadCallback,
         const JQNetworkConnectSettingsSharedPointer &connectSettings,
         const QString &hostName,
         const quint16 &port
@@ -59,7 +60,7 @@ void JQNetworkConnect::createConnect(
 
 void JQNetworkConnect::createConnect(
         const std::function< void(const JQNetworkConnectSharedPointer &) > &onConnectCreatedCallback,
-        const std::function< void( std::function< void() > ) > runOnConnectThreadCallback,
+        const std::function< void( std::function< void() > ) > &runOnConnectThreadCallback,
         const JQNetworkConnectSettingsSharedPointer &connectSettings,
         const qintptr &socketDescriptor
     )
@@ -93,7 +94,8 @@ void JQNetworkConnect::close()
 
 qint32 JQNetworkConnect::sendPayloadData(
         const QByteArray &payloadData,
-        const JQNetworkOnReceivedCallbackPackage &callbackPackage
+        const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &succeedCallback,
+        const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback
     )
 {
     NULLPTR_CHECK( runOnConnectThreadCallback_, 0 );
@@ -115,7 +117,7 @@ qint32 JQNetworkConnect::sendPayloadData(
 
     if ( this->thread() == QThread::currentThread() )
     {
-        this->sendPayloadData( payloadData, currentRandomFlag, callbackPackage );
+        this->reaySendPayloadData( payloadData, currentRandomFlag, succeedCallback, failCallback );
     }
     else
     {
@@ -124,10 +126,11 @@ qint32 JQNetworkConnect::sendPayloadData(
                         this,
                         payloadData,
                         currentRandomFlag,
-                        callbackPackage
+                        succeedCallback,
+                        failCallback
                     ]()
             {
-                this->sendPayloadData( payloadData, currentRandomFlag, callbackPackage );
+                this->reaySendPayloadData( payloadData, currentRandomFlag, succeedCallback, failCallback );
             }
         );
     }
@@ -144,7 +147,7 @@ qint32 JQNetworkConnect::replyPayloadData(
 
     if ( this->thread() == QThread::currentThread() )
     {
-        this->sendPayloadData( payloadData, randomFlag, { } );
+        this->reaySendPayloadData( payloadData, randomFlag, nullptr, nullptr );
     }
     else
     {
@@ -155,7 +158,7 @@ qint32 JQNetworkConnect::replyPayloadData(
                         randomFlag
                     ]()
             {
-                this->sendPayloadData( payloadData, randomFlag, { } );
+                this->reaySendPayloadData( payloadData, randomFlag, nullptr, nullptr );
             }
         );
     }
@@ -299,6 +302,11 @@ void JQNetworkConnect::onTcpSocketReadyRead()
     }
 }
 
+void JQNetworkConnect::onSendPackageCheck()
+{
+    //...
+}
+
 void JQNetworkConnect::onPackageReceived(const JQNetworkPackageSharedPointer &package)
 {
     if ( ( connectSettings_->randomFlagRangeStart <= package->randomFlag() ) &&
@@ -350,7 +358,12 @@ void JQNetworkConnect::onReadyToDelete()
     connectSettings_->readyToDeleteCallback( this );
 }
 
-void JQNetworkConnect::sendPayloadData(const QByteArray &payloadData, const qint32 &randomFlag, const JQNetworkOnReceivedCallbackPackage &callbackPackage)
+void JQNetworkConnect::reaySendPayloadData(
+        const QByteArray &payloadData,
+        const qint32 &randomFlag,
+        const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &succeedCallback,
+        const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback
+    )
 {
     if ( isAbandonTcpSocket_ ) { return; }
     NULLPTR_CHECK( tcpSocket_ );
@@ -362,8 +375,13 @@ void JQNetworkConnect::sendPayloadData(const QByteArray &payloadData, const qint
     tcpSocket_->write( buffer );
 //    qDebug() << "write:" << tcpSocket_->write( buffer );
 
-    if ( callbackPackage.succeedCallback || callbackPackage.failCallback )
+    if ( succeedCallback || failCallback )
     {
-        onReceivedCallbacks_[ randomFlag ] = callbackPackage;
+        onReceivedCallbacks_[ randomFlag ] =
+        {
+            QDateTime::currentMSecsSinceEpoch(),
+            succeedCallback,
+            failCallback
+        };
     }
 }

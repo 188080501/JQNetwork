@@ -50,9 +50,14 @@ public:
 
     JQNetworkServer &operator =(const JQNetworkServer &) = delete;
 
-    static JQNetworkServerSharedPointer createServerByListenPort(const quint16 &listenPort, const QHostAddress &listenAddress = QHostAddress::Any);
+    static JQNetworkServerSharedPointer createServerByListenPort(
+            const quint16 &listenPort,
+            const QHostAddress &listenAddress = QHostAddress::Any
+        );
 
-    inline void setOnPackageReceivedCallback(const std::function< void( JQNetworkConnectPointer, JQNetworkPackageSharedPointer ) > &callback);
+    inline void setOnPackageReceivedCallback(
+            const std::function< void( JQNetworkConnectPointer, JQNetworkPackageSharedPointer ) > &callback
+        );
 
     bool begin();
 
@@ -69,7 +74,7 @@ private:
 
     inline void onReadyToDelete(const JQNetworkConnectPointer &connect);
 
-    inline void onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package);
+    void onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package);
 
 private:
     // Thread pool

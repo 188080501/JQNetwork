@@ -16,7 +16,6 @@
 // JQNetwork lib import
 #include <JQNetworkFoundation>
 
-
 struct JQNetworkConnectSettings
 {
     bool longConnection = true;
@@ -57,6 +56,14 @@ class JQNetworkConnect: public QObject
     Q_OBJECT
 
 private:
+    struct ReceivedCallbackPackage
+    {
+        qint64 sendTime;
+        std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > succeedCallback;
+        std::function< void(const JQNetworkConnectPointer &connect) > failCallback;
+    };
+
+private:
     JQNetworkConnect();
 
     JQNetworkConnect(const JQNetworkConnect &) = delete;
@@ -68,7 +75,7 @@ public:
 
     static void createConnect(
             const std::function< void(const JQNetworkConnectSharedPointer &) > &onConnectCreatedCallback,
-            const std::function< void( std::function< void() > ) > runOnConnectThreadCallback,
+            const std::function< void( std::function< void() > ) > &runOnConnectThreadCallback,
             const JQNetworkConnectSettingsSharedPointer &connectSettings,
             const QString &hostName,
             const quint16 &port
@@ -76,7 +83,7 @@ public:
 
     static void createConnect(
             const std::function< void(const JQNetworkConnectSharedPointer &) > &onConnectCreatedCallback,
-            const std::function< void( std::function< void() > ) > runOnConnectThreadCallback,
+            const std::function< void( std::function< void() > ) > &runOnConnectThreadCallback,
             const JQNetworkConnectSettingsSharedPointer &connectSettings,
             const qintptr &socketDescriptor
         );
@@ -87,7 +94,8 @@ public:
 
     qint32 sendPayloadData(
             const QByteArray &payloadData,
-            const JQNetworkOnReceivedCallbackPackage &callbackPackage = JQNetworkOnReceivedCallbackPackage()
+            const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &succeedCallback = nullptr,
+            const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback = nullptr
         );
 
     qint32 replyPayloadData(
@@ -104,11 +112,19 @@ private Q_SLOTS:
 
     void onTcpSocketReadyRead();
 
+    void onSendPackageCheck();
+
+private:
     void onPackageReceived(const JQNetworkPackageSharedPointer &package);
 
     void onReadyToDelete();
 
-    void sendPayloadData(const QByteArray &payloadData, const qint32 &randomFlag, const JQNetworkOnReceivedCallbackPackage &callbackPackage);
+    void reaySendPayloadData(
+            const QByteArray &payloadData,
+            const qint32 &randomFlag,
+            const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &succeedCallback,
+            const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback
+        );
 
 private:
     // Settings
@@ -123,13 +139,14 @@ private:
 
     // Timer
     QSharedPointer< QTimer > timerForConnectToHostTimeOut_;
+    QSharedPointer< QTimer > timerForSendPackageCheck_;
 
     // Package
     QMutex mutexForSend_;
     qint32 sendRandomFlagRotaryIndex_ = 0;
     QMap< qint32, JQNetworkPackageSharedPointer > sendPackagePool_; // randomFlag -> package
     QMap< qint32, JQNetworkPackageSharedPointer > receivePackagePool_; // randomFlag -> package
-    QMap< qint32, JQNetworkOnReceivedCallbackPackage > onReceivedCallbacks_; // randomFlag -> package
+    QMap< qint32, ReceivedCallbackPackage > onReceivedCallbacks_; // randomFlag -> package
 
     // Statistics
     qint64 waitForSendBytes_ = 0;

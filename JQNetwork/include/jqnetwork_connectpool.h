@@ -47,9 +47,16 @@ public:
 
     JQNetworkConnectPool &operator =(const JQNetworkConnectPool &) = delete;
 
-    void createConnect(const std::function< void( std::function< void() > ) > runOnConnectThreadCallback, const QString &hostName, const quint16 &port);
+    void createConnect(
+            const std::function< void( std::function< void() > ) > runOnConnectThreadCallback,
+            const QString &hostName,
+            const quint16 &port
+        );
 
-    void createConnect(const std::function< void( std::function< void() > ) > runOnConnectThreadCallback, const qintptr &socketDescriptor);
+    void createConnect(
+            const std::function< void( std::function< void() > ) > runOnConnectThreadCallback,
+            const qintptr &socketDescriptor
+        );
 
     inline bool containsConnect(const QString &hostName, const quint16 &port);
 

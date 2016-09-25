@@ -16,7 +16,9 @@
 // JQNetwork lib import
 #include "jqnetwork_client.h"
 
-inline void JQNetworkClient::setOnConnectToHostSucceedCallback(const std::function< void( JQNetworkConnectPointer, const QString &hostName, const quint16 &port ) > &callback)
+inline void JQNetworkClient::setOnConnectToHostSucceedCallback(
+        const std::function< void( JQNetworkConnectPointer, const QString &hostName, const quint16 &port ) > &callback
+    )
 {
     if ( !connectPools_.isEmpty() )
     {

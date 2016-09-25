@@ -16,7 +16,9 @@
 // JQNetwork lib import
 #include "jqnetwork_server.h"
 
-inline void JQNetworkServer::setOnPackageReceivedCallback(const std::function<void (QPointer<JQNetworkConnect>, JQNetworkPackageSharedPointer)> &callback)
+inline void JQNetworkServer::setOnPackageReceivedCallback(
+        const std::function<void (QPointer<JQNetworkConnect>, JQNetworkPackageSharedPointer)> &callback
+    )
 {
     if ( !connectPools_.isEmpty() )
     {
@@ -98,22 +100,6 @@ inline void JQNetworkServer::onReadyToDelete(const JQNetworkConnectPointer &conn
                 ]()
                 {
                     callback( connect );
-                }
-    );
-}
-
-inline void JQNetworkServer::onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package)
-{
-    NULLPTR_CHECK( serverSettings_->packageReceivedCallback );
-
-    processorThreadPool_->run(
-                [
-                    connect,
-                    package,
-                    callback = serverSettings_->packageReceivedCallback
-                ]()
-                {
-                    callback( connect, package );
                 }
     );
 }
