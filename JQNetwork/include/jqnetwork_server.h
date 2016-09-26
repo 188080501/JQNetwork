@@ -19,8 +19,8 @@
 struct JQNetworkServerSettings
 {
     int globalServerThreadCount = 1;
-    int globalSocketThreadCount = 2;
-    int globalProcessorThreadCount = 2;
+    int globalSocketThreadCount = JQNETWORK_ADVISE_THREADCOUNT;
+    int globalProcessorThreadCount = JQNETWORK_ADVISE_THREADCOUNT;
 
     QHostAddress listenAddress = QHostAddress::Any;
     quint16 listenPort = 0;
@@ -70,17 +70,21 @@ public:
 private:
     void incomingConnection(const qintptr &socketDescriptor);
 
-    inline void onConnectToHostError(const JQNetworkConnectPointer &connect);
+    inline void onConnectToHostError(const JQNetworkConnectPointer &connect, const JQNetworkConnectPoolPointer &connectPool);
 
-    inline void onConnectToHostTimeout(const JQNetworkConnectPointer &connect);
+    inline void onConnectToHostTimeout(const JQNetworkConnectPointer &connect, const JQNetworkConnectPoolPointer &connectPool);
 
-    inline void onConnectToHostSucceed(const JQNetworkConnectPointer &connect);
+    inline void onConnectToHostSucceed(const JQNetworkConnectPointer &connect, const JQNetworkConnectPoolPointer &connectPool);
 
-    inline void onRemoteHostClosed(const JQNetworkConnectPointer &connect);
+    inline void onRemoteHostClosed(const JQNetworkConnectPointer &connect, const JQNetworkConnectPoolPointer &connectPool);
 
-    inline void onReadyToDelete(const JQNetworkConnectPointer &connect);
+    inline void onReadyToDelete(const JQNetworkConnectPointer &connect, const JQNetworkConnectPoolPointer &connectPool);
 
-    void onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package);
+    void onPackageReceived(
+            const JQNetworkConnectPointer &connect,
+            const JQNetworkConnectPoolPointer &connectPool,
+            const JQNetworkPackageSharedPointer &package
+        );
 
 private:
     // Thread pool

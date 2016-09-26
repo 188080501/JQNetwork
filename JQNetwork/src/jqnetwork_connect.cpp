@@ -44,7 +44,7 @@ void JQNetworkConnect::createConnect(
     newConnect->runOnConnectThreadCallback_ = runOnConnectThreadCallback;
     newConnect->sendRandomFlagRotaryIndex_ = connectSettings->randomFlagRangeStart - 1;
 
-    NULLPTR_CHECK( onConnectCreatedCallback );
+    JQNETWORK_NULLPTR_CHECK( onConnectCreatedCallback );
     onConnectCreatedCallback( newConnect );
 
     newConnect->startTimerForConnectToHostTimeOut();
@@ -64,7 +64,7 @@ void JQNetworkConnect::createConnect(
     newConnect->runOnConnectThreadCallback_ = runOnConnectThreadCallback;
     newConnect->sendRandomFlagRotaryIndex_ = connectSettings->randomFlagRangeStart - 1;
 
-    NULLPTR_CHECK( onConnectCreatedCallback );
+    JQNETWORK_NULLPTR_CHECK( onConnectCreatedCallback );
     onConnectCreatedCallback( newConnect );
 
     newConnect->startTimerForConnectToHostTimeOut();
@@ -75,7 +75,7 @@ void JQNetworkConnect::createConnect(
 void JQNetworkConnect::close()
 {
     if ( isAbandonTcpSocket_ ) { return; }
-    NULLPTR_CHECK( tcpSocket_ );
+    JQNETWORK_NULLPTR_CHECK( tcpSocket_ );
 
     this->onReadyToDelete();
 }
@@ -86,7 +86,7 @@ qint32 JQNetworkConnect::sendPayloadData(
         const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback
     )
 {
-    NULLPTR_CHECK( runOnConnectThreadCallback_, 0 );
+    JQNETWORK_NULLPTR_CHECK( runOnConnectThreadCallback_, 0 );
 
     mutexForSend_.lock();
 
@@ -105,20 +105,20 @@ qint32 JQNetworkConnect::sendPayloadData(
 
     if ( this->thread() == QThread::currentThread() )
     {
-        this->reaySendPayloadData( payloadData, currentRandomFlag, succeedCallback, failCallback );
+        this->reaySendPayloadData( currentRandomFlag, payloadData, succeedCallback, failCallback );
     }
     else
     {
         runOnConnectThreadCallback_(
                     [
                         this,
-                        payloadData,
                         currentRandomFlag,
+                        payloadData,
                         succeedCallback,
                         failCallback
                     ]()
             {
-                this->reaySendPayloadData( payloadData, currentRandomFlag, succeedCallback, failCallback );
+                this->reaySendPayloadData( currentRandomFlag, payloadData, succeedCallback, failCallback );
             }
         );
     }
@@ -131,22 +131,22 @@ qint32 JQNetworkConnect::replyPayloadData(
         const qint32 &randomFlag
     )
 {
-    NULLPTR_CHECK( runOnConnectThreadCallback_, 0 );
+    JQNETWORK_NULLPTR_CHECK( runOnConnectThreadCallback_, 0 );
 
     if ( this->thread() == QThread::currentThread() )
     {
-        this->reaySendPayloadData( payloadData, randomFlag, nullptr, nullptr );
+        this->reaySendPayloadData( randomFlag, payloadData, nullptr, nullptr );
     }
     else
     {
         runOnConnectThreadCallback_(
                     [
                         this,
-                        payloadData,
-                        randomFlag
+                        randomFlag,
+                        payloadData
                     ]()
             {
-                this->reaySendPayloadData( payloadData, randomFlag, nullptr, nullptr );
+                this->reaySendPayloadData( randomFlag, payloadData, nullptr, nullptr );
             }
         );
     }
@@ -157,7 +157,7 @@ qint32 JQNetworkConnect::replyPayloadData(
 void JQNetworkConnect::onTcpSocketStateChanged()
 {
     if ( isAbandonTcpSocket_ ) { return; }
-    NULLPTR_CHECK( tcpSocket_ );
+    JQNETWORK_NULLPTR_CHECK( tcpSocket_ );
 
     const auto &&state = tcpSocket_->state();
 
@@ -172,7 +172,7 @@ void JQNetworkConnect::onTcpSocketStateChanged()
                 timerForConnectToHostTimeOut_.clear();
             }
 
-            NULLPTR_CHECK( connectSettings_->connectToHostSucceedCallback );
+            JQNETWORK_NULLPTR_CHECK( connectSettings_->connectToHostSucceedCallback );
             connectSettings_->connectToHostSucceedCallback( this );
 
             onceConnectSucceed_ = true;
@@ -187,21 +187,21 @@ void JQNetworkConnect::onTcpSocketStateChanged()
                 {
                     if ( onceConnectSucceed_ ) { break; }
 
-                    NULLPTR_CHECK( connectSettings_->connectToHostErrorCallback );
+                    JQNETWORK_NULLPTR_CHECK( connectSettings_->connectToHostErrorCallback );
                     connectSettings_->connectToHostErrorCallback( this );
 
                     break;
                 }
                 case QAbstractSocket::RemoteHostClosedError:
                 {
-                    NULLPTR_CHECK( connectSettings_->remoteHostClosedCallback );
+                    JQNETWORK_NULLPTR_CHECK( connectSettings_->remoteHostClosedCallback );
                     connectSettings_->remoteHostClosedCallback( this );
                     break;
                 }
                 case QAbstractSocket::HostNotFoundError:
                 case QAbstractSocket::ConnectionRefusedError:
                 {
-                    NULLPTR_CHECK( connectSettings_->connectToHostErrorCallback );
+                    JQNETWORK_NULLPTR_CHECK( connectSettings_->connectToHostErrorCallback );
                     connectSettings_->connectToHostErrorCallback( this );
                     break;
                 }
@@ -222,7 +222,7 @@ void JQNetworkConnect::onTcpSocketStateChanged()
 void JQNetworkConnect::onTcpSocketReadyRead()
 {
     if ( isAbandonTcpSocket_ ) { return; }
-    NULLPTR_CHECK( tcpSocket_ );
+    JQNETWORK_NULLPTR_CHECK( tcpSocket_ );
 
     const auto &&data = tcpSocket_->readAll();
 
@@ -279,10 +279,10 @@ void JQNetworkConnect::onTcpSocketReadyRead()
 void JQNetworkConnect::onTcpSocketConnectToHostTimeOut()
 {
     if ( isAbandonTcpSocket_ ) { return; }
-    NULLPTR_CHECK( timerForConnectToHostTimeOut_ );
-    NULLPTR_CHECK( tcpSocket_ );
+    JQNETWORK_NULLPTR_CHECK( timerForConnectToHostTimeOut_ );
+    JQNETWORK_NULLPTR_CHECK( tcpSocket_ );
 
-    NULLPTR_CHECK( connectSettings_->connectToHostTimeoutCallback );
+    JQNETWORK_NULLPTR_CHECK( connectSettings_->connectToHostTimeoutCallback );
     connectSettings_->connectToHostTimeoutCallback( this );
 
     this->onReadyToDelete();
@@ -307,7 +307,7 @@ void JQNetworkConnect::onSendPackageCheck()
         {
             if ( it->failCallback )
             {
-                NULLPTR_CHECK( connectSettings_->waitReplyPackageFailCallback );
+                JQNETWORK_NULLPTR_CHECK( connectSettings_->waitReplyPackageFailCallback );
                 connectSettings_->waitReplyPackageFailCallback( this, it->failCallback );
             }
 
@@ -370,7 +370,7 @@ void JQNetworkConnect::onPackageReceived(const JQNetworkPackageSharedPointer &pa
 
         if ( it->succeedCallback )
         {
-            NULLPTR_CHECK( connectSettings_->waitReplyPackageSucceedCallback );
+            JQNETWORK_NULLPTR_CHECK( connectSettings_->waitReplyPackageSucceedCallback );
             connectSettings_->waitReplyPackageSucceedCallback( this, package, it->succeedCallback );
         }
 
@@ -378,7 +378,7 @@ void JQNetworkConnect::onPackageReceived(const JQNetworkPackageSharedPointer &pa
     }
     else
     {
-        NULLPTR_CHECK( connectSettings_->packageReceivedCallback );
+        JQNETWORK_NULLPTR_CHECK( connectSettings_->packageReceivedCallback );
         connectSettings_->packageReceivedCallback( this, package );
     }
 }
@@ -386,7 +386,7 @@ void JQNetworkConnect::onPackageReceived(const JQNetworkPackageSharedPointer &pa
 void JQNetworkConnect::onTcpSocketBytesWritten(const qint64 &bytes)
 {
     if ( isAbandonTcpSocket_ ) { return; }
-    NULLPTR_CHECK( tcpSocket_ );
+    JQNETWORK_NULLPTR_CHECK( tcpSocket_ );
 
     waitForSendBytes_ -= bytes;
     alreadyWrittenBytes_ += bytes;
@@ -404,22 +404,22 @@ void JQNetworkConnect::onReadyToDelete()
         timerForConnectToHostTimeOut_.clear();
     }
 
-    NULLPTR_CHECK( tcpSocket_ );
+    JQNETWORK_NULLPTR_CHECK( tcpSocket_ );
     tcpSocket_->close();
 
-    NULLPTR_CHECK( connectSettings_->readyToDeleteCallback );
+    JQNETWORK_NULLPTR_CHECK( connectSettings_->readyToDeleteCallback );
     connectSettings_->readyToDeleteCallback( this );
 }
 
 void JQNetworkConnect::reaySendPayloadData(
-        const QByteArray &payloadData,
         const qint32 &randomFlag,
+        const QByteArray &payloadData,
         const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &succeedCallback,
         const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback
     )
 {
     if ( isAbandonTcpSocket_ ) { return; }
-    NULLPTR_CHECK( tcpSocket_ );
+    JQNETWORK_NULLPTR_CHECK( tcpSocket_ );
 
     const auto &&package = JQNetworkPackage::createPackageFromPayloadData( payloadData, randomFlag );
     const auto &&buffer = package->toByteArray();
@@ -441,4 +441,35 @@ void JQNetworkConnect::reaySendPayloadData(
             this->startTimerForSendPackageCheck();
         }
     }
+
+//    for ( auto payloadDataIndex = 0; payloadDataIndex < payloadData.size(); )
+//    {
+//        if ( ( payloadDataIndex + connectSettings_->cutPackageSize ) > payloadData.size() )
+//        {
+//            //
+//        }
+//        else
+//        {
+//            const auto &&package = JQNetworkPackage::createPackageFromPayloadData( payloadData, randomFlag );
+//            const auto &&buffer = package->toByteArray();
+
+//            waitForSendBytes_ += buffer.size();
+//            tcpSocket_->write( buffer );
+
+//            if ( succeedCallback || failCallback )
+//            {
+//                onReceivedCallbacks_[ randomFlag ] =
+//                {
+//                    QDateTime::currentMSecsSinceEpoch(),
+//                    succeedCallback,
+//                    failCallback
+//                };
+
+//                if ( !timerForSendPackageCheck_ )
+//                {
+//                    this->startTimerForSendPackageCheck();
+//                }
+//            }
+//        }
+//    }
 }

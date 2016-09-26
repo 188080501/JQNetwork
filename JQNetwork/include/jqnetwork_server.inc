@@ -44,7 +44,7 @@ inline void JQNetworkServer::setOnPackageReceivedCallback(
     serverSettings_->packageReceivedCallback = callback;
 }
 
-inline void JQNetworkServer::onConnectToHostError(const JQNetworkConnectPointer &connect)
+inline void JQNetworkServer::onConnectToHostError(const JQNetworkConnectPointer &connect, const JQNetworkConnectPoolPointer &)
 {
     if ( !serverSettings_->connectToHostErrorCallback ) { return; }
 
@@ -59,7 +59,7 @@ inline void JQNetworkServer::onConnectToHostError(const JQNetworkConnectPointer 
     );
 }
 
-inline void JQNetworkServer::onConnectToHostTimeout(const JQNetworkConnectPointer &connect)
+inline void JQNetworkServer::onConnectToHostTimeout(const JQNetworkConnectPointer &connect, const JQNetworkConnectPoolPointer &)
 {
     if ( !serverSettings_->connectToHostTimeoutCallback ) { return; }
 
@@ -74,7 +74,7 @@ inline void JQNetworkServer::onConnectToHostTimeout(const JQNetworkConnectPointe
     );
 }
 
-inline void JQNetworkServer::onConnectToHostSucceed(const JQNetworkConnectPointer &connect)
+inline void JQNetworkServer::onConnectToHostSucceed(const JQNetworkConnectPointer &connect, const JQNetworkConnectPoolPointer &)
 {
     if ( !serverSettings_->connectToHostSucceedCallback ) { return; }
 
@@ -89,7 +89,7 @@ inline void JQNetworkServer::onConnectToHostSucceed(const JQNetworkConnectPointe
     );
 }
 
-inline void JQNetworkServer::onRemoteHostClosed(const JQNetworkConnectPointer &connect)
+inline void JQNetworkServer::onRemoteHostClosed(const JQNetworkConnectPointer &connect, const JQNetworkConnectPoolPointer &)
 {
     if ( !serverSettings_->remoteHostClosedCallback ) { return; }
 
@@ -104,7 +104,7 @@ inline void JQNetworkServer::onRemoteHostClosed(const JQNetworkConnectPointer &c
     );
 }
 
-inline void JQNetworkServer::onReadyToDelete(const JQNetworkConnectPointer &connect)
+inline void JQNetworkServer::onReadyToDelete(const JQNetworkConnectPointer &connect, const JQNetworkConnectPoolPointer &)
 {
     if ( !serverSettings_->readyToDeleteCallback ) { return; }
 

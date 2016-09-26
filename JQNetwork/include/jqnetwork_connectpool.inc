@@ -40,26 +40,26 @@ inline bool JQNetworkConnectPool::containsConnect(const qintptr &socketDescripto
 
 inline void JQNetworkConnectPool::onConnectToHostError(const JQNetworkConnectPointer &connect)
 {
-    NULLPTR_CHECK( connectPoolSettings_->connectToHostErrorCallback );
-    connectPoolSettings_->connectToHostErrorCallback( connect );
+    JQNETWORK_NULLPTR_CHECK( connectPoolSettings_->connectToHostErrorCallback );
+    connectPoolSettings_->connectToHostErrorCallback( connect, this );
 }
 
 inline void JQNetworkConnectPool::onConnectToHostTimeout(const JQNetworkConnectPointer &connect)
 {
-    NULLPTR_CHECK( connectPoolSettings_->connectToHostTimeoutCallback );
-    connectPoolSettings_->connectToHostTimeoutCallback( connect );
+    JQNETWORK_NULLPTR_CHECK( connectPoolSettings_->connectToHostTimeoutCallback );
+    connectPoolSettings_->connectToHostTimeoutCallback( connect, this );
 }
 
 inline void JQNetworkConnectPool::onRemoteHostClosed(const JQNetworkConnectPointer &connect)
 {
-    NULLPTR_CHECK( connectPoolSettings_->remoteHostClosedCallback );
-    connectPoolSettings_->remoteHostClosedCallback( connect );
+    JQNETWORK_NULLPTR_CHECK( connectPoolSettings_->remoteHostClosedCallback );
+    connectPoolSettings_->remoteHostClosedCallback( connect, this );
 }
 
 inline void JQNetworkConnectPool::onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package)
 {
-    NULLPTR_CHECK( connectPoolSettings_->packageReceivedCallback );
-    connectPoolSettings_->packageReceivedCallback( connect, package );
+    JQNETWORK_NULLPTR_CHECK( connectPoolSettings_->packageReceivedCallback );
+    connectPoolSettings_->packageReceivedCallback( connect, this, package );
 }
 
 inline void JQNetworkConnectPool::onWaitReplySucceedPackage(
@@ -68,8 +68,8 @@ inline void JQNetworkConnectPool::onWaitReplySucceedPackage(
         const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &callback
     )
 {
-    NULLPTR_CHECK( connectPoolSettings_->waitReplyPackageSucceedCallback );
-    connectPoolSettings_->waitReplyPackageSucceedCallback( connect, package, callback );
+    JQNETWORK_NULLPTR_CHECK( connectPoolSettings_->waitReplyPackageSucceedCallback );
+    connectPoolSettings_->waitReplyPackageSucceedCallback( connect, this, package, callback );
 }
 
 inline void JQNetworkConnectPool::onWaitReplyPackageFail(
@@ -77,8 +77,8 @@ inline void JQNetworkConnectPool::onWaitReplyPackageFail(
         const std::function< void(const JQNetworkConnectPointer &connect) > &callback
     )
 {
-    NULLPTR_CHECK( connectPoolSettings_->waitReplyPackageFailCallback );
-    connectPoolSettings_->waitReplyPackageFailCallback( connect, callback );
+    JQNETWORK_NULLPTR_CHECK( connectPoolSettings_->waitReplyPackageFailCallback );
+    connectPoolSettings_->waitReplyPackageFailCallback( connect, this, callback );
 }
 
 #endif//JQNETWORK_INCLUDE_JQNETWORK_CONNECTPOOL_INC

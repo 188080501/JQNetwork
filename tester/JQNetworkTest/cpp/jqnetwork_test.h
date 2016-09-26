@@ -13,21 +13,21 @@ public:
 
     ~JQNetworkBenchmark() = default;
 
-public slots:
+private slots:
     void jqNetworkThreadPoolTest();
 
-public slots:
+private slots:
     void jqNetworkThreadPoolBenchmark();
 
     void jqNetworkThreadPoolBenchmark2();
 
-public slots:
+private slots:
     void jqNetworkConnectTest();
 
-public slots:
+private slots:
     void jeNetworkPackageTest();
 
-public slots:
+private slots:
     void jqNetworkServerTest();
 
 private slots:

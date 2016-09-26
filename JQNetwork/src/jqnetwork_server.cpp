@@ -153,18 +153,18 @@ bool JQNetworkServer::begin()
                     JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings( new JQNetworkConnectPoolSettings( *this->connectPoolSettings_ ) );
                     JQNetworkConnectSettingsSharedPointer connectSettings( new JQNetworkConnectSettings( *this->connectSettings_ ) );
 
-                    connectPoolSettings->connectToHostErrorCallback   = [ this ](const auto &connect)
-                        { this->onConnectToHostError( connect ); };
-                    connectPoolSettings->connectToHostTimeoutCallback = [ this ](const auto &connect)
-                        { this->onConnectToHostTimeout( connect ); };
-                    connectPoolSettings->connectToHostSucceedCallback = [ this ](const auto &connect)
-                        { this->onConnectToHostSucceed( connect ); };
-                    connectPoolSettings->remoteHostClosedCallback     = [ this ](const auto &connect)
-                        { this->onRemoteHostClosed( connect ); };
-                    connectPoolSettings->readyToDeleteCallback        = [ this ](const auto &connect)
-                        { this->onReadyToDelete( connect ); };
-                    connectPoolSettings->packageReceivedCallback      = [ this ](const auto &connect, const auto &package)
-                        { this->onPackageReceived( connect, package ); };
+                    connectPoolSettings->connectToHostErrorCallback   = [ this ](const auto &connect, const auto &connectPool)
+                        { this->onConnectToHostError( connect, connectPool ); };
+                    connectPoolSettings->connectToHostTimeoutCallback = [ this ](const auto &connect, const auto &connectPool)
+                        { this->onConnectToHostTimeout( connect, connectPool ); };
+                    connectPoolSettings->connectToHostSucceedCallback = [ this ](const auto &connect, const auto &connectPool)
+                        { this->onConnectToHostSucceed( connect, connectPool ); };
+                    connectPoolSettings->remoteHostClosedCallback     = [ this ](const auto &connect, const auto &connectPool)
+                        { this->onRemoteHostClosed( connect, connectPool ); };
+                    connectPoolSettings->readyToDeleteCallback        = [ this ](const auto &connect, const auto &connectPool)
+                        { this->onReadyToDelete( connect, connectPool ); };
+                    connectPoolSettings->packageReceivedCallback      = [ this ](const auto &connect, const auto &connectPool, const auto &package)
+                        { this->onPackageReceived( connect, connectPool, package ); };
 
                     connectSettings->randomFlagRangeStart = 1000000000;
                     connectSettings->randomFlagRangeEnd = 1999999999;
@@ -207,9 +207,13 @@ void JQNetworkServer::incomingConnection(const qintptr &socketDescriptor)
     );
 }
 
-void JQNetworkServer::onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package)
+void JQNetworkServer::onPackageReceived(
+        const JQNetworkConnectPointer &connect,
+        const JQNetworkConnectPoolPointer &,
+        const JQNetworkPackageSharedPointer &package
+    )
 {
-    NULLPTR_CHECK( serverSettings_->packageReceivedCallback );
+    JQNETWORK_NULLPTR_CHECK( serverSettings_->packageReceivedCallback );
 
     processorThreadPool_->run(
                 [

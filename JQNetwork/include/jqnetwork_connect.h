@@ -23,8 +23,8 @@ struct JQNetworkConnectSettings
 
     int streamFormat = -1;
     qint64 cutPackageSize = 2 * 1024 * 1024;
-    qint64 packageCompressionThresholdForBytes = -1;
-    int packageCompressionThresholdForFirstCommunicationElapsed = -1;
+    qint64 packageCompressionMinimumBytes = 8 * 1024 * 1024;
+    int packageCompressionThresholdForFirstCommunicationElapsed = 1000;
     qint64 maximumSendForTotalByteCount = -1;
     qint64 maximumSendPackageByteCount = -1;
     int maximumSendSpeed = -1; // Byte/s
@@ -124,8 +124,8 @@ private:
     void onReadyToDelete();
 
     void reaySendPayloadData(
-            const QByteArray &payloadData,
             const qint32 &randomFlag,
+            const QByteArray &payloadData,
             const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &succeedCallback,
             const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback
         );
@@ -148,7 +148,7 @@ private:
     // Package
     QMutex mutexForSend_;
     qint32 sendRandomFlagRotaryIndex_ = 0;
-    QMap< qint32, JQNetworkPackageSharedPointer > sendPackagePool_; // randomFlag -> package
+    QMap< qint32, QList< JQNetworkPackageSharedPointer > > sendPackagePool_; // randomFlag -> package
     QMap< qint32, JQNetworkPackageSharedPointer > receivePackagePool_; // randomFlag -> package
     QMap< qint32, ReceivedCallbackPackage > onReceivedCallbacks_; // randomFlag -> package
 

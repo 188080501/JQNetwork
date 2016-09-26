@@ -245,13 +245,16 @@ void JQNetworkConnectPool::onConnectToHostSucceed(const JQNetworkConnectPointer 
 
     mutex_.unlock();
 
-    NULLPTR_CHECK( connectPoolSettings_->connectToHostSucceedCallback );
-    connectPoolSettings_->connectToHostSucceedCallback( connect );
+    JQNETWORK_NULLPTR_CHECK( connectPoolSettings_->connectToHostSucceedCallback );
+    connectPoolSettings_->connectToHostSucceedCallback( connect, this );
 }
 
 void JQNetworkConnectPool::onReadyToDelete(const JQNetworkConnectPointer &connect)
 {
 //    qDebug() << "onReadyToDelete:" << connect.data();
+
+    JQNETWORK_NULLPTR_CHECK( connectPoolSettings_->readyToDeleteCallback );
+    connectPoolSettings_->readyToDeleteCallback( connect, this );
 
     mutex_.lock();
 
@@ -293,7 +296,4 @@ void JQNetworkConnectPool::onReadyToDelete(const JQNetworkConnectPointer &connec
     }
 
     mutex_.unlock();
-
-    NULLPTR_CHECK( connectPoolSettings_->readyToDeleteCallback );
-    connectPoolSettings_->readyToDeleteCallback( connect );
 }

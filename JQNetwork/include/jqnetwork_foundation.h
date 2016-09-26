@@ -30,8 +30,14 @@
 #define JQNETWORKPACKAGE_BOOTFLAG 0x7d
 #define JQNETWORKPACKAGE_VERSION 1
 
-#define NULLPTR_CHECK( ptr, ... ) \
+#define JQNETWORK_NULLPTR_CHECK( ptr, ... ) \
     if ( !ptr ) { qDebug( "%s: %s is null", __func__, # ptr ); return __VA_ARGS__; }
+
+#if ( defined Q_OS_IOS ) || ( defined Q_OS_ANDROID )
+#   define JQNETWORK_ADVISE_THREADCOUNT 1
+#else
+#   define JQNETWORK_ADVISE_THREADCOUNT 2
+#endif
 
 class QJsonObject;
 class QJsonArray;
@@ -59,9 +65,15 @@ struct JQNetworkConnectPoolSettings;
 struct JQNetworkServerSettings;
 struct JQNetworkClientSettings;
 
+typedef QPointer< JQNetworkPackage > JQNetworkPackagePointer;
+typedef QPointer< JQNetworkConnect > JQNetworkConnectPointer;
+typedef QPointer< JQNetworkConnectPool > JQNetworkConnectPoolPointer;
+typedef QPointer< JQNetworkServer > JQNetworkServerPointer;
+typedef QPointer< JQNetworkProcessor > JQNetworkProcessorPointer;
+typedef QPointer< JQNetworkClient > JQNetworkClientPointer;
+
 typedef QSharedPointer< JQNetworkPackage > JQNetworkPackageSharedPointer;
 typedef QSharedPointer< JQNetworkConnect > JQNetworkConnectSharedPointer;
-typedef QPointer< JQNetworkConnect > JQNetworkConnectPointer;
 typedef QSharedPointer< JQNetworkConnectPool > JQNetworkConnectPoolSharedPointer;
 typedef QSharedPointer< JQNetworkServer > JQNetworkServerSharedPointer;
 typedef QSharedPointer< JQNetworkProcessor > JQNetworkProcessorSharedPointer;

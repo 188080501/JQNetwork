@@ -288,30 +288,64 @@ void JQNetworkBenchmark::jqNetworkServerTest()
 void JQNetworkBenchmark::jqNetworkClientTest()
 {
     bool flag1 = false;
+    bool flag2 = false;
+
+    int count1 = 0;
+
+    QTcpServer tcpServer;
+    QCOMPARE( tcpServer.listen( QHostAddress::Any, 12345 ), true );
+
+    JQNetworkClientSettingsSharedPointer clientSettings( new JQNetworkClientSettings );
+    JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings( new JQNetworkConnectPoolSettings );
+    JQNetworkConnectSettingsSharedPointer connectSettings( new JQNetworkConnectSettings );
+
+    clientSettings->readyToDeleteCallback = [ &flag1, &count1 ](const auto &, const auto &, const auto &){ flag1 = true; ++count1; };
 
     {
-        QTcpServer tcpServer;
-        QCOMPARE( tcpServer.listen( QHostAddress::Any, 12345 ), true );
-
-        JQNetworkClientSettingsSharedPointer clientSettings( new JQNetworkClientSettings );
-        JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings( new JQNetworkConnectPoolSettings );
-        JQNetworkConnectSettingsSharedPointer connectSettings( new JQNetworkConnectSettings );
-
-        clientSettings->readyToDeleteCallback = [](){};
-        connectSettings->maximumReceivePackageWaitTime = 500;
-
         JQNetworkClient client( clientSettings, connectPoolSettings, connectSettings );
         client.begin();
 
+        QCOMPARE( client.sendPayloadData( "127.0.0.1", 23456, { } ), 0 );
+        QCOMPARE( client.waitForCreateConnect( "127.0.0.1", 23456 ), false );
+
+        count1 = 0;
+
+        for ( auto count = 0; count < 500; ++count )
+        {
+            client.createConnect( "127.0.0.1", 34567 + count );
+        }
+
+        QThread::msleep( 15 * 1000 );
+
+        QCOMPARE( count1, 500 );
+    }
+
+    connectSettings->maximumReceivePackageWaitTime = 500;
+
+    {
+        JQNetworkClient client( clientSettings, connectPoolSettings, connectSettings );
+        client.begin();
+
+        flag1 = false;
         QCOMPARE( client.waitForCreateConnect( "127.0.0.1", 12344, 1000 ), false );
+        QThread::msleep( 200 );
+        QCOMPARE( flag1, true );
+
+        flag1 = false;
         QCOMPARE( client.waitForCreateConnect( "127.0.0.1", 12345 ), true );
-
-        client.sendPayloadData( "127.0.0.1", 12345, "Test", nullptr, [ &flag1 ](const auto &){ flag1 = true; } );
-
-        QThread::msleep( 100 );
+        QThread::msleep( 200 );
         QCOMPARE( flag1, false );
 
+        client.sendPayloadData( "127.0.0.1", 12345, "Test", nullptr, [ &flag2 ](const auto &){ flag2 = true; } );
+
+        QThread::msleep( 100 );
+        QCOMPARE( flag2, false );
+
         QThread::msleep( 1000 );
-        QCOMPARE( flag1, true );
+        QCOMPARE( flag2, true );
     }
+
+    QCOMPARE( flag1, true );
+
+    connectSettings->maximumReceivePackageWaitTime = 30 * 1000;
 }
