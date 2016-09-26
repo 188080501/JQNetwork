@@ -26,8 +26,11 @@ struct JQNetworkConnectPoolSettings
     std::function< void( const JQNetworkConnectPointer &, const JQNetworkConnectPoolPointer & ) > connectToHostSucceedCallback = nullptr;
     std::function< void( const JQNetworkConnectPointer &, const JQNetworkConnectPoolPointer & ) > remoteHostClosedCallback = nullptr;
     std::function< void( const JQNetworkConnectPointer &, const JQNetworkConnectPoolPointer & ) > readyToDeleteCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer &, const JQNetworkConnectPoolPointer &, const qint32 &, const qint64 &, const qint64 &, const qint64 & ) > packageSendingCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer &, const JQNetworkConnectPoolPointer &, const qint32 &, const qint64 &, const qint64 &, const qint64 & ) > packageReceivingCallback = nullptr;
     std::function< void( const JQNetworkConnectPointer &, const JQNetworkConnectPoolPointer &, const JQNetworkPackageSharedPointer & ) > packageReceivedCallback = nullptr;
-    std::function< void( const JQNetworkConnectPointer &, const JQNetworkConnectPoolPointer &, const JQNetworkPackageSharedPointer &, const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > & ) > waitReplyPackageSucceedCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer &, const JQNetworkConnectPoolPointer &, const JQNetworkPackageSharedPointer &,
+                         const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > & ) > waitReplyPackageSucceedCallback = nullptr;
     std::function< void( const JQNetworkConnectPointer &, const JQNetworkConnectPoolPointer &, const std::function< void(const JQNetworkConnectPointer &connect) > & ) > waitReplyPackageFailCallback = nullptr;
 };
 
@@ -80,6 +83,22 @@ private:
     inline void onRemoteHostClosed(const JQNetworkConnectPointer &connect);
 
     void onReadyToDelete(const JQNetworkConnectPointer &connect);
+
+    inline void onPackageSending(
+            const JQNetworkConnectPointer &connect,
+            const qint32 &randomFlag,
+            const qint64 &payloadCurrentIndex,
+            const qint64 &payloadCurrentSize,
+            const qint64 &payloadTotalSize
+        );
+
+    inline void onPackageReceiving(
+            const JQNetworkConnectPointer &connect,
+            const qint32 &randomFlag,
+            const qint64 &payloadCurrentIndex,
+            const qint64 &payloadCurrentSize,
+            const qint64 &payloadTotalSize
+        );
 
     inline void onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package);
 

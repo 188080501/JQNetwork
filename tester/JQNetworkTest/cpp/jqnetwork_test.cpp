@@ -17,7 +17,7 @@
 #include <JQNetworkClient>
 #include <JQNetworkForwarf>
 
-void JQNetworkBenchmark::jqNetworkThreadPoolTest()
+void JQNetworkTest::jqNetworkThreadPoolTest()
 {
     QMutex mutex;
     QMap< QThread *, int > flag;
@@ -62,7 +62,7 @@ void JQNetworkBenchmark::jqNetworkThreadPoolTest()
     }
 }
 
-void JQNetworkBenchmark::jqNetworkThreadPoolBenchmark()
+void JQNetworkTest::jqNetworkThreadPoolBenchmark()
 {
     int number = 0;
 
@@ -80,7 +80,7 @@ void JQNetworkBenchmark::jqNetworkThreadPoolBenchmark()
     QCOMPARE( ( number != 10000000 ), true );
 }
 
-void JQNetworkBenchmark::jqNetworkThreadPoolBenchmark2()
+void JQNetworkTest::jqNetworkThreadPoolBenchmark2()
 {
     int number = 0;
 
@@ -98,7 +98,7 @@ void JQNetworkBenchmark::jqNetworkThreadPoolBenchmark2()
     QCOMPARE( number, 90000 );
 }
 
-void JQNetworkBenchmark::jqNetworkConnectTest()
+void JQNetworkTest::jqNetworkConnectTest()
 {
     auto connectSettings = JQNetworkConnectSettingsSharedPointer( new JQNetworkConnectSettings );
 
@@ -188,7 +188,7 @@ void JQNetworkBenchmark::jqNetworkConnectTest()
     QCOMPARE( flag5, true );
 }
 
-void JQNetworkBenchmark::jeNetworkPackageTest()
+void JQNetworkTest::jeNetworkPackageTest()
 {
     {
         QCOMPARE( JQNetworkPackage::headSize(), 24 );
@@ -242,10 +242,78 @@ void JQNetworkBenchmark::jeNetworkPackageTest()
             QCOMPARE( package1->isAbandonPackage(), true );
             QCOMPARE( package3->isAbandonPackage(), true );
         }
+
+        {
+            auto packages = JQNetworkPackage::createPackagesFromPayloadData( "12345", 1, 2 );
+            QCOMPARE( packages.size(), 3 );
+
+            auto package1 = packages.at( 0 );
+            auto package2 = packages.at( 1 );
+            auto package3 = packages.at( 2 );
+
+            QCOMPARE( package1->randomFlag(), 1 );
+            QCOMPARE( package2->randomFlag(), 1 );
+            QCOMPARE( package3->randomFlag(), 1 );
+
+            QCOMPARE( package1->payloadDataTotalSize(), 5 );
+            QCOMPARE( package2->payloadDataTotalSize(), 5 );
+            QCOMPARE( package3->payloadDataTotalSize(), 5 );
+
+            QCOMPARE( package1->payloadDataCurrentSize(), 2 );
+            QCOMPARE( package2->payloadDataCurrentSize(), 2 );
+            QCOMPARE( package3->payloadDataCurrentSize(), 1 );
+
+            QCOMPARE( package1->payloadData(), QByteArray( "12" ) );
+            QCOMPARE( package2->payloadData(), QByteArray( "34" ) );
+            QCOMPARE( package3->payloadData(), QByteArray( "5" ) );
+
+            QCOMPARE( package1->payloadDataSize(), 2 );
+            QCOMPARE( package2->payloadDataSize(), 2 );
+            QCOMPARE( package3->payloadDataSize(), 1 );
+
+            QCOMPARE( package2->isAbandonPackage(), false );
+            QCOMPARE( package3->isAbandonPackage(), false );
+
+            QCOMPARE( package1->isCompletePackage(), false );
+            QCOMPARE( package1->mixPackage( package2 ), true );
+            QCOMPARE( package1->isCompletePackage(), false );
+            QCOMPARE( package1->mixPackage( package3 ), true );
+            QCOMPARE( package1->isCompletePackage(), true );
+
+            QCOMPARE( package2->isCompletePackage(), false );
+            QCOMPARE( package3->isCompletePackage(), false );
+
+            QCOMPARE( package1->payloadDataSize(), 5 );
+            QCOMPARE( package1->payloadData(), QByteArray( "12345" ) );
+        }
+
+        {
+            auto packages = JQNetworkPackage::createPackagesFromPayloadData( "12345", 2, 5 );
+            QCOMPARE( packages.size(), 1 );
+
+            auto package = packages.first();
+
+            QCOMPARE( package->isAbandonPackage(), false );
+            QCOMPARE( package->isCompletePackage(), true );
+            QCOMPARE( package->payloadDataSize(), 5 );
+            QCOMPARE( package->payloadData(), QByteArray( "12345" ) );
+        }
+
+        {
+            auto packages = JQNetworkPackage::createPackagesFromPayloadData( "12345", 2, 6 );
+            QCOMPARE( packages.size(), 1 );
+
+            auto package = packages.first();
+
+            QCOMPARE( package->isAbandonPackage(), false );
+            QCOMPARE( package->isCompletePackage(), true );
+            QCOMPARE( package->payloadDataSize(), 5 );
+            QCOMPARE( package->payloadData(), QByteArray( "12345" ) );
+        }
     }
 }
 
-void JQNetworkBenchmark::jqNetworkServerTest()
+void JQNetworkTest::jqNetworkServerTest()
 {
     auto serverSettings = JQNetworkServerSettingsSharedPointer( new JQNetworkServerSettings );
     auto connectPoolSettings = JQNetworkConnectPoolSettingsSharedPointer( new JQNetworkConnectPoolSettings );
@@ -285,7 +353,7 @@ void JQNetworkBenchmark::jqNetworkServerTest()
     QCOMPARE( succeedCount, 1 );
 }
 
-void JQNetworkBenchmark::jqNetworkClientTest()
+void JQNetworkTest::jqNetworkClientTest()
 {
     bool flag1 = false;
     bool flag2 = false;
@@ -348,4 +416,73 @@ void JQNetworkBenchmark::jqNetworkClientTest()
     QCOMPARE( flag1, true );
 
     connectSettings->maximumReceivePackageWaitTime = 30 * 1000;
+}
+
+void JQNetworkTest::jqNetworkServerAndClientTest()
+{
+    auto server = JQNetworkServer::createServerByListenPort( 12345 );
+    server->connectSettings()->cutPackageSize = 2;
+    server->serverSettings()->packageSendingCallback = [  ](
+            const auto &,
+            const auto &randomFlag,
+            const auto &payloadCurrentIndex,
+            const auto &payloadCurrentSize,
+            const auto &payloadTotalSize
+        )
+    {
+        //...
+    };
+    server->serverSettings()->packageReceivingCallback = [  ](
+            const auto &,
+            const auto &randomFlag,
+            const auto &payloadCurrentIndex,
+            const auto &payloadCurrentSize,
+            const auto &payloadTotalSize
+        )
+    {
+        //...
+    };
+    server->serverSettings()->packageReceivedCallback = [  ](
+            const auto &,
+            const auto &package
+        )
+    {
+        //...
+    };
+
+    auto client = JQNetworkClient::createClient();
+    client->connectSettings()->cutPackageSize = 2;
+    client->clientSettings()->packageSendingCallback = [  ](
+            const auto &,
+            const auto &hostName,
+            const auto &port,
+            const auto &randomFlag,
+            const auto &payloadCurrentIndex,
+            const auto &payloadCurrentSize,
+            const auto &payloadTotalSize
+        )
+    {
+        //...
+    };
+    client->clientSettings()->packageReceivingCallback = [  ](
+            const auto &,
+            const auto &hostName,
+            const auto &port,
+            const auto &randomFlag,
+            const auto &payloadCurrentIndex,
+            const auto &payloadCurrentSize,
+            const auto &payloadTotalSize
+        )
+    {
+        //...
+    };
+    client->clientSettings()->packageReceivedCallback = [  ](
+            const auto &,
+            const auto &hostName,
+            const auto &port,
+            const auto &package
+        )
+    {
+        //...
+    };
 }

@@ -20,10 +20,10 @@ void JQNetworkBenchmark::test1()
 {
     auto server = JQNetworkServer::createServerByListenPort( 12345 );
 
-    server->setOnPackageReceivedCallback( [](const auto &connect, const auto &package)
+    server->serverSettings()->packageReceivedCallback = [](const auto &connect, const auto &package)
     {
         connect->replyPayloadData( "Test", package->randomFlag() );
-    } );
+    };
 
     if ( !server->begin() )
     {
@@ -87,10 +87,10 @@ void JQNetworkBenchmark::test2()
 
     auto server = JQNetworkServer::createServerByListenPort( 23456 );
 
-    server->setOnPackageReceivedCallback( [ ](const auto &connect, const auto &package)
+    server->serverSettings()->packageReceivedCallback = [ ](const auto &connect, const auto &package)
     {
         connect->replyPayloadData( testData, package->randomFlag() );
-    } );
+    };
 
     if ( !server->begin() )
     {
@@ -150,10 +150,10 @@ void JQNetworkBenchmark::test3()
 {
     auto server = JQNetworkServer::createServerByListenPort( 34567 );
 
-    server->setOnPackageReceivedCallback( [](const auto &connect, const auto &package)
+    server->serverSettings()->packageReceivedCallback = [](const auto &connect, const auto &package)
     {
         connect->replyPayloadData( "Test", package->randomFlag() );
-    } );
+    };
 
     if ( !server->begin() )
     {
@@ -224,10 +224,10 @@ void JQNetworkBenchmark::test4()
 
     auto server = JQNetworkServer::createServerByListenPort( 45678 );
 
-    server->setOnPackageReceivedCallback( [](const auto &connect, const auto &package)
+    server->serverSettings()->packageReceivedCallback = [](const auto &connect, const auto &package)
     {
         connect->replyPayloadData( testData, package->randomFlag() );
-    } );
+    };
 
     if ( !server->begin() )
     {
@@ -301,10 +301,10 @@ void JQNetworkBenchmark::test5()
     auto server = JQNetworkServer::createServerByListenPort( 56789 );
     QSemaphore semaphore;
 
-    server->setOnPackageReceivedCallback( [ &semaphore ](const auto &, const auto &)
+    server->serverSettings()->packageReceivedCallback = [ &semaphore ](const auto &, const auto &)
     {
         semaphore.release( 1 );
-    } );
+    };
 
     if ( !server->begin() )
     {

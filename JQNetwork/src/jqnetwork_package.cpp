@@ -93,20 +93,53 @@ JQNetworkPackageSharedPointer JQNetworkPackage::createPackageFromRawData(QByteAr
     return newPackage;
 }
 
-JQNetworkPackageSharedPointer JQNetworkPackage::createPackageFromPayloadData(const QByteArray &payloadData, const qint32 &randomFlag)
+QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createPackagesFromPayloadData(
+        const QByteArray &payloadData,
+        const qint32 &randomFlag,
+        const qint64 cutPackageSize
+    )
 {
-    auto newPackage = JQNetworkPackageSharedPointer( new JQNetworkPackage );
+    QList< JQNetworkPackageSharedPointer > result;
 
-    newPackage->head_.randomFlag_ = randomFlag;
+    for ( auto index = 0; index < payloadData.size(); )
+    {
+        auto package = JQNetworkPackageSharedPointer( new JQNetworkPackage );
 
-    newPackage->head_.payloadDataTotalSize_ = payloadData.size();
-    newPackage->head_.payloadDataCurrentSize_ = payloadData.size();
+        package->head_.randomFlag_ = randomFlag;
+        package->head_.payloadDataTotalSize_ = payloadData.size();
 
-    newPackage->payloadData_ = payloadData;
+        if ( cutPackageSize == -1 )
+        {
+            package->head_.payloadDataCurrentSize_ = payloadData.size();
+            package->payloadData_ = payloadData;
+            package->isCompletePackage_ = true;
 
-    newPackage->isCompletePackage_ = true;
+            index = payloadData.size();
+        }
+        else
+        {
+            if ( ( index + cutPackageSize ) > payloadData.size() )
+            {
+                package->payloadData_ = payloadData.mid( index );
+                package->head_.payloadDataCurrentSize_ = package->payloadData_.size();
+                package->isCompletePackage_ = result.isEmpty();
 
-    return newPackage;
+                index = payloadData.size();
+            }
+            else
+            {
+                package->head_.payloadDataCurrentSize_ = cutPackageSize;
+                package->payloadData_ = payloadData.mid( index, cutPackageSize );
+                package->isCompletePackage_ = !index && ( ( index + cutPackageSize ) == payloadData.size() );
+
+                index += cutPackageSize;
+            }
+        }
+
+        result.push_back( package );
+    }
+
+    return result;
 }
 
 bool JQNetworkPackage::mixPackage(const JQNetworkPackageSharedPointer &mixPackage)

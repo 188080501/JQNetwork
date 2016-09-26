@@ -31,17 +31,4 @@ inline JQNetworkConnectSettingsSharedPointer JQNetworkClient::connectSettings()
     return connectSettings_;
 }
 
-inline void JQNetworkClient::setOnConnectToHostSucceedCallback(
-        const std::function< void( JQNetworkConnectPointer, const QString &hostName, const quint16 &port ) > &callback
-    )
-{
-    if ( !connectPools_.isEmpty() )
-    {
-        qDebug() << __func__ << "set error: already begin";
-        return;
-    }
-
-    clientSettings_->connectToHostSucceedCallback = callback;
-}
-
 #endif//JQNETWORK_INCLUDE_JQNETWORK_CLIENG_INC

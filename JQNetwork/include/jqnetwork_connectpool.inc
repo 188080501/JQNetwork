@@ -56,6 +56,30 @@ inline void JQNetworkConnectPool::onRemoteHostClosed(const JQNetworkConnectPoint
     connectPoolSettings_->remoteHostClosedCallback( connect, this );
 }
 
+inline void JQNetworkConnectPool::onPackageSending(
+        const JQNetworkConnectPointer &connect,
+        const qint32 &randomFlag,
+        const qint64 &payloadCurrentIndex,
+        const qint64 &payloadCurrentSize,
+        const qint64 &payloadTotalSize
+    )
+{
+    JQNETWORK_NULLPTR_CHECK( connectPoolSettings_->packageSendingCallback );
+    connectPoolSettings_->packageSendingCallback( connect, this, randomFlag, payloadCurrentIndex, payloadCurrentSize, payloadTotalSize );
+}
+
+inline void JQNetworkConnectPool::onPackageReceiving(
+        const JQNetworkConnectPointer &connect,
+        const qint32 &randomFlag,
+        const qint64 &payloadCurrentIndex,
+        const qint64 &payloadCurrentSize,
+        const qint64 &payloadTotalSize
+    )
+{
+    JQNETWORK_NULLPTR_CHECK( connectPoolSettings_->packageReceivingCallback );
+    connectPoolSettings_->packageReceivingCallback( connect, this, randomFlag, payloadCurrentIndex, payloadCurrentSize, payloadTotalSize );
+}
+
 inline void JQNetworkConnectPool::onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package)
 {
     JQNETWORK_NULLPTR_CHECK( connectPoolSettings_->packageReceivedCallback );

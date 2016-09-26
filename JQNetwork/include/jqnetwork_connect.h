@@ -46,8 +46,11 @@ struct JQNetworkConnectSettings
     std::function< void( const JQNetworkConnectPointer & ) > connectToHostSucceedCallback = nullptr;
     std::function< void( const JQNetworkConnectPointer & ) > remoteHostClosedCallback = nullptr;
     std::function< void( const JQNetworkConnectPointer & ) > readyToDeleteCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer &, const qint32 &, const qint64 &, const qint64 &, const qint64 & ) > packageSendingCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer &, const qint32 &, const qint64 &, const qint64 &, const qint64 & ) > packageReceivingCallback = nullptr;
     std::function< void( const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer & ) > packageReceivedCallback = nullptr;
-    std::function< void( const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer &, const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > & ) > waitReplyPackageSucceedCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer &,
+                         const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > & ) > waitReplyPackageSucceedCallback = nullptr;
     std::function< void( const JQNetworkConnectPointer &, const std::function< void(const JQNetworkConnectPointer &connect) > & ) > waitReplyPackageFailCallback = nullptr;
 };
 

@@ -35,7 +35,11 @@ public:
 
     static JQNetworkPackageSharedPointer createPackageFromRawData(QByteArray &rawData);
 
-    static JQNetworkPackageSharedPointer createPackageFromPayloadData(const QByteArray &payloadData, const qint32 &randomFlag);
+    static QList< JQNetworkPackageSharedPointer > createPackagesFromPayloadData(
+            const QByteArray &payloadData,
+            const qint32 &randomFlag,
+            const qint64 cutPackageSize = -1
+        );
 
     inline bool isCompletePackage() const;
 

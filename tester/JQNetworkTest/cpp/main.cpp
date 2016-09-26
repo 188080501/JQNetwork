@@ -9,10 +9,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
 
-    JQNetworkBenchmark jqNetworkTest;
-
-//    jqNetworkTest.jqNetworkThreadPoolTest();
-//    return app.exec();
+    JQNetworkTest jqNetworkTest;
 
     return QTest::qExec( &jqNetworkTest, argc, argv );
 }

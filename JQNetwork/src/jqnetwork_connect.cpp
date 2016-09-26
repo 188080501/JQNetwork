@@ -246,15 +246,24 @@ void JQNetworkConnect::onTcpSocketReadyRead()
         else
         {
             auto package = JQNetworkPackage::createPackageFromRawData( tcpSocketBuffer_ );
+
             if ( package->isCompletePackage() )
             {
+                JQNETWORK_NULLPTR_CHECK( connectSettings_->packageReceivingCallback );
+                connectSettings_->packageReceivingCallback( this, package->randomFlag(), 0, package->payloadDataCurrentSize(), package->payloadDataTotalSize() );
+
                 this->onPackageReceived( package );
             }
             else
             {
                 const auto &&itForPackage = receivePackagePool_.find( package->randomFlag() );
+
                 if ( itForPackage != receivePackagePool_.end() )
                 {
+                    auto payloadCurrentIndex = ( *itForPackage )->payloadDataCurrentSize();
+                    JQNETWORK_NULLPTR_CHECK( connectSettings_->packageReceivingCallback );
+                    connectSettings_->packageReceivingCallback( this, package->randomFlag(), payloadCurrentIndex, package->payloadDataCurrentSize(), package->payloadDataTotalSize() );
+
                     if ( !(*itForPackage)->mixPackage( package ) )
                     {
                         receivePackagePool_.erase( itForPackage );
@@ -269,6 +278,9 @@ void JQNetworkConnect::onTcpSocketReadyRead()
                 }
                 else
                 {
+                    JQNETWORK_NULLPTR_CHECK( connectSettings_->packageReceivingCallback );
+                    connectSettings_->packageReceivingCallback( this, package->randomFlag(), 0, package->payloadDataCurrentSize(), package->payloadDataTotalSize() );
+
                     receivePackagePool_[ package->randomFlag() ] = package;
                 }
             }
@@ -421,8 +433,21 @@ void JQNetworkConnect::reaySendPayloadData(
     if ( isAbandonTcpSocket_ ) { return; }
     JQNETWORK_NULLPTR_CHECK( tcpSocket_ );
 
-    const auto &&package = JQNetworkPackage::createPackageFromPayloadData( payloadData, randomFlag );
-    const auto &&buffer = package->toByteArray();
+    auto packages = JQNetworkPackage::createPackagesFromPayloadData(
+                payloadData,
+                randomFlag,
+                connectSettings_->cutPackageSize
+            );
+    if ( packages.isEmpty() )
+    {
+        qDebug() << "JQNetworkConnect::reaySendPayloadData: createPackagesFromPayloadData error";
+        return;
+    }
+
+    auto firstPackage = packages.first();
+    packages.pop_front();
+
+    const auto &&buffer = firstPackage->toByteArray();
 
     waitForSendBytes_ += buffer.size();
     tcpSocket_->write( buffer );
@@ -442,34 +467,11 @@ void JQNetworkConnect::reaySendPayloadData(
         }
     }
 
-//    for ( auto payloadDataIndex = 0; payloadDataIndex < payloadData.size(); )
-//    {
-//        if ( ( payloadDataIndex + connectSettings_->cutPackageSize ) > payloadData.size() )
-//        {
-//            //
-//        }
-//        else
-//        {
-//            const auto &&package = JQNetworkPackage::createPackageFromPayloadData( payloadData, randomFlag );
-//            const auto &&buffer = package->toByteArray();
+    if ( !packages.isEmpty() )
+    {
+        sendPackagePool_[ randomFlag ] = packages;
+    }
 
-//            waitForSendBytes_ += buffer.size();
-//            tcpSocket_->write( buffer );
-
-//            if ( succeedCallback || failCallback )
-//            {
-//                onReceivedCallbacks_[ randomFlag ] =
-//                {
-//                    QDateTime::currentMSecsSinceEpoch(),
-//                    succeedCallback,
-//                    failCallback
-//                };
-
-//                if ( !timerForSendPackageCheck_ )
-//                {
-//                    this->startTimerForSendPackageCheck();
-//                }
-//            }
-//        }
-//    }
+    JQNETWORK_NULLPTR_CHECK( connectSettings_->packageSendingCallback );
+    connectSettings_->packageSendingCallback( this, randomFlag, 0, firstPackage->payloadDataCurrentSize(), firstPackage->payloadDataTotalSize() );
 }

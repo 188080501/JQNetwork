@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     auto server = JQNetworkServer::createServerByListenPort( listenPort );
 
     // 设置接收到数据包后的回调
-    server->setOnPackageReceivedCallback( [ ](const auto &connect, const auto &package)
+    server->serverSettings()->packageReceivedCallback = [ ](const auto &connect, const auto &package)
     {
         // 回调会发生在一个专用的线程，请注意线程安全
 
@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 
         // 返回一个数据，需要指定 randomFlag 以告知客户端
         connect->replyPayloadData( "Pong", package->randomFlag() );
-    } );
+    };
 
     // 初始化服务端
     if ( !server->begin() )
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     QObject::connect( &timer, &QTimer::timeout, ping );
 
     // 设置连接到服务端后的回调
-    client->setOnConnectToHostSucceedCallback( [ &timer ](JQNetworkConnectPointer, const QString &hostName, const quint16 &port)
+    client->clientSettings()->connectToHostSucceedCallback = [ &timer ](JQNetworkConnectPointer, const QString &hostName, const quint16 &port)
     {
         // 回调会发生在一个专用的线程，请注意线程安全
 
@@ -115,7 +115,7 @@ int main(int argc, char *argv[])
         // 开启 PingPong 测试的定时器，循环发送
         // 因为这里在一个新的线程，所以通过 invokeMethod 去调用 start
         QMetaObject::invokeMethod( &timer, "start" );
-    } );
+    };
 
     // 初始化客户端
     if ( !client->begin() )

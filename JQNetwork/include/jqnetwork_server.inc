@@ -31,19 +31,6 @@ inline JQNetworkConnectSettingsSharedPointer JQNetworkServer::connectSettings()
     return connectSettings_;
 }
 
-inline void JQNetworkServer::setOnPackageReceivedCallback(
-        const std::function<void (QPointer<JQNetworkConnect>, JQNetworkPackageSharedPointer)> &callback
-    )
-{
-    if ( !connectPools_.isEmpty() )
-    {
-        qDebug() << __func__ << "set error: already begin";
-        return;
-    }
-
-    serverSettings_->packageReceivedCallback = callback;
-}
-
 inline void JQNetworkServer::onConnectToHostError(const JQNetworkConnectPointer &connect, const JQNetworkConnectPoolPointer &)
 {
     if ( !serverSettings_->connectToHostErrorCallback ) { return; }
@@ -115,6 +102,58 @@ inline void JQNetworkServer::onReadyToDelete(const JQNetworkConnectPointer &conn
                 ]()
                 {
                     callback( connect );
+                }
+    );
+}
+
+inline void JQNetworkServer::onPackageSending(
+        const JQNetworkConnectPointer &connect,
+        const JQNetworkConnectPoolPointer &,
+        const qint32 &randomFlag,
+        const qint64 &payloadCurrentIndex,
+        const qint64 &payloadCurrentSize,
+        const qint64 &payloadTotalSize
+    )
+{
+    if ( !serverSettings_->packageSendingCallback ) { return; }
+
+    processorThreadPool_->run(
+                [
+                    connect,
+                    callback = serverSettings_->packageSendingCallback,
+                    randomFlag,
+                    payloadCurrentIndex,
+                    payloadCurrentSize,
+                    payloadTotalSize
+                ]()
+                {
+                    callback( connect, randomFlag, payloadCurrentIndex, payloadCurrentSize, payloadTotalSize );
+                }
+    );
+}
+
+inline void JQNetworkServer::onPackageReceiving(
+        const JQNetworkConnectPointer &connect,
+        const JQNetworkConnectPoolPointer &,
+        const qint32 &randomFlag,
+        const qint64 &payloadCurrentIndex,
+        const qint64 &payloadCurrentSize,
+        const qint64 &payloadTotalSize
+    )
+{
+    if ( !serverSettings_->packageReceivingCallback ) { return; }
+
+    processorThreadPool_->run(
+                [
+                    connect,
+                    callback = serverSettings_->packageReceivingCallback,
+                    randomFlag,
+                    payloadCurrentIndex,
+                    payloadCurrentSize,
+                    payloadTotalSize
+                ]()
+                {
+                    callback( connect, randomFlag, payloadCurrentIndex, payloadCurrentSize, payloadTotalSize );
                 }
     );
 }
