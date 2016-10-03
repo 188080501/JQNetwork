@@ -36,9 +36,9 @@ inline qint8 JQNetworkPackage::bootFlag() const
     return head_.bootFlag_; 
 }
 
-inline qint8 JQNetworkPackage::versionFlag() const 
+inline qint8 JQNetworkPackage::packageFlag() const 
 { 
-    return head_.versionFlag_; 
+    return head_.packageFlag_; 
 }
 
 inline qint32 JQNetworkPackage::randomFlag() const 

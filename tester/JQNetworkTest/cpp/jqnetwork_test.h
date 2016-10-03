@@ -4,14 +4,14 @@
 // Qt lib import
 #include <QObject>
 
-class JQNetworkBenchmark: public QObject
+class JQNetworkTest: public QObject
 {
      Q_OBJECT
 
 public:
-    JQNetworkBenchmark() = default;
+    JQNetworkTest() = default;
 
-    ~JQNetworkBenchmark() = default;
+    ~JQNetworkTest() = default;
 
 private slots:
     void jqNetworkThreadPoolTest();
@@ -32,6 +32,9 @@ private slots:
 
 private slots:
     void jqNetworkClientTest();
+
+private slots:
+    void jqNetworkServerAndClientTest();
 };
 
 #endif//__CPP_JQNETWORK_TEST_H__

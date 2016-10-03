@@ -20,10 +20,10 @@ void JQNetworkBenchmark::test1()
 {
     auto server = JQNetworkServer::createServerByListenPort( 12345 );
 
-    server->setOnPackageReceivedCallback( [](const auto &connect, const auto &package)
+    server->serverSettings()->packageReceivedCallback = [](const auto &connect, const auto &package)
     {
-        connect->replyPayloadData( "Test", package->randomFlag() );
-    } );
+        connect->replyPayloadData( package->randomFlag(), "Test" );
+    };
 
     if ( !server->begin() )
     {
@@ -55,16 +55,14 @@ void JQNetworkBenchmark::test1()
                     "127.0.0.1",
                     12345,
                     "Test",
+                    [ &testCount, &succeedCount, &semaphore ](const auto &, const auto &)
                     {
-                        [ &testCount, &succeedCount, &semaphore ](const auto &, const auto &)
+                        if ( ++succeedCount >= testCount )
                         {
-                            if ( ++succeedCount >= testCount )
-                            {
-                                semaphore.release( 1 );
-                            }
-                        },
-                        nullptr
-                    }
+                            semaphore.release( 1 );
+                        }
+                    },
+                    nullptr
                 );
     }
 
@@ -79,7 +77,7 @@ void JQNetworkBenchmark::test1()
 
 void JQNetworkBenchmark::test2()
 {
-    static QByteArray testData;
+    QByteArray testData;
     for ( auto count = 0; count < 32 * 1024; ++count )
     {
         testData.append( char( rand() % 256 ) );
@@ -87,10 +85,10 @@ void JQNetworkBenchmark::test2()
 
     auto server = JQNetworkServer::createServerByListenPort( 23456 );
 
-    server->setOnPackageReceivedCallback( [ ](const auto &connect, const auto &package)
+    server->serverSettings()->packageReceivedCallback = [ testData ](const auto &connect, const auto &package)
     {
-        connect->replyPayloadData( testData, package->randomFlag() );
-    } );
+        connect->replyPayloadData( package->randomFlag(), testData );
+    };
 
     if ( !server->begin() )
     {
@@ -122,16 +120,14 @@ void JQNetworkBenchmark::test2()
                     "127.0.0.1",
                     23456,
                     testData,
+                    [ &testCount, &succeedCount, &semaphore ](const auto &, const auto &)
                     {
-                        [ &testCount, &succeedCount, &semaphore ](const auto &, const auto &)
+                        if ( ++succeedCount >= testCount )
                         {
-                            if ( ++succeedCount >= testCount )
-                            {
-                                semaphore.release( 1 );
-                            }
-                        },
-                        nullptr
-                    }
+                            semaphore.release( 1 );
+                        }
+                    },
+                    nullptr
                 );
     }
 
@@ -150,10 +146,10 @@ void JQNetworkBenchmark::test3()
 {
     auto server = JQNetworkServer::createServerByListenPort( 34567 );
 
-    server->setOnPackageReceivedCallback( [](const auto &connect, const auto &package)
+    server->serverSettings()->packageReceivedCallback = [](const auto &connect, const auto &package)
     {
-        connect->replyPayloadData( "Test", package->randomFlag() );
-    } );
+        connect->replyPayloadData( package->randomFlag(), "Test" );
+    };
 
     if ( !server->begin() )
     {
@@ -186,20 +182,18 @@ void JQNetworkBenchmark::test3()
                     "127.0.0.1",
                     34567,
                     "Test",
+                    [ &testCount, &succeedCount, &semaphore, &ping ](const auto &, const auto &)
                     {
-                        [ &testCount, &succeedCount, &semaphore, &ping ](const auto &, const auto &)
+                        if ( ++succeedCount >= testCount )
                         {
-                            if ( ++succeedCount >= testCount )
-                            {
-                                semaphore.release( 1 );
-                            }
-                            else
-                            {
-                                ping();
-                            }
-                        },
-                        nullptr
-                    }
+                            semaphore.release( 1 );
+                        }
+                        else
+                        {
+                            ping();
+                        }
+                    },
+                    nullptr
                 );
     };
 
@@ -216,7 +210,7 @@ void JQNetworkBenchmark::test3()
 
 void JQNetworkBenchmark::test4()
 {
-    static QByteArray testData;
+    QByteArray testData;
     for ( auto count = 0; count < 32 * 1024; ++count )
     {
         testData.append( char( rand() % 256 ) );
@@ -224,10 +218,10 @@ void JQNetworkBenchmark::test4()
 
     auto server = JQNetworkServer::createServerByListenPort( 45678 );
 
-    server->setOnPackageReceivedCallback( [](const auto &connect, const auto &package)
+    server->serverSettings()->packageReceivedCallback = [ testData ](const auto &connect, const auto &package)
     {
-        connect->replyPayloadData( testData, package->randomFlag() );
-    } );
+        connect->replyPayloadData( package->randomFlag(), testData );
+    };
 
     if ( !server->begin() )
     {
@@ -254,26 +248,24 @@ void JQNetworkBenchmark::test4()
     QSemaphore semaphore;
 
     std::function< void() > ping;
-    ping = [ &testCount, &succeedCount, &semaphore, &ping, &client ]()
+    ping = [ &testCount, &succeedCount, &semaphore, &ping, &client, testData ]()
     {
         client->sendPayloadData(
                     "127.0.0.1",
                     45678,
                     testData,
+                    [ &testCount, &succeedCount, &semaphore, &ping ](const auto &, const auto &)
                     {
-                        [ &testCount, &succeedCount, &semaphore, &ping ](const auto &, const auto &)
+                        if ( ++succeedCount >= testCount )
                         {
-                            if ( ++succeedCount >= testCount )
-                            {
-                                semaphore.release( 1 );
-                            }
-                            else
-                            {
-                                ping();
-                            }
-                        },
-                        nullptr
-                    }
+                            semaphore.release( 1 );
+                        }
+                        else
+                        {
+                            ping();
+                        }
+                    },
+                    nullptr
                 );
     };
 
@@ -301,10 +293,10 @@ void JQNetworkBenchmark::test5()
     auto server = JQNetworkServer::createServerByListenPort( 56789 );
     QSemaphore semaphore;
 
-    server->setOnPackageReceivedCallback( [ &semaphore ](const auto &, const auto &)
+    server->serverSettings()->packageReceivedCallback = [ &semaphore ](const auto &, const auto &)
     {
         semaphore.release( 1 );
-    } );
+    };
 
     if ( !server->begin() )
     {

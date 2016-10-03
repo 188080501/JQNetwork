@@ -33,27 +33,7 @@ JQNetworkClient::JQNetworkClient(
     clientSettings_( clientSettings ),
     connectPoolSettings_( connectPoolSettings ),
     connectSettings_( connectSettings )
-{
-    if ( globalSocketThreadPool_ )
-    {
-        socketThreadPool_ = globalSocketThreadPool_.toStrongRef();
-    }
-    else
-    {
-        socketThreadPool_ = QSharedPointer< JQNetworkThreadPool >( new JQNetworkThreadPool( clientSettings_->globalSocketThreadCount ) );
-        globalSocketThreadPool_ = socketThreadPool_.toWeakRef();
-    }
-
-    if ( globalProcessorThreadPool_ )
-    {
-        processorThreadPool_ = globalProcessorThreadPool_.toStrongRef();
-    }
-    else
-    {
-        processorThreadPool_ = QSharedPointer< JQNetworkThreadPool >( new JQNetworkThreadPool( clientSettings->globalProcessorThreadCount ) );
-        globalProcessorThreadPool_ = processorThreadPool_.toWeakRef();
-    }
-}
+{ }
 
 JQNetworkClient::~JQNetworkClient()
 {
@@ -76,6 +56,26 @@ JQNetworkClientSharedPointer JQNetworkClient::createClient()
 
 bool JQNetworkClient::begin()
 {
+    if ( globalSocketThreadPool_ )
+    {
+        socketThreadPool_ = globalSocketThreadPool_.toStrongRef();
+    }
+    else
+    {
+        socketThreadPool_ = QSharedPointer< JQNetworkThreadPool >( new JQNetworkThreadPool( clientSettings_->globalSocketThreadCount ) );
+        globalSocketThreadPool_ = socketThreadPool_.toWeakRef();
+    }
+
+    if ( globalProcessorThreadPool_ )
+    {
+        processorThreadPool_ = globalProcessorThreadPool_.toStrongRef();
+    }
+    else
+    {
+        processorThreadPool_ = QSharedPointer< JQNetworkThreadPool >( new JQNetworkThreadPool( clientSettings_->globalProcessorThreadCount ) );
+        globalProcessorThreadPool_ = processorThreadPool_.toWeakRef();
+    }
+
     socketThreadPool_->waitRunEach(
                 [
                     this
@@ -98,6 +98,10 @@ bool JQNetworkClient::begin()
                         { this->onRemoteHostClosed( connect, connectPool ); };
                     connectPoolSettings->readyToDeleteCallback              = [ this ](const auto &connect, const auto &connectPool)
                         { this->onReadyToDelete( connect, connectPool ); };
+                    connectPoolSettings->packageSendingCallback             = [ this ](const auto &connect, const auto &connectPool, const auto &randomFlag, const auto &payloadCurrentIndex, const auto &payloadCurrentSize, const auto &payloadTotalSize)
+                        { this->onPackageSending( connect, connectPool, randomFlag, payloadCurrentIndex, payloadCurrentSize, payloadTotalSize ); };
+                    connectPoolSettings->packageReceivingCallback           = [ this ](const auto &connect, const auto &connectPool, const auto &randomFlag, const auto &payloadCurrentIndex, const auto &payloadCurrentSize, const auto &payloadTotalSize)
+                        { this->onPackageReceiving( connect, connectPool, randomFlag, payloadCurrentIndex, payloadCurrentSize, payloadTotalSize ); };
                     connectPoolSettings->packageReceivedCallback            = [ this ](const auto &connect, const auto &connectPool, const auto &package)
                         { this->onPackageReceived( connect, connectPool, package ); };
                     connectPoolSettings->waitReplyPackageSucceedCallback    = [ this ](const auto &connect, const auto &connectPool, const auto &package, const auto &callback)
@@ -123,17 +127,20 @@ bool JQNetworkClient::begin()
 void JQNetworkClient::createConnect(const QString &hostName, const quint16 &port)
 {
     const auto &&rotaryIndex = socketThreadPool_->nextRotaryIndex();
+
+    auto runOnConnectThreadCallback =
+            [
+                this,
+                rotaryIndex
+            ](const std::function< void() > &callback)
+            {
+                this->socketThreadPool_->run( callback, rotaryIndex );
+            };
+
     socketThreadPool_->run(
                 [
                     this,
-                    runOnConnectThreadCallback =
-                        [
-                            this,
-                            rotaryIndex
-                        ](const std::function< void() > &callback)
-                        {
-                            this->socketThreadPool_->run( callback, rotaryIndex );
-                        },
+                    runOnConnectThreadCallback,
                     hostName,
                     port
                 ]()
@@ -335,6 +342,94 @@ void JQNetworkClient::onReadyToDelete(const JQNetworkConnectPointer &connect, co
     );
 }
 
+void JQNetworkClient::onPackageSending(
+        const JQNetworkConnectPointer &connect,
+        const JQNetworkConnectPoolPointer &connectPool,
+        const qint32 &randomFlag,
+        const qint64 &payloadCurrentIndex,
+        const qint64 &payloadCurrentSize,
+        const qint64 &payloadTotalSize
+    )
+{
+    if ( !clientSettings_->packageSendingCallback ) { return; }
+
+    const auto &&reply = connectPool->getHostAndPortByConnect( connect );
+
+    if ( reply.first.isEmpty() || !reply.second )
+    {
+        qDebug() << "JQNetworkClient::onPackageSending: error";
+        return;
+    }
+
+    processorThreadPool_->run(
+                [
+                    this,
+                    connect,
+                    hostName = reply.first,
+                    port = reply.second,
+                    randomFlag,
+                    payloadCurrentIndex,
+                    payloadCurrentSize,
+                    payloadTotalSize
+                ]()
+                {
+                    this->clientSettings_->packageSendingCallback(
+                        connect,
+                        hostName,
+                        port,
+                        randomFlag,
+                        payloadCurrentIndex,
+                        payloadCurrentSize,
+                        payloadTotalSize
+                    );
+                }
+    );
+}
+
+void JQNetworkClient::onPackageReceiving(
+        const JQNetworkConnectPointer &connect,
+        const JQNetworkConnectPoolPointer &connectPool,
+        const qint32 &randomFlag,
+        const qint64 &payloadCurrentIndex,
+        const qint64 &payloadCurrentSize,
+        const qint64 &payloadTotalSize
+    )
+{
+    if ( !clientSettings_->packageReceivingCallback ) { return; }
+
+    const auto &&reply = connectPool->getHostAndPortByConnect( connect );
+
+    if ( reply.first.isEmpty() || !reply.second )
+    {
+        qDebug() << "JQNetworkClient::onPackageReceiving: error";
+        return;
+    }
+
+    processorThreadPool_->run(
+                [
+                    this,
+                    connect,
+                    hostName = reply.first,
+                    port = reply.second,
+                    randomFlag,
+                    payloadCurrentIndex,
+                    payloadCurrentSize,
+                    payloadTotalSize
+                ]()
+                {
+                    this->clientSettings_->packageReceivingCallback(
+                        connect,
+                        hostName,
+                        port,
+                        randomFlag,
+                        payloadCurrentIndex,
+                        payloadCurrentSize,
+                        payloadTotalSize
+                    );
+                }
+    );
+}
+
 void JQNetworkClient::onPackageReceived(
         const JQNetworkConnectPointer &connect,
         const JQNetworkConnectPoolPointer &connectPool,
@@ -355,12 +450,12 @@ void JQNetworkClient::onPackageReceived(
                 [
                     this,
                     connect,
-                    package,
                     hostName = reply.first,
-                    port = reply.second
+                    port = reply.second,
+                    package
                 ]()
                 {
-                    this->clientSettings_->packageReceivedCallback( connect, package, hostName, port );
+                    this->clientSettings_->packageReceivedCallback( connect, hostName, port, package );
                 }
     );
 }

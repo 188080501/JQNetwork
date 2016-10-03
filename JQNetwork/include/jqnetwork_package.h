@@ -33,9 +33,15 @@ public:
 
     static qint32 checkDataIsReadyReceive(const QByteArray &rawData);
 
-    static JQNetworkPackageSharedPointer createPackageFromRawData(QByteArray &rawData);
+    static JQNetworkPackageSharedPointer createPackage(QByteArray &rawData);
 
-    static JQNetworkPackageSharedPointer createPackageFromPayloadData(const QByteArray &payloadData, const qint32 &randomFlag);
+    static QList< JQNetworkPackageSharedPointer > createTransportPackages(
+            const QByteArray &payloadData,
+            const qint32 &randomFlag,
+            const qint64 cutPackageSize = -1
+        );
+
+    static JQNetworkPackageSharedPointer createRequestPackage(const qint32 &randomFlag);
 
     inline bool isCompletePackage() const;
 
@@ -43,7 +49,7 @@ public:
 
     inline qint8 bootFlag() const;
 
-    inline qint8 versionFlag() const;
+    inline qint8 packageFlag() const;
 
     inline qint32 randomFlag() const;
 
@@ -82,15 +88,15 @@ private:
 #pragma pack(1)
     struct Head
     {
-        qint8 bootFlag_ = JQNETWORKPACKAGE_BOOTFLAG;
-        qint8 versionFlag_ = JQNETWORKPACKAGE_VERSION;
+        qint8 bootFlag_ = 0;
+        qint8 packageFlag_ = 0;
         qint32 randomFlag_ = 0;
 
-        qint8 metaDataFlag_ = 0x1;
+        qint8 metaDataFlag_ = 0;
         qint32 metaDataTotalSize_ = -1;
         qint32 metaDataCurrentSize_ = -1;
 
-        qint8 payloadDataFlag_ = 0x1;
+        qint8 payloadDataFlag_ = 0;
         qint32 payloadDataTotalSize_ = -1;
         qint32 payloadDataCurrentSize_ = -1;
     } head_;
