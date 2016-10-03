@@ -102,8 +102,8 @@ public:
         );
 
     qint32 replyPayloadData(
-            const QByteArray &payloadData,
-            const qint32 &randomFlag
+            const qint32 &randomFlag,
+            const QByteArray &payloadData
         );
 
 private Q_SLOTS:
@@ -122,16 +122,20 @@ private:
 
     void startTimerForSendPackageCheck();
 
-    void onPackageReceived(const JQNetworkPackageSharedPointer &package);
+    void onTransportPackageReceived(const JQNetworkPackageSharedPointer &package);
 
     void onReadyToDelete();
 
-    void reaySendPayloadData(
+    void realSendPackage(const JQNetworkPackageSharedPointer &package);
+
+    void realSendPayloadData(
             const qint32 &randomFlag,
             const QByteArray &payloadData,
             const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &succeedCallback,
             const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback
         );
+
+    void realSendDataRequest(const qint32 &randomFlag);
 
 private:
     // Settings

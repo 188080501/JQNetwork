@@ -39,15 +39,30 @@ qint32 JQNetworkPackage::checkDataIsReadyReceive(const QByteArray &rawData)
     auto dataSize = rawData.size() - JQNetworkPackage::headSize();
 
     if ( head->bootFlag_ != JQNETWORKPACKAGE_BOOTFLAG ) { return -1; }
-    if ( head->versionFlag_ != JQNETWORKPACKAGE_VERSION ) { return -1; }
+    switch ( head->packageFlag_ )
+    {
+        case JQNETWORKPACKAGE_DATATRANSPORTPACKGEFLAG:
+        case JQNETWORKPACKAGE_DATAREQUESTPACKGEFLAG: { break; }
+        default: { return -1; }
+    }
     if ( head->randomFlag_ == 0 ) { return -1; }
 
-    if ( head->metaDataFlag_ == 0 ) { return -1; }
+    switch ( head->metaDataFlag_ )
+    {
+        case JQNETWORKPACKAGE_UNCOMPRESSED:
+        case JQNETWORKPACKAGE_COMPRESSED: { break; }
+        default: { return -1; }
+    }
     if ( head->metaDataTotalSize_ < -1 ) { return -1; }
     if ( head->metaDataCurrentSize_ < -1 ) { return -1; }
     if ( head->metaDataTotalSize_ < head->metaDataCurrentSize_ ) { return -1; }
 
-    if ( head->payloadDataFlag_ == 0 ) { return -1; }
+    switch ( head->payloadDataFlag_ )
+    {
+        case JQNETWORKPACKAGE_UNCOMPRESSED:
+        case JQNETWORKPACKAGE_COMPRESSED: { break; }
+        default: { return -1; }
+    }
     if ( head->payloadDataTotalSize_ < -1 ) { return -1; }
     if ( head->payloadDataCurrentSize_ < -1 ) { return -1; }
     if ( head->payloadDataTotalSize_ < head->payloadDataCurrentSize_ ) { return -1; }
@@ -67,33 +82,33 @@ qint32 JQNetworkPackage::checkDataIsReadyReceive(const QByteArray &rawData)
     return 0;
 }
 
-JQNetworkPackageSharedPointer JQNetworkPackage::createPackageFromRawData(QByteArray &rawData)
+JQNetworkPackageSharedPointer JQNetworkPackage::createPackage(QByteArray &rawData)
 {
-    auto newPackage = JQNetworkPackageSharedPointer( new JQNetworkPackage );
+    auto package = JQNetworkPackageSharedPointer( new JQNetworkPackage );
     auto head = ( Head * )rawData.data();
     auto data = rawData.data() + JQNetworkPackage::headSize();
 
-    newPackage->head_ = *head;
+    package->head_ = *head;
 
-    if ( newPackage->metaDataCurrentSize() > 0 )
+    if ( package->metaDataCurrentSize() > 0 )
     {
-        newPackage->metaData_.append( data, newPackage->metaDataCurrentSize() );
-        data += newPackage->metaDataCurrentSize();
+        package->metaData_.append( data, package->metaDataCurrentSize() );
+        data += package->metaDataCurrentSize();
     }
-    if ( newPackage->payloadDataCurrentSize() > 0 )
+    if ( package->payloadDataCurrentSize() > 0 )
     {
-        newPackage->payloadData_.append( data, newPackage->payloadDataCurrentSize() );
-        data += newPackage->payloadDataCurrentSize();
+        package->payloadData_.append( data, package->payloadDataCurrentSize() );
+        data += package->payloadDataCurrentSize();
     }
 
     rawData.remove( 0, data - rawData.data() );
 
-    newPackage->refreshPackage();
+    package->refreshPackage();
 
-    return newPackage;
+    return package;
 }
 
-QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createPackagesFromPayloadData(
+QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createTransportPackages(
         const QByteArray &payloadData,
         const qint32 &randomFlag,
         const qint64 cutPackageSize
@@ -105,7 +120,13 @@ QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createPackagesFromPaylo
     {
         auto package = JQNetworkPackageSharedPointer( new JQNetworkPackage );
 
+        package->head_.bootFlag_ = JQNETWORKPACKAGE_BOOTFLAG;
+        package->head_.packageFlag_ = JQNETWORKPACKAGE_DATATRANSPORTPACKGEFLAG;
         package->head_.randomFlag_ = randomFlag;
+
+        package->head_.metaDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSED;
+
+        package->head_.payloadDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSED;
         package->head_.payloadDataTotalSize_ = payloadData.size();
 
         if ( cutPackageSize == -1 )
@@ -140,6 +161,21 @@ QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createPackagesFromPaylo
     }
 
     return result;
+}
+
+JQNetworkPackageSharedPointer JQNetworkPackage::createRequestPackage(const qint32 &randomFlag)
+{
+    auto package = JQNetworkPackageSharedPointer( new JQNetworkPackage );
+
+    package->head_.bootFlag_ = JQNETWORKPACKAGE_BOOTFLAG;
+    package->head_.packageFlag_ = JQNETWORKPACKAGE_DATAREQUESTPACKGEFLAG;
+    package->head_.randomFlag_ = randomFlag;
+
+    package->head_.metaDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSED;
+
+    package->head_.payloadDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSED;
+
+    return package;
 }
 
 bool JQNetworkPackage::mixPackage(const JQNetworkPackageSharedPointer &mixPackage)

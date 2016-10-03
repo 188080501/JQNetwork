@@ -37,7 +37,7 @@ JQNetworkConnectPool::JQNetworkConnectPool(
     connectSettings_->readyToDeleteCallback             = [ this ](const auto &connect)
         { this->onReadyToDelete( connect ); };
     connectSettings_->packageSendingCallback            = [ this ](const auto &connect, const auto &randomFlag, const auto &payloadCurrentIndex, const auto &payloadCurrentSize, const auto &payloadTotalSize)
-        { this->onPackageReceiving( connect, randomFlag, payloadCurrentIndex, payloadCurrentSize, payloadTotalSize ); };
+        { this->onPackageSending( connect, randomFlag, payloadCurrentIndex, payloadCurrentSize, payloadTotalSize ); };
     connectSettings_->packageReceivingCallback          = [ this ](const auto &connect, const auto &randomFlag, const auto &payloadCurrentIndex, const auto &payloadCurrentSize, const auto &payloadTotalSize)
         { this->onPackageReceiving( connect, randomFlag, payloadCurrentIndex, payloadCurrentSize, payloadTotalSize ); };
     connectSettings_->packageReceivedCallback           = [ this ](const auto &connect, const auto &package)

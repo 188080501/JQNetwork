@@ -77,7 +77,15 @@ void JQNetworkTest::jqNetworkThreadPoolBenchmark()
     }
 
     qDebug() << number;
-    QCOMPARE( ( number != 10000000 ), true );
+
+    if ( QThreadPool::globalInstance()->maxThreadCount() > 1 )
+    {
+        QCOMPARE( ( number != 10000000 ), true );
+    }
+    else
+    {
+        QCOMPARE( ( 8000000 <= number ) && ( number <= 10000000 ), true );
+    }
 }
 
 void JQNetworkTest::jqNetworkThreadPoolBenchmark2()
@@ -201,13 +209,13 @@ void JQNetworkTest::jeNetworkPackageTest()
 
         {
             auto rawData = QByteArray::fromHex( "7d 01 04030201 01 02000000 02000000 01 03000000 03000000 1122334455" );
-            const auto &&package = JQNetworkPackage::createPackageFromRawData( rawData );
+            const auto &&package = JQNetworkPackage::createPackage( rawData );
 
             QCOMPARE( rawData.size(), 0 );
             QCOMPARE( package->isCompletePackage(), true );
             QCOMPARE( package->isAbandonPackage(), false );
             QCOMPARE( (int)package->bootFlag(), 0x7d );
-            QCOMPARE( (int)package->versionFlag(), 0x1 );
+            QCOMPARE( (int)package->packageFlag(), 0x1 );
             QCOMPARE( package->randomFlag(), 0x01020304 );
             QCOMPARE( (int)package->metaDataFlag(), 0x1 );
             QCOMPARE( package->metaDataTotalSize(), 0x2 );
@@ -223,9 +231,9 @@ void JQNetworkTest::jeNetworkPackageTest()
             auto rawData1 = QByteArray::fromHex( "7d 01 04030201 01 05000000 02000000 01 05000000 03000000 1122334455" );
             auto rawData2 = QByteArray::fromHex( "7d 01 04030201 01 05000000 03000000 01 05000000 02000000 1122334455" );
             auto rawData3 = QByteArray::fromHex( "7d 01 04030201 01 05000000 03000000 01 05000000 02000000 1122334455" );
-            const auto &&package1 = JQNetworkPackage::createPackageFromRawData( rawData1 );
-            const auto &&package2 = JQNetworkPackage::createPackageFromRawData( rawData2 );
-            const auto &&package3 = JQNetworkPackage::createPackageFromRawData( rawData3 );
+            const auto &&package1 = JQNetworkPackage::createPackage( rawData1 );
+            const auto &&package2 = JQNetworkPackage::createPackage( rawData2 );
+            const auto &&package3 = JQNetworkPackage::createPackage( rawData3 );
 
             QCOMPARE( package1->isCompletePackage(), false );
             QCOMPARE( package1->isAbandonPackage(), false );
@@ -244,7 +252,7 @@ void JQNetworkTest::jeNetworkPackageTest()
         }
 
         {
-            auto packages = JQNetworkPackage::createPackagesFromPayloadData( "12345", 1, 2 );
+            auto packages = JQNetworkPackage::createTransportPackages( "12345", 1, 2 );
             QCOMPARE( packages.size(), 3 );
 
             auto package1 = packages.at( 0 );
@@ -288,7 +296,7 @@ void JQNetworkTest::jeNetworkPackageTest()
         }
 
         {
-            auto packages = JQNetworkPackage::createPackagesFromPayloadData( "12345", 2, 5 );
+            auto packages = JQNetworkPackage::createTransportPackages( "12345", 2, 5 );
             QCOMPARE( packages.size(), 1 );
 
             auto package = packages.first();
@@ -300,7 +308,7 @@ void JQNetworkTest::jeNetworkPackageTest()
         }
 
         {
-            auto packages = JQNetworkPackage::createPackagesFromPayloadData( "12345", 2, 6 );
+            auto packages = JQNetworkPackage::createTransportPackages( "12345", 2, 6 );
             QCOMPARE( packages.size(), 1 );
 
             auto package = packages.first();
@@ -420,9 +428,16 @@ void JQNetworkTest::jqNetworkClientTest()
 
 void JQNetworkTest::jqNetworkServerAndClientTest()
 {
-    auto server = JQNetworkServer::createServerByListenPort( 12345 );
+    QString serverFlag;
+    QString clientFlag;
+    QThread *serverProcessThread = nullptr;
+    QThread *clientProcessThread = nullptr;
+
+    auto server = JQNetworkServer::createServerByListenPort( 23456 );
     server->connectSettings()->cutPackageSize = 2;
-    server->serverSettings()->packageSendingCallback = [  ](
+    server->serverSettings()->globalSocketThreadCount = 1;
+    server->serverSettings()->globalProcessorThreadCount = 1;
+    server->serverSettings()->packageSendingCallback = [ &serverFlag, &serverProcessThread ](
             const auto &,
             const auto &randomFlag,
             const auto &payloadCurrentIndex,
@@ -430,9 +445,13 @@ void JQNetworkTest::jqNetworkServerAndClientTest()
             const auto &payloadTotalSize
         )
     {
-        //...
+        qDebug() << "server packageSendingCallback:" << randomFlag << payloadCurrentIndex << payloadCurrentSize << payloadTotalSize << QThread::currentThread();
+
+        serverFlag += QString( "server packageSendingCallback: %1 %2 %3 %4\n" ).arg( randomFlag ).arg( payloadCurrentIndex ).arg( payloadCurrentSize ).arg( payloadTotalSize );
+
+        QCOMPARE( QThread::currentThread(), serverProcessThread );
     };
-    server->serverSettings()->packageReceivingCallback = [  ](
+    server->serverSettings()->packageReceivingCallback = [ &serverFlag, &serverProcessThread ](
             const auto &,
             const auto &randomFlag,
             const auto &payloadCurrentIndex,
@@ -440,19 +459,37 @@ void JQNetworkTest::jqNetworkServerAndClientTest()
             const auto &payloadTotalSize
         )
     {
-        //...
+        qDebug() << "server packageReceivingCallback:" << randomFlag << payloadCurrentIndex << payloadCurrentSize << payloadTotalSize << QThread::currentThread();
+
+        serverFlag += QString( "server packageReceivingCallback: %1 %2 %3 %4\n" ).arg( randomFlag ).arg( payloadCurrentIndex ).arg( payloadCurrentSize ).arg( payloadTotalSize );
+
+        if ( !serverProcessThread )
+        {
+            serverProcessThread = QThread::currentThread();
+        }
+        QCOMPARE( QThread::currentThread(), serverProcessThread );
     };
-    server->serverSettings()->packageReceivedCallback = [  ](
-            const auto &,
+    server->serverSettings()->packageReceivedCallback = [ &serverFlag, &serverProcessThread ](
+            const auto &connect,
             const auto &package
         )
     {
-        //...
+        qDebug() << "server packageReceivedCallback:" << package->payloadData() << QThread::currentThread();
+
+        serverFlag += QString( "server packageReceivedCallback: %1\n" ).arg( QString::fromLatin1( package->payloadData() ) );
+
+        connect->replyPayloadData( package->randomFlag(), "67890" );
+        connect->sendPayloadData( "abcd" );
+
+        QCOMPARE( QThread::currentThread(), serverProcessThread );
     };
+    QCOMPARE( server->begin(), true );
 
     auto client = JQNetworkClient::createClient();
     client->connectSettings()->cutPackageSize = 2;
-    client->clientSettings()->packageSendingCallback = [  ](
+    client->clientSettings()->globalSocketThreadCount = 1;
+    client->clientSettings()->globalProcessorThreadCount = 1;
+    client->clientSettings()->packageSendingCallback = [ &clientFlag, &clientProcessThread ](
             const auto &,
             const auto &hostName,
             const auto &port,
@@ -462,9 +499,17 @@ void JQNetworkTest::jqNetworkServerAndClientTest()
             const auto &payloadTotalSize
         )
     {
-        //...
+        qDebug() << "client packageSendingCallback:" << hostName << port << randomFlag << payloadCurrentIndex << payloadCurrentSize << payloadTotalSize;
+
+        clientFlag += QString( "client packageSendingCallback: %1 %2 %3 %4 %5 %6\n" ).arg( hostName ).arg( port ).arg( randomFlag ).arg( payloadCurrentIndex ).arg( payloadCurrentSize ).arg( payloadTotalSize );
+
+        if ( !clientProcessThread )
+        {
+            clientProcessThread = QThread::currentThread();
+        }
+        QCOMPARE( QThread::currentThread(), clientProcessThread );
     };
-    client->clientSettings()->packageReceivingCallback = [  ](
+    client->clientSettings()->packageReceivingCallback = [ &clientFlag, &clientProcessThread ](
             const auto &,
             const auto &hostName,
             const auto &port,
@@ -474,15 +519,68 @@ void JQNetworkTest::jqNetworkServerAndClientTest()
             const auto &payloadTotalSize
         )
     {
-        //...
+        qDebug() << "client packageReceivingCallback:" << hostName << port << randomFlag << payloadCurrentIndex << payloadCurrentSize << payloadTotalSize;
+
+        clientFlag += QString( "client packageReceivingCallback: %1 %2 %3 %4 %5 %6\n" ).arg( hostName ).arg( port ).arg( randomFlag ).arg( payloadCurrentIndex ).arg( payloadCurrentSize ).arg( payloadTotalSize );
+
+        QCOMPARE( QThread::currentThread(), clientProcessThread );
     };
-    client->clientSettings()->packageReceivedCallback = [  ](
+    client->clientSettings()->packageReceivedCallback = [ &clientFlag, &clientProcessThread ](
             const auto &,
             const auto &hostName,
             const auto &port,
             const auto &package
         )
     {
-        //...
+        qDebug() << "client packageReceivedCallback:" << hostName << port << package->payloadData();
+
+        clientFlag += QString( "client packageReceivedCallback: %1 %2 %3\n" ).arg( hostName ).arg( port ).arg( QString::fromLatin1( package->payloadData() ) );
+
+        QCOMPARE( QThread::currentThread(), clientProcessThread );
     };
+    QCOMPARE( client->begin(), true );
+
+    QCOMPARE( client->waitForCreateConnect( "127.0.0.1", 23456 ), true );
+
+    auto succeedCallback = [ &clientFlag, &clientProcessThread ]
+            (
+                const auto &,
+                const auto &package
+            )
+    {
+        qDebug() << "client succeedCallback:" << package->payloadData();
+
+        clientFlag += QString( "client succeedCallback: %1\n" ).arg( QString::fromLatin1( package->payloadData() ) );
+
+        QCOMPARE( QThread::currentThread(), clientProcessThread );
+    };
+
+    QCOMPARE( client->sendPayloadData( "127.0.0.1", 23456, "12345", succeedCallback ), 1 );
+
+    QThread::msleep( 1000 );
+
+    QCOMPARE( serverFlag.toLatin1().data(),
+              "server packageReceivingCallback: 1 0 2 5\n"
+              "server packageReceivingCallback: 1 2 2 5\n"
+              "server packageReceivingCallback: 1 4 1 5\n"
+              "server packageReceivedCallback: 12345\n"
+              "server packageSendingCallback: 1 0 2 5\n"
+              "server packageSendingCallback: 1000000000 0 2 4\n"
+              "server packageSendingCallback: 1 2 2 5\n"
+              "server packageSendingCallback: 1000000000 2 2 4\n"
+              "server packageSendingCallback: 1 4 1 5\n"
+          );
+
+    QCOMPARE( clientFlag.toLatin1().data(),
+              "client packageSendingCallback: 127.0.0.1 23456 1 0 2 5\n"
+              "client packageSendingCallback: 127.0.0.1 23456 1 2 2 5\n"
+              "client packageSendingCallback: 127.0.0.1 23456 1 4 1 5\n"
+              "client packageReceivingCallback: 127.0.0.1 23456 1 0 2 5\n"
+              "client packageReceivingCallback: 127.0.0.1 23456 1000000000 0 2 4\n"
+              "client packageReceivingCallback: 127.0.0.1 23456 1 2 2 5\n"
+              "client packageReceivingCallback: 127.0.0.1 23456 1000000000 2 2 4\n"
+              "client packageReceivedCallback: 127.0.0.1 23456 abcd\n"
+              "client packageReceivingCallback: 127.0.0.1 23456 1 4 1 5\n"
+              "client succeedCallback: 67890\n"
+          );
 }

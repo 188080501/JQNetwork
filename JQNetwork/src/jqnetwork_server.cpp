@@ -54,37 +54,7 @@ JQNetworkServer::JQNetworkServer(
     serverSettings_( serverSettings ),
     connectPoolSettings_( connectPoolSettings ),
     connectSettings_( connectSettings )
-{
-    if ( globalServerThreadPool_ )
-    {
-        serverThreadPool_ = globalServerThreadPool_.toStrongRef();
-    }
-    else
-    {
-        serverThreadPool_ = QSharedPointer< JQNetworkThreadPool >( new JQNetworkThreadPool( serverSettings->globalServerThreadCount ) );
-        globalServerThreadPool_ = serverThreadPool_.toWeakRef();
-    }
-
-    if ( globalSocketThreadPool_ )
-    {
-        socketThreadPool_ = globalSocketThreadPool_.toStrongRef();
-    }
-    else
-    {
-        socketThreadPool_ = QSharedPointer< JQNetworkThreadPool >( new JQNetworkThreadPool( serverSettings->globalSocketThreadCount ) );
-        globalSocketThreadPool_ = socketThreadPool_.toWeakRef();
-    }
-
-    if ( globalProcessorThreadPool_ )
-    {
-        processorThreadPool_ = globalProcessorThreadPool_.toStrongRef();
-    }
-    else
-    {
-        processorThreadPool_ = QSharedPointer< JQNetworkThreadPool >( new JQNetworkThreadPool( serverSettings->globalProcessorThreadCount ) );
-        globalProcessorThreadPool_ = processorThreadPool_.toWeakRef();
-    }
-}
+{ }
 
 JQNetworkServer::~JQNetworkServer()
 {
@@ -125,6 +95,36 @@ JQNetworkServerSharedPointer JQNetworkServer::createServerByListenPort(
 
 bool JQNetworkServer::begin()
 {
+    if ( globalServerThreadPool_ )
+    {
+        serverThreadPool_ = globalServerThreadPool_.toStrongRef();
+    }
+    else
+    {
+        serverThreadPool_ = QSharedPointer< JQNetworkThreadPool >( new JQNetworkThreadPool( serverSettings_->globalServerThreadCount ) );
+        globalServerThreadPool_ = serverThreadPool_.toWeakRef();
+    }
+
+    if ( globalSocketThreadPool_ )
+    {
+        socketThreadPool_ = globalSocketThreadPool_.toStrongRef();
+    }
+    else
+    {
+        socketThreadPool_ = QSharedPointer< JQNetworkThreadPool >( new JQNetworkThreadPool( serverSettings_->globalSocketThreadCount ) );
+        globalSocketThreadPool_ = socketThreadPool_.toWeakRef();
+    }
+
+    if ( globalProcessorThreadPool_ )
+    {
+        processorThreadPool_ = globalProcessorThreadPool_.toStrongRef();
+    }
+    else
+    {
+        processorThreadPool_ = QSharedPointer< JQNetworkThreadPool >( new JQNetworkThreadPool( serverSettings_->globalProcessorThreadCount ) );
+        globalProcessorThreadPool_ = processorThreadPool_.toWeakRef();
+    }
+
     bool listenSucceed = false;
 
     serverThreadPool_->waitRun(
@@ -163,6 +163,10 @@ bool JQNetworkServer::begin()
                         { this->onRemoteHostClosed( connect, connectPool ); };
                     connectPoolSettings->readyToDeleteCallback        = [ this ](const auto &connect, const auto &connectPool)
                         { this->onReadyToDelete( connect, connectPool ); };
+                    connectPoolSettings->packageSendingCallback       = [ this ](const auto &connect, const auto &connectPool, const auto &randomFlag, const auto &payloadCurrentIndex, const auto &payloadCurrentSize, const auto &payloadTotalSize)
+                        { this->onPackageSending( connect, connectPool, randomFlag, payloadCurrentIndex, payloadCurrentSize, payloadTotalSize ); };
+                    connectPoolSettings->packageReceivingCallback     = [ this ](const auto &connect, const auto &connectPool, const auto &randomFlag, const auto &payloadCurrentIndex, const auto &payloadCurrentSize, const auto &payloadTotalSize)
+                        { this->onPackageReceiving( connect, connectPool, randomFlag, payloadCurrentIndex, payloadCurrentSize, payloadTotalSize ); };
                     connectPoolSettings->packageReceivedCallback      = [ this ](const auto &connect, const auto &connectPool, const auto &package)
                         { this->onPackageReceived( connect, connectPool, package ); };
 
@@ -184,17 +188,20 @@ bool JQNetworkServer::begin()
 void JQNetworkServer::incomingConnection(const qintptr &socketDescriptor)
 {
     const auto &&rotaryIndex = socketThreadPool_->nextRotaryIndex();
+
+    auto runOnConnectThreadCallback =
+        [
+            this,
+            rotaryIndex
+        ](const std::function< void() > &callback)
+        {
+            this->socketThreadPool_->run( callback, rotaryIndex );
+        };
+
     socketThreadPool_->run(
                 [
                     this,
-                    runOnConnectThreadCallback =
-                        [
-                            this,
-                            rotaryIndex
-                        ](const std::function< void() > &callback)
-                        {
-                            this->socketThreadPool_->run( callback, rotaryIndex );
-                        },
+                    runOnConnectThreadCallback,
                     socketDescriptor
                 ]()
                 {

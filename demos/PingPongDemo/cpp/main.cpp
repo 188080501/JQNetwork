@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
         qDebug() << "Server: received data:" << package->payloadData() << ", randomFlag:" << package->randomFlag();
 
         // 返回一个数据，需要指定 randomFlag 以告知客户端
-        connect->replyPayloadData( "Pong", package->randomFlag() );
+        connect->replyPayloadData( package->randomFlag(), "Pong" );
     };
 
     // 初始化服务端

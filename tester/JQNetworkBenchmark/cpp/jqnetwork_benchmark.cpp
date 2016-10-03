@@ -22,7 +22,7 @@ void JQNetworkBenchmark::test1()
 
     server->serverSettings()->packageReceivedCallback = [](const auto &connect, const auto &package)
     {
-        connect->replyPayloadData( "Test", package->randomFlag() );
+        connect->replyPayloadData( package->randomFlag(), "Test" );
     };
 
     if ( !server->begin() )
@@ -89,7 +89,7 @@ void JQNetworkBenchmark::test2()
 
     server->serverSettings()->packageReceivedCallback = [ ](const auto &connect, const auto &package)
     {
-        connect->replyPayloadData( testData, package->randomFlag() );
+        connect->replyPayloadData( package->randomFlag(), testData );
     };
 
     if ( !server->begin() )
@@ -152,7 +152,7 @@ void JQNetworkBenchmark::test3()
 
     server->serverSettings()->packageReceivedCallback = [](const auto &connect, const auto &package)
     {
-        connect->replyPayloadData( "Test", package->randomFlag() );
+        connect->replyPayloadData( package->randomFlag(), "Test" );
     };
 
     if ( !server->begin() )
@@ -226,7 +226,7 @@ void JQNetworkBenchmark::test4()
 
     server->serverSettings()->packageReceivedCallback = [](const auto &connect, const auto &package)
     {
-        connect->replyPayloadData( testData, package->randomFlag() );
+        connect->replyPayloadData( package->randomFlag(), testData );
     };
 
     if ( !server->begin() )
