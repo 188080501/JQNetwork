@@ -403,7 +403,7 @@ void JQNetworkTest::jqNetworkClientTest()
         client.begin();
 
         flag1 = false;
-        QCOMPARE( client.waitForCreateConnect( "127.0.0.1", 12344, 1000 ), false );
+        QCOMPARE( client.waitForCreateConnect( "Hello,world!", 12345, 1000 ), false );
         QThread::msleep( 200 );
         QCOMPARE( flag1, true );
 
