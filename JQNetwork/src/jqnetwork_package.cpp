@@ -49,8 +49,8 @@ qint32 JQNetworkPackage::checkDataIsReadyReceive(const QByteArray &rawData)
 
     switch ( head->metaDataFlag_ )
     {
-        case JQNETWORKPACKAGE_UNCOMPRESSED:
-        case JQNETWORKPACKAGE_COMPRESSED: { break; }
+        case JQNETWORKPACKAGE_UNCOMPRESSEDFLAG:
+        case JQNETWORKPACKAGE_COMPRESSEDFLAG: { break; }
         default: { return -1; }
     }
     if ( head->metaDataTotalSize_ < -1 ) { return -1; }
@@ -59,8 +59,8 @@ qint32 JQNetworkPackage::checkDataIsReadyReceive(const QByteArray &rawData)
 
     switch ( head->payloadDataFlag_ )
     {
-        case JQNETWORKPACKAGE_UNCOMPRESSED:
-        case JQNETWORKPACKAGE_COMPRESSED: { break; }
+        case JQNETWORKPACKAGE_UNCOMPRESSEDFLAG:
+        case JQNETWORKPACKAGE_COMPRESSEDFLAG: { break; }
         default: { return -1; }
     }
     if ( head->payloadDataTotalSize_ < -1 ) { return -1; }
@@ -85,10 +85,9 @@ qint32 JQNetworkPackage::checkDataIsReadyReceive(const QByteArray &rawData)
 JQNetworkPackageSharedPointer JQNetworkPackage::createPackage(QByteArray &rawData)
 {
     auto package = JQNetworkPackageSharedPointer( new JQNetworkPackage );
-    auto head = ( Head * )rawData.data();
     auto data = rawData.data() + JQNetworkPackage::headSize();
 
-    package->head_ = *head;
+    package->head_ = *( Head * )rawData.data();
 
     if ( package->metaDataCurrentSize() > 0 )
     {
@@ -111,12 +110,13 @@ JQNetworkPackageSharedPointer JQNetworkPackage::createPackage(QByteArray &rawDat
 QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createTransportPackages(
         const QByteArray &payloadData,
         const qint32 &randomFlag,
-        const qint64 cutPackageSize
+        const qint64 cutPackageSize,
+        const bool &compressionPayloadData
     )
 {
     QList< JQNetworkPackageSharedPointer > result;
 
-    for ( auto index = 0; index < payloadData.size(); )
+    if ( payloadData.isEmpty() )
     {
         auto package = JQNetworkPackageSharedPointer( new JQNetworkPackage );
 
@@ -124,40 +124,71 @@ QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createTransportPackages
         package->head_.packageFlag_ = JQNETWORKPACKAGE_DATATRANSPORTPACKGEFLAG;
         package->head_.randomFlag_ = randomFlag;
 
-        package->head_.metaDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSED;
+        package->head_.metaDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSEDFLAG;
 
-        package->head_.payloadDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSED;
-        package->head_.payloadDataTotalSize_ = payloadData.size();
+        package->head_.payloadDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSEDFLAG;
 
-        if ( cutPackageSize == -1 )
+        package->payloadDataOriginalIndex_ = 0;
+        package->payloadDataOriginalCurrentSize_ = 0;
+
+        package->isCompletePackage_ = true;
+
+        result.push_back( package );
+    }
+    else
+    {
+        for ( auto index = 0; index < payloadData.size(); )
         {
-            package->head_.payloadDataCurrentSize_ = payloadData.size();
-            package->payloadData_ = payloadData;
-            package->isCompletePackage_ = true;
+            auto package = JQNetworkPackageSharedPointer( new JQNetworkPackage );
 
-            index = payloadData.size();
-        }
-        else
-        {
-            if ( ( index + cutPackageSize ) > payloadData.size() )
+            package->head_.bootFlag_ = JQNETWORKPACKAGE_BOOTFLAG;
+            package->head_.packageFlag_ = JQNETWORKPACKAGE_DATATRANSPORTPACKGEFLAG;
+            package->head_.randomFlag_ = randomFlag;
+
+            package->head_.metaDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSEDFLAG;
+
+            package->head_.payloadDataFlag_ = ( compressionPayloadData ) ? ( JQNETWORKPACKAGE_COMPRESSEDFLAG ) : ( JQNETWORKPACKAGE_UNCOMPRESSEDFLAG );
+            package->head_.payloadDataTotalSize_ = payloadData.size();
+
+            if ( cutPackageSize == -1 )
             {
-                package->payloadData_ = payloadData.mid( index );
+                package->payloadData_ = ( compressionPayloadData ) ? ( qCompress( payloadData, 4 ) ) : ( payloadData );
                 package->head_.payloadDataCurrentSize_ = package->payloadData_.size();
-                package->isCompletePackage_ = result.isEmpty();
+                package->isCompletePackage_ = true;
+
+                package->payloadDataOriginalIndex_ = index;
+                package->payloadDataOriginalCurrentSize_ = payloadData.size();
 
                 index = payloadData.size();
             }
             else
             {
-                package->head_.payloadDataCurrentSize_ = cutPackageSize;
-                package->payloadData_ = payloadData.mid( index, cutPackageSize );
-                package->isCompletePackage_ = !index && ( ( index + cutPackageSize ) == payloadData.size() );
+                if ( ( index + cutPackageSize ) > payloadData.size() )
+                {
+                    package->payloadData_ = ( compressionPayloadData ) ? ( qCompress( payloadData.mid( index ), 4 ) ) : ( payloadData.mid( index ) );
+                    package->head_.payloadDataCurrentSize_ = package->payloadData_.size();
+                    package->isCompletePackage_ = result.isEmpty();
 
-                index += cutPackageSize;
+                    package->payloadDataOriginalIndex_ = index;
+                    package->payloadDataOriginalCurrentSize_ = payloadData.size() - index;
+
+                    index = payloadData.size();
+                }
+                else
+                {
+                    package->payloadData_ = ( compressionPayloadData ) ? ( qCompress( payloadData.mid( index, cutPackageSize ), 4 ) ) : ( payloadData.mid( index, cutPackageSize ) );
+                    package->head_.payloadDataCurrentSize_ = package->payloadData_.size();
+                    package->isCompletePackage_ = !index && ( ( index + cutPackageSize ) == payloadData.size() );
+
+                    package->payloadDataOriginalIndex_ = index;
+                    package->payloadDataOriginalCurrentSize_ = cutPackageSize;
+
+                    index += cutPackageSize;
+                }
             }
-        }
 
-        result.push_back( package );
+            result.push_back( package );
+        }
     }
 
     return result;
@@ -171,9 +202,9 @@ JQNetworkPackageSharedPointer JQNetworkPackage::createRequestPackage(const qint3
     package->head_.packageFlag_ = JQNETWORKPACKAGE_DATAREQUESTPACKGEFLAG;
     package->head_.randomFlag_ = randomFlag;
 
-    package->head_.metaDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSED;
+    package->head_.metaDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSEDFLAG;
 
-    package->head_.payloadDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSED;
+    package->head_.payloadDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSEDFLAG;
 
     return package;
 }
@@ -210,4 +241,28 @@ bool JQNetworkPackage::mixPackage(const JQNetworkPackageSharedPointer &mixPackag
     this->refreshPackage();
 
     return true;
+}
+
+void JQNetworkPackage::refreshPackage()
+{
+    if ( head_.metaDataFlag_ == JQNETWORKPACKAGE_COMPRESSEDFLAG )
+    {
+        head_.metaDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSEDFLAG;
+
+        metaData_ = qUncompress( metaData_ );
+        head_.metaDataCurrentSize_ = metaData_.size();
+    }
+
+    if ( head_.payloadDataFlag_ == JQNETWORKPACKAGE_COMPRESSEDFLAG )
+    {
+        head_.payloadDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSEDFLAG;
+
+        payloadData_ = qUncompress( payloadData_ );
+        head_.payloadDataCurrentSize_ = payloadData_.size();
+    }
+
+    if ( this->metaDataTotalSize() != this->metaDataCurrentSize() ) { return; }
+    if ( this->payloadDataTotalSize() != this->payloadDataCurrentSize() ) { return; }
+
+    this->isCompletePackage_ = true;
 }

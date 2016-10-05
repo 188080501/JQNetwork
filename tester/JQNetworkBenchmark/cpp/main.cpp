@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
     benchmark.test5();
     qDebug() << "----- test5 end -----";
 
-//    QFile file( "/Users/Jason/Desktop/test.psd" );
+//    QFile file( "/Users/Jason/Desktop/Test.psd" );
 //    file.open( QIODevice::ReadOnly );
 
 //    const auto &&sourceData = file.readAll();

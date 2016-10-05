@@ -186,24 +186,33 @@ int JQNetworkClient::sendPayloadData(
         const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback
     )
 {
+    auto connect = this->getConnect( hostName, port );
+
+    if ( !connect ) { return 0; }
+
+    auto randomFlag = connect->sendPayloadData(
+                payloadData,
+                succeedCallback,
+                failCallback
+            );
+
+    if ( !randomFlag ) { return randomFlag; }
+
+    return randomFlag;
+}
+
+JQNetworkConnectPointer JQNetworkClient::getConnect(const QString &hostName, const quint16 &port)
+{
     for ( const auto &connectPool: this->connectPools_ )
     {
         auto connect = connectPool->getConnectByHostAndPort( hostName, port );
 
         if ( !connect ) { continue; }
 
-        auto randomFlag = connect->sendPayloadData(
-                    payloadData,
-                    succeedCallback,
-                    failCallback
-                );
-
-        if ( !randomFlag ) { return randomFlag; }
-
-        return randomFlag;
+        return connect;
     }
 
-    return 0;
+    return { };
 }
 
 void JQNetworkClient::onConnectToHostError(const JQNetworkConnectPointer &connect, const JQNetworkConnectPoolPointer &connectPool)

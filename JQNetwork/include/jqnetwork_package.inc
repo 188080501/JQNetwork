@@ -96,6 +96,26 @@ inline int JQNetworkPackage::payloadDataSize() const
     return payloadData_.size();
 }
 
+inline qint32 JQNetworkPackage::metaDataOriginalIndex() const
+{
+    return metaDataOriginalIndex_;
+}
+
+inline qint32 JQNetworkPackage::metaDataOriginalCurrentSize() const
+{
+    return metaDataOriginalCurrentSize_;
+}
+
+inline qint32 JQNetworkPackage::payloadDataOriginalIndex() const
+{
+    return payloadDataOriginalIndex_;
+}
+
+inline qint32 JQNetworkPackage::payloadDataOriginalCurrentSize() const
+{
+    return payloadDataOriginalCurrentSize_;
+}
+
 inline QByteArray JQNetworkPackage::toByteArray() const
 {
     QByteArray buffer;
@@ -111,14 +131,6 @@ inline QByteArray JQNetworkPackage::toByteArray() const
     }
 
     return buffer;
-}
-
-inline void JQNetworkPackage::refreshPackage()
-{
-    if ( this->metaDataTotalSize() != this->metaDataCurrentSize() ) { return; }
-    if ( this->payloadDataTotalSize() != this->payloadDataCurrentSize() ) { return; }
-
-    this->isCompletePackage_ = true;
 }
 
 #endif//JQNETWORK_INCLUDE_JQNETWORK_PACKAGE_INC

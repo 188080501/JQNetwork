@@ -22,9 +22,9 @@ struct JQNetworkConnectSettings
     bool autoMaintainLongConnection = false;
 
     int streamFormat = -1;
-    qint64 cutPackageSize = 2 * 1024 * 1024;
-    qint64 packageCompressionMinimumBytes = 8 * 1024 * 1024;
-    int packageCompressionThresholdForFirstCommunicationElapsed = 1000;
+    qint64 cutPackageSize = JQNETWORKPACKAGE_ADVISE_CUTPACKAGESIZE;
+    qint64 packageCompressionMinimumBytes = 1024;
+    int packageCompressionThresholdForConnectSucceedElapsed = 500;
     qint64 maximumSendForTotalByteCount = -1;
     qint64 maximumSendPackageByteCount = -1;
     int maximumSendSpeed = -1; // Byte/s
@@ -91,7 +91,19 @@ public:
             const qintptr &socketDescriptor
         );
 
+    inline bool onceConnectSucceed() const;
+
     inline bool isAbandonTcpSocket() const;
+
+    inline qint64 connectCreateTime() const;
+
+    inline qint64 connectSucceedTime() const;
+
+    inline qint64 waitForSendBytes() const;
+
+    inline qint64 alreadyWrittenBytes() const;
+
+    inline qint64 connectSucceedElapsed() const;
 
     void close();
 
@@ -135,6 +147,13 @@ private:
             const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback
         );
 
+    void realSendPayloadData(
+            const qint32 &randomFlag,
+            const QList< JQNetworkPackageSharedPointer > &packages,
+            const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &succeedCallback,
+            const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback
+        );
+
     void realSendDataRequest(const qint32 &randomFlag);
 
 private:
@@ -160,6 +179,8 @@ private:
     QMap< qint32, ReceivedCallbackPackage > onReceivedCallbacks_; // randomFlag -> package
 
     // Statistics
+    qint64 connectCreateTime_ = 0;
+    qint64 connectSucceedTime_ = 0;
     qint64 waitForSendBytes_ = 0;
     qint64 alreadyWrittenBytes_ = 0;
 };
