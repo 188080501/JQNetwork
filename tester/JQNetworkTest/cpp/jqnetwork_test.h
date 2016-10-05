@@ -35,6 +35,9 @@ private slots:
 
 private slots:
     void jqNetworkServerAndClientTest();
+
+private slots:
+    void jqNetworkServerAndClientTest2();
 };
 
 #endif//__CPP_JQNETWORK_TEST_H__

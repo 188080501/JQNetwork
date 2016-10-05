@@ -70,6 +70,8 @@ public:
             const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback = nullptr
         );
 
+    JQNetworkConnectPointer getConnect(const QString &hostName, const quint16 &port);
+
 private:
     void onConnectToHostError(const JQNetworkConnectPointer &connect, const JQNetworkConnectPoolPointer &connectPool);
 

@@ -38,7 +38,8 @@ public:
     static QList< JQNetworkPackageSharedPointer > createTransportPackages(
             const QByteArray &payloadData,
             const qint32 &randomFlag,
-            const qint64 cutPackageSize = -1
+            const qint64 cutPackageSize = -1,
+            const bool &compressionPayloadData = false
         );
 
     static JQNetworkPackageSharedPointer createRequestPackage(const qint32 &randomFlag);
@@ -46,6 +47,7 @@ public:
     inline bool isCompletePackage() const;
 
     inline bool isAbandonPackage() const;
+
 
     inline qint8 bootFlag() const;
 
@@ -73,12 +75,20 @@ public:
 
     inline int payloadDataSize() const;
 
+    inline qint32 metaDataOriginalIndex() const;
+
+    inline qint32 metaDataOriginalCurrentSize() const;
+
+    inline qint32 payloadDataOriginalIndex() const;
+
+    inline qint32 payloadDataOriginalCurrentSize() const;
+
+
     inline QByteArray toByteArray() const;
 
     bool mixPackage(const JQNetworkPackageSharedPointer &mixPackage);
 
-private:
-    inline void refreshPackage();
+    void refreshPackage();
 
 private:
     bool isCompletePackage_ = false;
@@ -104,6 +114,11 @@ private:
 
     QByteArray metaData_;
     QByteArray payloadData_;
+
+    qint32 metaDataOriginalIndex_ = -1;
+    qint32 metaDataOriginalCurrentSize_ = -1;
+    qint32 payloadDataOriginalIndex_ = -1;
+    qint32 payloadDataOriginalCurrentSize_ = -1;
 };
 
 #include "jqnetwork_package.inc"
