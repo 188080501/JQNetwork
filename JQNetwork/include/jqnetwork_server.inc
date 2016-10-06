@@ -31,6 +31,11 @@ inline JQNetworkConnectSettingsSharedPointer JQNetworkServer::connectSettings()
     return connectSettings_;
 }
 
+inline QString JQNetworkServer::nodeMarkSummary() const
+{
+    return nodeMarkSummary_;
+}
+
 inline void JQNetworkServer::onConnectToHostError(const JQNetworkConnectPointer &connect, const JQNetworkConnectPoolPointer &)
 {
     if ( !serverSettings_->connectToHostErrorCallback ) { return; }

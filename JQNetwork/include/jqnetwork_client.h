@@ -18,8 +18,7 @@
 
 struct JQNetworkClientSettings
 {
-    int globalSocketThreadCount = JQNETWORK_ADVISE_THREADCOUNT;
-    int globalProcessorThreadCount = 1;
+    QString dutyMark;
 
     std::function< void( const JQNetworkConnectPointer &, const QString &hostName, const quint16 &port ) > connectToHostErrorCallback = nullptr;
     std::function< void( const JQNetworkConnectPointer &, const QString &hostName, const quint16 &port ) > connectToHostTimeoutCallback = nullptr;
@@ -29,6 +28,9 @@ struct JQNetworkClientSettings
     std::function< void( const JQNetworkConnectPointer &, const QString &hostName, const quint16 &port, const qint32 &, const qint64 &, const qint64 &, const qint64 & ) > packageSendingCallback = nullptr;
     std::function< void( const JQNetworkConnectPointer &, const QString &hostName, const quint16 &port, const qint32 &, const qint64 &, const qint64 &, const qint64 & ) > packageReceivingCallback = nullptr;
     std::function< void( const JQNetworkConnectPointer &, const QString &hostName, const quint16 &port, const JQNetworkPackageSharedPointer & ) > packageReceivedCallback = nullptr;
+
+    int globalSocketThreadCount = JQNETWORK_ADVISE_THREADCOUNT;
+    int globalProcessorThreadCount = 1;
 };
 
 class JQNetworkClient: public QObject
@@ -55,6 +57,8 @@ public:
     inline JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings();
 
     inline JQNetworkConnectSettingsSharedPointer connectSettings();
+
+    inline QString nodeMarkSummary() const;
 
     bool begin();
 
@@ -136,6 +140,7 @@ private:
     QMap< QThread *, JQNetworkConnectPoolSharedPointer > connectPools_;
 
     // Other
+    QString nodeMarkSummary_;
     QMutex mutex_;
     QMap< QString, QSharedPointer< QSemaphore > > waitConnectSucceedSemaphore_; // "127.0.0.1:34543" -> Connect
 };

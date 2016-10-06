@@ -16,6 +16,7 @@
 // JQNetwork lib import
 #include "jqnetwork_foundation.h"
 
+// JQNetworkThreadPool
 inline int JQNetworkThreadPool::nextRotaryIndex()
 {
     rotaryIndex_ = ( rotaryIndex_ + 1 ) % helpers_->size();
@@ -36,6 +37,42 @@ inline void JQNetworkThreadPool::waitRunEach(const std::function<void ()> &callb
     {
         this->waitRun( callback, index );
     }
+}
+
+// JQNetworkNodeMark
+inline qint64 JQNetworkNodeMark::applicationStartTime() const
+{
+    return applicationStartTime_;
+}
+
+inline QString JQNetworkNodeMark::applicationFilePath() const
+{
+    return applicationFilePath_;
+}
+
+inline QString JQNetworkNodeMark::localHostName() const
+{
+    return localHostName_;
+}
+
+inline qint64 JQNetworkNodeMark::nodeMarkCreatedTime() const
+{
+    return nodeMarkCreatedTime_;
+}
+
+inline QString JQNetworkNodeMark::nodeMarkClassAddress() const
+{
+    return nodeMarkClassAddress_;
+}
+
+inline QString JQNetworkNodeMark::dutyMark() const
+{
+    return dutyMark_;
+}
+
+inline QString JQNetworkNodeMark::nodeMarkSummary() const
+{
+    return nodeMarkSummary_;
 }
 
 #endif//JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_INC

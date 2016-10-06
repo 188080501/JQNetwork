@@ -15,6 +15,7 @@
 #include <JQNetworkServer>
 #include <JQNetworkProcessor>
 #include <JQNetworkClient>
+#include <JQNetworkLan>
 #include <JQNetworkForwarf>
 
 void JQNetworkTest::jqNetworkThreadPoolTest()
@@ -104,6 +105,35 @@ void JQNetworkTest::jqNetworkThreadPoolBenchmark2()
 
     qDebug() << number;
     QCOMPARE( number, 90000 );
+}
+
+void JQNetworkTest::jqNetworkNodeMarkTest()
+{
+    JQNetworkNodeMark nodeMark( "test" );
+
+    qDebug() << "applicationStartTime:" << nodeMark.applicationStartTime();
+    qDebug() << "applicationFilePath:" << nodeMark.applicationFilePath();
+    qDebug() << "localHostName:" << nodeMark.localHostName();
+    qDebug() << "nodeMarkCreatedTime:" << nodeMark.nodeMarkCreatedTime();
+    qDebug() << "nodeMarkClassAddress:" << nodeMark.nodeMarkClassAddress();
+    qDebug() << "dutyMark:" << nodeMark.dutyMark();
+    qDebug() << "nodeMarkSummary:" << nodeMark.nodeMarkSummary();
+
+    QCOMPARE( nodeMark.applicationStartTime() > 0, true );
+    QCOMPARE( nodeMark.applicationFilePath().isEmpty(), false );
+    QCOMPARE( nodeMark.localHostName().isEmpty(), false );
+    QCOMPARE( nodeMark.nodeMarkCreatedTime() > 0, true );
+    QCOMPARE( nodeMark.nodeMarkClassAddress().isEmpty(), false );
+    QCOMPARE( nodeMark.dutyMark().isEmpty(), false );
+    QCOMPARE( nodeMark.nodeMarkSummary().isEmpty(), false );
+
+    const auto &&nodeMarkSummary1 = nodeMark.nodeMarkSummary();
+
+    QThread::msleep( 50 );
+
+    const auto &&nodeMarkSummary2 = JQNetworkNodeMark::calculateNodeMarkSummary( "test" );
+
+    QCOMPARE( nodeMarkSummary1 != nodeMarkSummary2, true );
 }
 
 void JQNetworkTest::jqNetworkConnectTest()
@@ -489,7 +519,7 @@ void JQNetworkTest::jqNetworkServerAndClientTest()
     QThread *serverProcessThread = nullptr;
     QThread *clientProcessThread = nullptr;
 
-    auto server = JQNetworkServer::createServerByListenPort( 23456 );
+    auto server = JQNetworkServer::createServer( 23456 );
     server->connectSettings()->cutPackageSize = 2;
     server->serverSettings()->globalProcessorThreadCount = 1;
     server->serverSettings()->packageSendingCallback = [ &serverFlag, &serverProcessThread ](
@@ -650,7 +680,7 @@ void JQNetworkTest::jqNetworkServerAndClientTest2()
         testData.append( rand() % 16 );
     }
 
-    auto server = JQNetworkServer::createServerByListenPort( 34567 );
+    auto server = JQNetworkServer::createServer( 34567 );
     server->serverSettings()->globalProcessorThreadCount = 1;
     server->serverSettings()->packageReceivingCallback = [ &serverFlag ](
             const auto &,
@@ -728,4 +758,63 @@ void JQNetworkTest::jqNetworkServerAndClientTest2()
               "client packageSendingCallback: 127.0.0.1 34567 1 16777216 8388608 33554432\n"
               "client packageSendingCallback: 127.0.0.1 34567 1 25165824 8388608 33554432\n"
           );
+}
+
+void JQNetworkTest::jqNetworkLanTest()
+{
+    bool flag1 = false;
+    bool flag2 = false;
+    bool flag3 = false;
+
+    {
+        auto lan = JQNetworkLan::createLan( QHostAddress( "228.12.23.34" ), 12345, 23456 );
+
+        lan->lanSettings()->lanNodeOnlineCallback = [ &flag1 ](const auto &lanNode)
+        {
+            qDebug() << "lanNodeOnlineCallback" << lanNode.nodeMarkSummary;
+            flag1 = true;
+        };
+        lan->lanSettings()->lanNodeActiveCallback = [ &flag2 ](const auto &lanNode)
+        {
+            qDebug() << "lanNodeActiveCallback" << lanNode.nodeMarkSummary;
+            flag2 = true;
+        };
+        lan->lanSettings()->lanNodeOfflineCallback = [ &flag3 ](const auto &lanNode)
+        {
+            qDebug() << "lanNodeOfflineCallback" << lanNode.nodeMarkSummary;
+            flag3 = true;
+        };
+
+        QCOMPARE( lan->begin(), true );
+
+        QThread::sleep( 20 );
+
+        auto availableLanNodes = lan->availableLanNodes();
+        QCOMPARE( availableLanNodes.size() >= 1, true );
+
+        bool flag4 = false;
+
+        for ( const auto &availableLanNode: availableLanNodes )
+        {
+            if ( availableLanNode.isSelf )
+            {
+               flag4 = true;
+            }
+        }
+
+        QCOMPARE( flag4, true );
+    }
+
+    QCOMPARE( flag1, true );
+    QCOMPARE( flag2, true );
+    QCOMPARE( flag3, true );
+
+    const auto &&lanAddressEntries = JQNetworkLan::getLanAddressEntries();
+
+    QCOMPARE( lanAddressEntries.size() >= 1, true );
+
+    for ( const auto &addressEntries: lanAddressEntries )
+    {
+        qDebug() << "addressEntries:" << addressEntries.ip << addressEntries.netmask << addressEntries.ipSegment << addressEntries.isVmAddress;
+    }
 }

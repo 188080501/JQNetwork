@@ -56,6 +56,8 @@ JQNetworkClientSharedPointer JQNetworkClient::createClient()
 
 bool JQNetworkClient::begin()
 {
+    nodeMarkSummary_ = JQNetworkNodeMark::calculateNodeMarkSummary( clientSettings_->dutyMark );
+
     if ( globalSocketThreadPool_ )
     {
         socketThreadPool_ = globalSocketThreadPool_.toStrongRef();

@@ -19,13 +19,12 @@
 
 // Qt lib import
 #include <QObject>
-#include <QString>
-#include <QByteArray>
 #include <QSharedPointer>
 #include <QWeakPointer>
 #include <QPointer>
 #include <QHostAddress>
 #include <QMutex>
+#include <QVariant>
 
 #define JQNETWORKPACKAGE_BOOTFLAG qint8( 0x7d )
 #define JQNETWORKPACKAGE_DATATRANSPORTPACKGEFLAG qint8( 0x1 )
@@ -44,16 +43,14 @@
 #   define JQNETWORKPACKAGE_ADVISE_CUTPACKAGESIZE qint64( 8 * 1024 * 1024 )
 #endif
 
-class QJsonObject;
-class QJsonArray;
 class QSemaphore;
-class QJsonValue;
 class QMutex;
 class QTimer;
 class QThreadPool;
 class QEventLoop;
 class QTcpSocket;
 class QTcpServer;
+class QUdpSocket;
 
 template < typename T > class QVector;
 template < class Key, class T > class QMap;
@@ -64,11 +61,14 @@ class JQNetworkConnectPool;
 class JQNetworkServer;
 class JQNetworkProcessor;
 class JQNetworkClient;
+class JQNetworkLan;
 
 struct JQNetworkConnectSettings;
 struct JQNetworkConnectPoolSettings;
 struct JQNetworkServerSettings;
 struct JQNetworkClientSettings;
+struct JQNetworkLanSettings;
+struct JQNetworkLanNode;
 
 typedef QPointer< JQNetworkPackage > JQNetworkPackagePointer;
 typedef QPointer< JQNetworkConnect > JQNetworkConnectPointer;
@@ -76,6 +76,7 @@ typedef QPointer< JQNetworkConnectPool > JQNetworkConnectPoolPointer;
 typedef QPointer< JQNetworkServer > JQNetworkServerPointer;
 typedef QPointer< JQNetworkProcessor > JQNetworkProcessorPointer;
 typedef QPointer< JQNetworkClient > JQNetworkClientPointer;
+typedef QPointer< JQNetworkLan > JQNetworkLanPointer;
 
 typedef QSharedPointer< JQNetworkPackage > JQNetworkPackageSharedPointer;
 typedef QSharedPointer< JQNetworkConnect > JQNetworkConnectSharedPointer;
@@ -83,11 +84,13 @@ typedef QSharedPointer< JQNetworkConnectPool > JQNetworkConnectPoolSharedPointer
 typedef QSharedPointer< JQNetworkServer > JQNetworkServerSharedPointer;
 typedef QSharedPointer< JQNetworkProcessor > JQNetworkProcessorSharedPointer;
 typedef QSharedPointer< JQNetworkClient > JQNetworkClientSharedPointer;
+typedef QSharedPointer< JQNetworkLan > JQNetworkLanSharedPointer;
 
 typedef QSharedPointer< JQNetworkConnectSettings > JQNetworkConnectSettingsSharedPointer;
 typedef QSharedPointer< JQNetworkConnectPoolSettings > JQNetworkConnectPoolSettingsSharedPointer;
 typedef QSharedPointer< JQNetworkServerSettings > JQNetworkServerSettingsSharedPointer;
 typedef QSharedPointer< JQNetworkClientSettings > JQNetworkClientSettingsSharedPointer;
+typedef QSharedPointer< JQNetworkLanSettings > JQNetworkLanSettingsSharedPointer;
 
 struct JQNetworkOnReceivedCallbackPackage
 {
@@ -145,6 +148,39 @@ private:
     QSharedPointer< QVector< QPointer< QEventLoop > > > eventLoops_;
     QSharedPointer< QVector< QPointer< JQNetworkThreadPoolHelper > > > helpers_;
     int rotaryIndex_ = -1;
+};
+
+class JQNetworkNodeMark
+{
+public:
+    JQNetworkNodeMark(const QString &dutyMark);
+
+    ~JQNetworkNodeMark() = default;
+
+    static QString calculateNodeMarkSummary(const QString &dutyMark);
+
+    inline qint64 applicationStartTime() const;
+
+    inline QString applicationFilePath() const;
+
+    inline QString localHostName() const;
+
+    inline qint64 nodeMarkCreatedTime() const;
+
+    inline QString nodeMarkClassAddress() const;
+
+    inline QString dutyMark() const;
+
+    inline QString nodeMarkSummary() const;
+
+private:
+    static qint64 applicationStartTime_;
+    static QString applicationFilePath_;
+    static QString localHostName_;
+    qint64 nodeMarkCreatedTime_;
+    QString nodeMarkClassAddress_;
+    QString dutyMark_;
+    QString nodeMarkSummary_;
 };
 
 #include "jqnetwork_foundation.inc"

@@ -17,6 +17,8 @@
 #include <QThreadPool>
 #include <QSemaphore>
 #include <QVector>
+#include <QCryptographicHash>
+#include <QHostInfo>
 #include <QtConcurrent>
 
 // JQNetworkThreadPoolHelper
@@ -152,4 +154,39 @@ int JQNetworkThreadPool::waitRun(const std::function<void ()> &callback, const i
     semaphore.acquire( 1 );
 
     return index;
+}
+
+// JQNetworkNodeMark
+qint64 JQNetworkNodeMark::applicationStartTime_ = QDateTime::currentMSecsSinceEpoch();
+QString JQNetworkNodeMark::applicationFilePath_;
+QString JQNetworkNodeMark::localHostName_;
+
+JQNetworkNodeMark::JQNetworkNodeMark(const QString &dutyMark):
+    nodeMarkCreatedTime_( QDateTime::currentMSecsSinceEpoch() ),
+    nodeMarkClassAddress_( QString::number( (qint64)this, 16 ) ),
+    dutyMark_( dutyMark )
+{
+    if ( applicationFilePath_.isEmpty() )
+    {
+        applicationFilePath_ = qApp->applicationFilePath();
+        localHostName_ = QHostInfo::localHostName();
+    }
+
+    nodeMarkSummary_ = QCryptographicHash::hash(
+                QString( "%1:%2:%3:%4:%5:%6" ).arg(
+                    QString::number( applicationStartTime_ ),
+                    applicationFilePath_,
+                    localHostName_,
+                    QString::number( nodeMarkCreatedTime_ ),
+                    nodeMarkClassAddress_,
+                    dutyMark_
+                    ).toUtf8(),
+                QCryptographicHash::Md5
+            ).toHex();
+}
+
+QString JQNetworkNodeMark::calculateNodeMarkSummary(const QString &dutyMark)
+{
+    JQNetworkNodeMark nodeMark( dutyMark );
+    return nodeMark.nodeMarkSummary();
 }

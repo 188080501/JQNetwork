@@ -18,9 +18,7 @@
 
 struct JQNetworkServerSettings
 {
-    int globalServerThreadCount = 1;
-    int globalSocketThreadCount = JQNETWORK_ADVISE_THREADCOUNT;
-    int globalProcessorThreadCount = JQNETWORK_ADVISE_THREADCOUNT;
+    QString dutyMark;
 
     QHostAddress listenAddress = QHostAddress::Any;
     quint16 listenPort = 0;
@@ -33,6 +31,10 @@ struct JQNetworkServerSettings
     std::function< void( const JQNetworkConnectPointer &, const qint32 &, const qint64 &, const qint64 &, const qint64 & ) > packageSendingCallback = nullptr;
     std::function< void( const JQNetworkConnectPointer &, const qint32 &, const qint64 &, const qint64 &, const qint64 & ) > packageReceivingCallback = nullptr;
     std::function< void( const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer & ) > packageReceivedCallback = nullptr;
+
+    int globalServerThreadCount = 1;
+    int globalSocketThreadCount = JQNETWORK_ADVISE_THREADCOUNT;
+    int globalProcessorThreadCount = JQNETWORK_ADVISE_THREADCOUNT;
 };
 
 class JQNetworkServer: public QObject
@@ -52,7 +54,7 @@ public:
 
     JQNetworkServer &operator =(const JQNetworkServer &) = delete;
 
-    static JQNetworkServerSharedPointer createServerByListenPort(
+    static JQNetworkServerSharedPointer createServer(
             const quint16 &listenPort,
             const QHostAddress &listenAddress = QHostAddress::Any
         );
@@ -62,6 +64,8 @@ public:
     inline JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings();
 
     inline JQNetworkConnectSettingsSharedPointer connectSettings();
+
+    inline QString nodeMarkSummary() const;
 
     bool begin();
 
@@ -119,6 +123,9 @@ private:
     // Server
     QSharedPointer< QTcpServer > tcpServer_;
     QMap< QThread *, JQNetworkConnectPoolSharedPointer > connectPools_;
+
+    // Other
+    QString nodeMarkSummary_;
 };
 
 #include "jqnetwork_server.inc"

@@ -78,7 +78,7 @@ JQNetworkServer::~JQNetworkServer()
     );
 }
 
-JQNetworkServerSharedPointer JQNetworkServer::createServerByListenPort(
+JQNetworkServerSharedPointer JQNetworkServer::createServer(
         const quint16 &listenPort,
         const QHostAddress &listenAddress
     )
@@ -95,6 +95,8 @@ JQNetworkServerSharedPointer JQNetworkServer::createServerByListenPort(
 
 bool JQNetworkServer::begin()
 {
+    nodeMarkSummary_ = JQNetworkNodeMark::calculateNodeMarkSummary( serverSettings_->dutyMark );
+
     if ( globalServerThreadPool_ )
     {
         serverThreadPool_ = globalServerThreadPool_.toStrongRef();
