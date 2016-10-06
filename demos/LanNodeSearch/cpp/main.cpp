@@ -3,7 +3,6 @@
 
 // JQNetwork lib improt
 #include <JQNetworkLan>
-#include <QtNetwork>
 
 int main(int argc, char *argv[])
 {
@@ -14,8 +13,7 @@ int main(int argc, char *argv[])
     // 创建配置
     JQNetworkLanSettingsSharedPointer lanSettings( new JQNetworkLanSettings );
     lanSettings->multicastGroupAddress = QHostAddress( "228.12.23.34" ); // 组播地址
-    lanSettings->multicastGroupAddressBindPort = 12345; // 组播端口
-    lanSettings->broadcastAddressBindPort = 23456; // 全局广播端口
+    lanSettings->bindPort = 12345; // 绑定端口
 
     lanSettings->lanNodeListChangedCallback = [ &printLanNodeList ]() // 当节点列表发生改变时的回调
     {
@@ -32,7 +30,7 @@ int main(int argc, char *argv[])
 
         for ( const auto &lanNode: lan.availableLanNodes() )
         {
-            qDebug() << "lanNode: matchAddress" << lanNode.matchAddress.toString();
+            qDebug() << "lanNode: matchAddress" << lanNode.matchAddress.toString() << ", isSelf:" << lanNode.isSelf << ", nodeMarkSummary:" << lanNode.nodeMarkSummary;
         }
 
         qDebug() << "----- Lan node list end -----";

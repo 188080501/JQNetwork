@@ -767,7 +767,7 @@ void JQNetworkTest::jqNetworkLanTest()
     bool flag3 = false;
 
     {
-        auto lan = JQNetworkLan::createLan( QHostAddress( "228.12.23.34" ), 12345, 23456 );
+        auto lan = JQNetworkLan::createLan( QHostAddress( "228.12.23.34" ), 12345 );
 
         lan->lanSettings()->lanNodeOnlineCallback = [ &flag1 ](const auto &lanNode)
         {

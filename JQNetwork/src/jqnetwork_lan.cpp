@@ -19,6 +19,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QDateTime>
+#include <QThread>
 #include <QNetworkInterface>
 
 QWeakPointer< JQNetworkThreadPool > JQNetworkLan::globalProcessorThreadPool_;
@@ -37,11 +38,11 @@ JQNetworkLan::~JQNetworkLan()
                     mutex_.lock();
 
                     this->sendOffline();
+                    QThread::msleep( 50 );
 
                     timerForCheckLoop_.clear();
 
-                    udpSocketForMulticastGroupAddress_.clear();
-                    udpSocketForBroadcastAddress_.clear();
+                    udpSocket_.clear();
 
                     for ( const auto &lanNode: lanNodes_ )
                     {
@@ -60,8 +61,7 @@ JQNetworkLan::~JQNetworkLan()
 
 JQNetworkLanSharedPointer JQNetworkLan::createLan(
         const QHostAddress &multicastGroupAddress,
-        const quint16 &multicastGroupAddressBindPort,
-        const quint16 &broadcastAddressBindPort,
+        const quint16 &bindPort,
         const QString &dutyMark
     )
 {
@@ -70,8 +70,7 @@ JQNetworkLanSharedPointer JQNetworkLan::createLan(
     lanSettings->dutyMark = dutyMark;
 
     lanSettings->multicastGroupAddress = multicastGroupAddress;
-    lanSettings->multicastGroupAddressBindPort = multicastGroupAddressBindPort;
-    lanSettings->broadcastAddressBindPort = broadcastAddressBindPort;
+    lanSettings->bindPort = bindPort;
 
     return JQNetworkLanSharedPointer( new JQNetworkLan( lanSettings ) );
 }
@@ -197,41 +196,23 @@ void JQNetworkLan::refreshLanAddressEntries()
 
 bool JQNetworkLan::refreshUdp()
 {
-    udpSocketForMulticastGroupAddress_.reset( new QUdpSocket );
-    udpSocketForBroadcastAddress_.reset( new QUdpSocket );
+    udpSocket_.reset( new QUdpSocket );
 
-    QObject::connect(
-                udpSocketForMulticastGroupAddress_.data(),
-                &QUdpSocket::readyRead,
-                [
-                    this,
-                    udpSocketForMulticastGroupAddress = udpSocketForMulticastGroupAddress_.data()
-                ]()
-                {
-                    this->onUdpSocketReadyRead( udpSocketForMulticastGroupAddress );
-                }
-    );
-    QObject::connect(
-                udpSocketForBroadcastAddress_.data(),
-                &QUdpSocket::readyRead,
-                [
-                    this,
-                    udpSocketForBroadcastAddress = udpSocketForBroadcastAddress_.data()
-                ]()
-                {
-                    this->onUdpSocketReadyRead( udpSocketForBroadcastAddress );
-                }
-    );
+    QObject::connect( udpSocket_.data(), &QUdpSocket::readyRead, this, &JQNetworkLan::onUdpSocketReadyRead, Qt::DirectConnection );
 
+    const auto &&bindSucceed = udpSocket_->bind(
+                QHostAddress::AnyIPv4,
+                lanSettings_->bindPort,
 #ifdef Q_OS_WIN
-    if ( !udpSocketForMulticastGroupAddress_->bind( QHostAddress::AnyIPv4, lanSettings_->multicastGroupAddressBindPort, QUdpSocket::ReuseAddressHint ) ) { return false; }
-    if ( !udpSocketForBroadcastAddress_->bind( QHostAddress::AnyIPv4, lanSettings_->broadcastAddressBindPort, QUdpSocket::ReuseAddressHint ) ) { return false; }
+                QUdpSocket::ReuseAddressHint
 #else
-    if ( !udpSocketForMulticastGroupAddress_->bind( QHostAddress::AnyIPv4, lanSettings_->multicastGroupAddressBindPort, QUdpSocket::ShareAddress ) ) { return false; }
-    if ( !udpSocketForBroadcastAddress_->bind( QHostAddress::AnyIPv4, lanSettings_->broadcastAddressBindPort, QUdpSocket::ShareAddress ) ) { return false; }
+                QUdpSocket::ShareAddress
 #endif
+            );
 
-    if ( !udpSocketForMulticastGroupAddress_->joinMulticastGroup( lanSettings_->multicastGroupAddress ) ) { return false; }
+    if ( !bindSucceed ) { return false; }
+
+    if ( !udpSocket_->joinMulticastGroup( lanSettings_->multicastGroupAddress ) ) { return false; }
 
     return true;
 }
@@ -240,7 +221,7 @@ void JQNetworkLan::checkLoop()
 {
     ++checkLoopCounting_;
 
-    if ( !( checkLoopCounting_ % 9 ) )
+    if ( !( checkLoopCounting_ % 12 ) )
     {
         this->refreshLanAddressEntries();
     }
@@ -288,7 +269,7 @@ void JQNetworkLan::checkLoop()
     timerForCheckLoop_->start();
 }
 
-QByteArray JQNetworkLan::makeData(const bool &requestOffline)
+QByteArray JQNetworkLan::makeData(const bool &requestOffline, const bool &requestFeedback)
 {
     QVariantMap data;
     QVariantList ipList;
@@ -301,6 +282,7 @@ QByteArray JQNetworkLan::makeData(const bool &requestOffline)
     data[ "lastActiveTime" ] = QDateTime::currentMSecsSinceEpoch();
     data[ "ipList" ] = ipList;
     data[ "requestOffline" ] = requestOffline;
+    data[ "requestFeedback" ] = requestFeedback;
     data[ "appendData" ] = QVariant();
 
     return QJsonDocument( QJsonObject::fromVariantMap( data ) ).toJson( QJsonDocument::Compact );
@@ -310,38 +292,39 @@ void JQNetworkLan::sendOnline()
 {
 //    qDebug() << "JQNetworkLan::sendOnline";
 
-    const auto &&data = this->makeData( false );
+    const auto &&data = this->makeData( false, true );
 
-    udpSocketForMulticastGroupAddress_->writeDatagram( data, lanSettings_->multicastGroupAddress, lanSettings_->multicastGroupAddressBindPort );
-    udpSocketForBroadcastAddress_->writeDatagram( data, QHostAddress( QHostAddress::Broadcast ), lanSettings_->broadcastAddressBindPort );
+    udpSocket_->writeDatagram( data, lanSettings_->multicastGroupAddress, lanSettings_->bindPort );
+    udpSocket_->writeDatagram( data, QHostAddress( QHostAddress::Broadcast ), lanSettings_->bindPort );
 }
 
 void JQNetworkLan::sendOffline()
 {
 //    qDebug() << "JQNetworkLan::sendOffline";
 
-    const auto &&data = this->makeData( true );
+    const auto &&data = this->makeData( true, false );
 
-    udpSocketForMulticastGroupAddress_->writeDatagram( data, lanSettings_->multicastGroupAddress, lanSettings_->multicastGroupAddressBindPort );
-    udpSocketForBroadcastAddress_->writeDatagram( data, QHostAddress( QHostAddress::Broadcast ), lanSettings_->broadcastAddressBindPort );
+    udpSocket_->writeDatagram( data, lanSettings_->multicastGroupAddress, lanSettings_->bindPort );
+    udpSocket_->writeDatagram( data, QHostAddress( QHostAddress::Broadcast ), lanSettings_->bindPort );
 }
 
-void JQNetworkLan::onUdpSocketReadyRead(QUdpSocket *udpSocket)
+void JQNetworkLan::onUdpSocketReadyRead()
 {
-    while ( udpSocket->hasPendingDatagrams() )
+    while ( udpSocket_->hasPendingDatagrams() )
     {
         QByteArray datagram;
 
-        datagram.resize( udpSocket->pendingDatagramSize() );
-        udpSocket->readDatagram( datagram.data(), datagram.size() );
+        datagram.resize( udpSocket_->pendingDatagramSize() );
+        udpSocket_->readDatagram( datagram.data(), datagram.size() );
 
-        qDebug() << "JQNetworkLan::onUdpSocketReadyRead:" << datagram;
+//        qDebug() << "JQNetworkLan::onUdpSocketReadyRead:" << datagram;
 
         const auto &&data = QJsonDocument::fromJson( datagram ).object().toVariantMap();
 
         const auto &&nodeMarkSummary = data[ "nodeMarkSummary" ].toString();
         const auto &&lastActiveTime = data[ "lastActiveTime" ].toLongLong();
         const auto &&requestOffline = data[ "requestOffline" ].toBool();
+        const auto &&requestFeedback = data[ "requestFeedback" ].toBool();
         const auto &&appendData = data[ "appendData" ].toMap();
 
         if ( nodeMarkSummary.isEmpty() )
@@ -372,10 +355,11 @@ void JQNetworkLan::onUdpSocketReadyRead(QUdpSocket *udpSocket)
         {
             mutex_.lock();
 
+            JQNetworkLanNode lanNode;
+            bool firstOnline = false;
+
             if ( !lanNodes_.contains( nodeMarkSummary ) )
             {
-                JQNetworkLanNode lanNode;
-
                 lanNode.nodeMarkSummary = nodeMarkSummary;
                 lanNode.lastActiveTime = lastActiveTime;
                 lanNode.ipList = ipList;
@@ -389,10 +373,12 @@ void JQNetworkLan::onUdpSocketReadyRead(QUdpSocket *udpSocket)
 
                 this->onLanNodeStateOnline( lanNode );
                 this->onLanNodeListChanged();
+
+                firstOnline = true;
             }
             else
             {
-                auto lanNode = lanNodes_[ nodeMarkSummary ];
+                lanNode = lanNodes_[ nodeMarkSummary ];
 
                 if ( lanNode.lastActiveTime < lastActiveTime )
                 {
@@ -411,6 +397,14 @@ void JQNetworkLan::onUdpSocketReadyRead(QUdpSocket *udpSocket)
                 {
                     mutex_.unlock();
                 }
+            }
+
+            if ( requestFeedback && firstOnline && ( lanNode.nodeMarkSummary != nodeMarkSummary_ ) )
+            {
+                const auto &&data = this->makeData( false, false );
+
+                udpSocket_->writeDatagram( data, lanSettings_->multicastGroupAddress, lanSettings_->bindPort );
+                udpSocket_->writeDatagram( data, lanNode.matchAddress, lanSettings_->bindPort );
             }
         }
         else

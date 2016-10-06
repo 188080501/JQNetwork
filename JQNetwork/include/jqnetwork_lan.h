@@ -21,8 +21,7 @@ struct JQNetworkLanSettings
     QString dutyMark;
 
     QHostAddress multicastGroupAddress;
-    quint16 multicastGroupAddressBindPort = 0;
-    quint16 broadcastAddressBindPort = 0;
+    quint16 bindPort = 0;
 
     int checkLoopInterval = 15 * 1000;
     int lanNodeTimeoutInterval = 45 * 1000;
@@ -68,8 +67,7 @@ public:
 
     static JQNetworkLanSharedPointer createLan(
             const QHostAddress &multicastGroupAddress,
-            const quint16 &multicastGroupAddressBindPort,
-            const quint16 &broadcastAddressBindPort,
+            const quint16 &bindPort,
             const QString &dutyMark = ""
         );
 
@@ -92,13 +90,13 @@ private:
 
     void checkLoop();
 
-    QByteArray makeData(const bool &requestOffline);
+    QByteArray makeData(const bool &requestOffline, const bool &requestFeedback);
 
     void sendOnline();
 
     void sendOffline();
 
-    void onUdpSocketReadyRead(QUdpSocket *udpSocket);
+    void onUdpSocketReadyRead();
 
     inline void onLanNodeStateOnline(const JQNetworkLanNode &lanNode);
 
@@ -117,8 +115,7 @@ private:
     JQNetworkLanSettingsSharedPointer lanSettings_;
 
     // Socket
-    QSharedPointer< QUdpSocket > udpSocketForMulticastGroupAddress_;
-    QSharedPointer< QUdpSocket > udpSocketForBroadcastAddress_;
+    QSharedPointer< QUdpSocket > udpSocket_;
 
     // Data
     QList< JQNetworkLanAddressEntries > lanAddressEntries_;
