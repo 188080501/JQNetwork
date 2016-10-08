@@ -283,7 +283,7 @@ QByteArray JQNetworkLan::makeData(const bool &requestOffline, const bool &reques
     data[ "ipList" ] = ipList;
     data[ "requestOffline" ] = requestOffline;
     data[ "requestFeedback" ] = requestFeedback;
-    data[ "appendData" ] = QVariant();
+    data[ "appendData" ] = appendData_;
 
     return QJsonDocument( QJsonObject::fromVariantMap( data ) ).toJson( QJsonDocument::Compact );
 }
@@ -325,7 +325,7 @@ void JQNetworkLan::onUdpSocketReadyRead()
         const auto &&lastActiveTime = data[ "lastActiveTime" ].toLongLong();
         const auto &&requestOffline = data[ "requestOffline" ].toBool();
         const auto &&requestFeedback = data[ "requestFeedback" ].toBool();
-        const auto &&appendData = data[ "appendData" ].toMap();
+        const auto &&appendData = data[ "appendData" ];
 
         if ( nodeMarkSummary.isEmpty() )
         {

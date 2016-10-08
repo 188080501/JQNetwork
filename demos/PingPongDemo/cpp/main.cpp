@@ -1,5 +1,6 @@
 ﻿// Qt lib import
 #include <QCoreApplication>
+#include <QTimer>
 
 // JQNetwork lib improt
 #include <JQNetworkPackage>

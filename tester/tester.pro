@@ -13,4 +13,4 @@
 TEMPLATE = subdirs
 
 SUBDIRS += JQNetworkTest
-#SUBDIRS += JQNetworkBenchmark
+SUBDIRS += JQNetworkBenchmark

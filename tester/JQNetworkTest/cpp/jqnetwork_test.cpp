@@ -817,4 +817,38 @@ void JQNetworkTest::jqNetworkLanTest()
     {
         qDebug() << "addressEntries:" << addressEntries.ip << addressEntries.netmask << addressEntries.ipSegment << addressEntries.isVmAddress;
     }
+
+    {
+        QVector< QSharedPointer< JQNetworkLan > > lans;
+
+        for ( auto count = 0; count < 5; ++count )
+        {
+            auto lan = JQNetworkLan::createLan( QHostAddress( "228.12.23.34" ), 12345 );
+
+            lan->setAppendData( count );
+
+            QCOMPARE( lan->begin(), true );
+            QThread::sleep( 1 );
+
+            lans.push_back( lan );
+        }
+
+        QThread::sleep( 1 );
+
+        for ( const auto &lan: lans )
+        {
+            const auto &&availableLanNodes = lan->availableLanNodes();
+
+            QCOMPARE( availableLanNodes.size(), 5 );
+
+            QSet< int > flag;
+
+            for ( const auto &lanNode: availableLanNodes )
+            {
+                flag.insert( lanNode.appendData.toInt() );
+            }
+
+            QCOMPARE( flag.size(), 5 );
+        }
+    }
 }

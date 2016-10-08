@@ -77,6 +77,8 @@ public:
 
     inline QString nodeMarkSummary() const;
 
+    inline void setAppendData(const QVariant &appendData);
+
     bool begin();
 
     QHostAddress matchLanAddressEntries(const QList< QHostAddress > &ipList);
@@ -124,6 +126,7 @@ private:
     // Other
     QString nodeMarkSummary_;
     QMutex mutex_;
+    QVariant appendData_;
     QSharedPointer< QTimer > timerForCheckLoop_;
     int checkLoopCounting_ = -1;
 };

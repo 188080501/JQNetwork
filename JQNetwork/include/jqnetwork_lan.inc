@@ -26,6 +26,11 @@ inline QString JQNetworkLan::nodeMarkSummary() const
     return nodeMarkSummary_;
 }
 
+inline void JQNetworkLan::setAppendData(const QVariant &appendData)
+{
+    appendData_ = appendData;
+}
+
 inline void JQNetworkLan::onLanNodeStateOnline(const JQNetworkLanNode &lanNode)
 {
     if ( !lanSettings_->lanNodeOnlineCallback ) { return; }

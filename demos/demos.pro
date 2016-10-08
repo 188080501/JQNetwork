@@ -12,5 +12,5 @@
 
 TEMPLATE = subdirs
 
-#SUBDIRS += PingPongDemo
+SUBDIRS += PingPongDemo
 SUBDIRS += LanNodeSearch
