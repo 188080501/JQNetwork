@@ -10,7 +10,14 @@
 #   GitHub: https://github.com/188080501/
 #
 
-TEMPLATE = subdirs
+QT       += core testlib
 
-SUBDIRS += JQNetworkTest
-SUBDIRS += JQNetworkBenchmark
+TEMPLATE = app
+
+include( $$PWD/../../JQNetwork/JQNetworkSrc.pri )
+#include( $$PWD/../../JQNetwork/JQNetworkLib.pri )
+
+SOURCES += \
+    $$PWD/cpp/main.cpp
+
+HEADERS +=

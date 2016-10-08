@@ -18,7 +18,7 @@
 
 void JQNetworkBenchmark::test1()
 {
-    auto server = JQNetworkServer::createServerByListenPort( 12345 );
+    auto server = JQNetworkServer::createServer( 12345 );
 
     server->serverSettings()->packageReceivedCallback = [](const auto &connect, const auto &package)
     {
@@ -83,7 +83,7 @@ void JQNetworkBenchmark::test2()
         testData.append( char( rand() % 256 ) );
     }
 
-    auto server = JQNetworkServer::createServerByListenPort( 23456 );
+    auto server = JQNetworkServer::createServer( 23456 );
 
     server->serverSettings()->packageReceivedCallback = [ testData ](const auto &connect, const auto &package)
     {
@@ -144,7 +144,7 @@ void JQNetworkBenchmark::test2()
 
 void JQNetworkBenchmark::test3()
 {
-    auto server = JQNetworkServer::createServerByListenPort( 34567 );
+    auto server = JQNetworkServer::createServer( 34567 );
 
     server->serverSettings()->packageReceivedCallback = [](const auto &connect, const auto &package)
     {
@@ -216,7 +216,7 @@ void JQNetworkBenchmark::test4()
         testData.append( char( rand() % 256 ) );
     }
 
-    auto server = JQNetworkServer::createServerByListenPort( 45678 );
+    auto server = JQNetworkServer::createServer( 45678 );
 
     server->serverSettings()->packageReceivedCallback = [ testData ](const auto &connect, const auto &package)
     {
@@ -290,7 +290,7 @@ void JQNetworkBenchmark::test5()
         testData.append( char( rand() % 256 ) );
     }
 
-    auto server = JQNetworkServer::createServerByListenPort( 56789 );
+    auto server = JQNetworkServer::createServer( 56789 );
     QSemaphore semaphore;
 
     server->serverSettings()->packageReceivedCallback = [ &semaphore ](const auto &, const auto &)

@@ -10,7 +10,7 @@
 #   GitHub: https://github.com/188080501/
 #
 
-QT       += core testlib
+QT       += core
 
 TEMPLATE = app
 
@@ -19,5 +19,3 @@ include( $$PWD/../../JQNetwork/JQNetworkSrc.pri )
 
 SOURCES += \
     $$PWD/cpp/main.cpp
-
-HEADERS +=

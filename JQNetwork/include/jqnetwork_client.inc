@@ -31,4 +31,9 @@ inline JQNetworkConnectSettingsSharedPointer JQNetworkClient::connectSettings()
     return connectSettings_;
 }
 
+inline QString JQNetworkClient::nodeMarkSummary() const
+{
+    return nodeMarkSummary_;
+}
+
 #endif//JQNETWORK_INCLUDE_JQNETWORK_CLIENG_INC

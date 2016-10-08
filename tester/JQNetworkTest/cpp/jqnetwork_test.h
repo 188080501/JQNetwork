@@ -22,6 +22,9 @@ private slots:
     void jqNetworkThreadPoolBenchmark2();
 
 private slots:
+    void jqNetworkNodeMarkTest();
+
+private slots:
     void jqNetworkConnectTest();
 
 private slots:
@@ -38,6 +41,9 @@ private slots:
 
 private slots:
     void jqNetworkServerAndClientTest2();
+
+private slots:
+    void jqNetworkLanTest();
 };
 
 #endif//__CPP_JQNETWORK_TEST_H__

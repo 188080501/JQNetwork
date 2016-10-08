@@ -1,7 +1,6 @@
 ﻿// Qt lib import
 #include <QCoreApplication>
-#include <QtTest>
-#include <QtConcurrent>
+#include <QTimer>
 
 // JQNetwork lib improt
 #include <JQNetworkPackage>
@@ -14,8 +13,8 @@ int main(int argc, char *argv[])
     QCoreApplication a(argc, argv);
 
     // 创建一个服务端
-    const quint16 &&listenPort = 34543;
-    auto server = JQNetworkServer::createServerByListenPort( listenPort );
+    const quint16 &&listenPort = 34543; // 监听端口
+    auto server = JQNetworkServer::createServer( listenPort );
 
     // 设置接收到数据包后的回调
     server->serverSettings()->packageReceivedCallback = [ ](const auto &connect, const auto &package)
@@ -49,13 +48,11 @@ int main(int argc, char *argv[])
     std::function< void() > ping;
     ping = [ &ping, &timer, client, &sendSucceedCount, &replySucceedCount ]()
     {
-        // 发送数据，返回0表示失败，其余数表示发送成功
-        const auto &&randomFlag = client->sendPayloadData(
+        const auto &&randomFlag = client->sendPayloadData( // 发送数据，返回0表示失败，其余数表示发送成功
                     "127.0.0.1",
                     34543,
                     "Ping",
-                    // 成功接收回复的数据时的回调
-                    [ &ping, &timer, &sendSucceedCount, &replySucceedCount ](const auto & /*connect*/, const auto &package)
+                    [ &ping, &timer, &sendSucceedCount, &replySucceedCount ](const auto & /*connect*/, const auto &package) // 成功接收回复的数据时的回调
                     {
                         // 回调会发生在一个专用的线程，请注意线程安全
 
@@ -78,8 +75,7 @@ int main(int argc, char *argv[])
                             QMetaObject::invokeMethod( &timer, "start" );
                         }
                     },
-                    // 未能成功接收回复的数据时的回调
-                    [](const auto & /*connect*/)
+                    [](const auto & /*connect*/) // 未能成功接收回复的数据时的回调
                     {
                         // 回调会发生在一个专用的线程，请注意线程安全
 
