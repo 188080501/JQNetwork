@@ -32,9 +32,6 @@
 #define JQNETWORKPACKAGE_UNCOMPRESSEDFLAG qint8( 0x1 )
 #define JQNETWORKPACKAGE_COMPRESSEDFLAG qint8( 0x2 )
 
-#define JQNETWORK_NULLPTR_CHECK( ptr, ... ) \
-    if ( !ptr ) { qDebug( "%s: %s is null", __func__, # ptr ); return __VA_ARGS__; }
-
 #if ( defined Q_OS_IOS ) || ( defined Q_OS_ANDROID )
 #   define JQNETWORK_ADVISE_THREADCOUNT 1
 #   define JQNETWORKPACKAGE_ADVISE_CUTPACKAGESIZE qint64( 2 * 1024 * 1024 )
@@ -42,6 +39,9 @@
 #   define JQNETWORK_ADVISE_THREADCOUNT 2
 #   define JQNETWORKPACKAGE_ADVISE_CUTPACKAGESIZE qint64( 8 * 1024 * 1024 )
 #endif
+
+#define JQNETWORK_NULLPTR_CHECK( ptr, ... ) \
+    if ( !ptr ) { qDebug( "%s: %s is null", __func__, # ptr ); return __VA_ARGS__; }
 
 class QSemaphore;
 class QMutex;
