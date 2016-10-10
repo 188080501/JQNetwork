@@ -71,7 +71,7 @@ public:
             const QString &dutyMark = ""
         );
 
-    static QList< JQNetworkLanAddressEntries > getLanAddressEntries();
+    static QList< JQNetworkLanAddressEntries > lanAddressEntries();
 
     inline JQNetworkLanSettingsSharedPointer lanSettings();
 

@@ -75,7 +75,7 @@ JQNetworkLanSharedPointer JQNetworkLan::createLan(
     return JQNetworkLanSharedPointer( new JQNetworkLan( lanSettings ) );
 }
 
-QList< JQNetworkLanAddressEntries > JQNetworkLan::getLanAddressEntries()
+QList< JQNetworkLanAddressEntries > JQNetworkLan::lanAddressEntries()
 {
     QList< JQNetworkLanAddressEntries > result;
 
@@ -191,7 +191,7 @@ QList< JQNetworkLanNode > JQNetworkLan::availableLanNodes()
 
 void JQNetworkLan::refreshLanAddressEntries()
 {
-    lanAddressEntries_ = this->getLanAddressEntries();
+    lanAddressEntries_ = this->lanAddressEntries();
 }
 
 bool JQNetworkLan::refreshUdp()
