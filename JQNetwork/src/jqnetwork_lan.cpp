@@ -189,6 +189,26 @@ QList< JQNetworkLanNode > JQNetworkLan::availableLanNodes()
     return result;
 }
 
+void JQNetworkLan::sendOnline()
+{
+//    qDebug() << "JQNetworkLan::sendOnline";
+
+    const auto &&data = this->makeData( false, true );
+
+    udpSocket_->writeDatagram( data, lanSettings_->multicastGroupAddress, lanSettings_->bindPort );
+    udpSocket_->writeDatagram( data, QHostAddress( QHostAddress::Broadcast ), lanSettings_->bindPort );
+}
+
+void JQNetworkLan::sendOffline()
+{
+//    qDebug() << "JQNetworkLan::sendOffline";
+
+    const auto &&data = this->makeData( true, false );
+
+    udpSocket_->writeDatagram( data, lanSettings_->multicastGroupAddress, lanSettings_->bindPort );
+    udpSocket_->writeDatagram( data, QHostAddress( QHostAddress::Broadcast ), lanSettings_->bindPort );
+}
+
 void JQNetworkLan::refreshLanAddressEntries()
 {
     lanAddressEntries_ = this->lanAddressEntries();
@@ -261,6 +281,7 @@ void JQNetworkLan::checkLoop()
 
     if ( lanListModified )
     {
+//        qDebug("111111");
         this->onLanNodeListChanged();
     }
 
@@ -286,26 +307,6 @@ QByteArray JQNetworkLan::makeData(const bool &requestOffline, const bool &reques
     data[ "appendData" ] = appendData_;
 
     return QJsonDocument( QJsonObject::fromVariantMap( data ) ).toJson( QJsonDocument::Compact );
-}
-
-void JQNetworkLan::sendOnline()
-{
-//    qDebug() << "JQNetworkLan::sendOnline";
-
-    const auto &&data = this->makeData( false, true );
-
-    udpSocket_->writeDatagram( data, lanSettings_->multicastGroupAddress, lanSettings_->bindPort );
-    udpSocket_->writeDatagram( data, QHostAddress( QHostAddress::Broadcast ), lanSettings_->bindPort );
-}
-
-void JQNetworkLan::sendOffline()
-{
-//    qDebug() << "JQNetworkLan::sendOffline";
-
-    const auto &&data = this->makeData( true, false );
-
-    udpSocket_->writeDatagram( data, lanSettings_->multicastGroupAddress, lanSettings_->bindPort );
-    udpSocket_->writeDatagram( data, QHostAddress( QHostAddress::Broadcast ), lanSettings_->bindPort );
 }
 
 void JQNetworkLan::onUdpSocketReadyRead()
@@ -373,6 +374,7 @@ void JQNetworkLan::onUdpSocketReadyRead()
 
                 this->onLanNodeStateOnline( lanNode );
                 this->onLanNodeListChanged();
+//                qDebug("222222");
 
                 firstOnline = true;
             }

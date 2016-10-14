@@ -23,8 +23,8 @@ struct JQNetworkLanSettings
     QHostAddress multicastGroupAddress;
     quint16 bindPort = 0;
 
-    int checkLoopInterval = 15 * 1000;
-    int lanNodeTimeoutInterval = 45 * 1000;
+    int checkLoopInterval = 10 * 1000;
+    int lanNodeTimeoutInterval = 60 * 1000;
 
     std::function< void( const JQNetworkLanNode & ) > lanNodeOnlineCallback;
     std::function< void( const JQNetworkLanNode & ) > lanNodeActiveCallback;
@@ -85,6 +85,10 @@ public:
 
     QList< JQNetworkLanNode > availableLanNodes();
 
+    void sendOnline();
+
+    void sendOffline();
+
 private:
     void refreshLanAddressEntries();
 
@@ -93,10 +97,6 @@ private:
     void checkLoop();
 
     QByteArray makeData(const bool &requestOffline, const bool &requestFeedback);
-
-    void sendOnline();
-
-    void sendOffline();
 
     void onUdpSocketReadyRead();
 
