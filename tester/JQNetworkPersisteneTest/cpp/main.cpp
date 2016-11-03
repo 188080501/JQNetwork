@@ -3,13 +3,14 @@
 #include <QtTest>
 
 // Project import
-#include "jqnetwork_test.h"
+#include "jqnetwork_persistenetest.h"
 
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
 
-    JQNetworkTest jqNetworkTest;
+    JQNetworkPersisteneTest persisteneTest;
 
-    return QTest::qExec( &jqNetworkTest, argc, argv );
+    persisteneTest.test();
 }
+

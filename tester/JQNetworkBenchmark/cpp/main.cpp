@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
 
-    JQNetworkBenchmark benchmark;
+    JQNetworkPersisteneTest benchmark;
 
     qDebug() << "----- test1 start -----";
     benchmark.test1();

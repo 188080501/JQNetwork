@@ -1,4 +1,4 @@
-﻿#include "jqnetwork_test.h"
+﻿#include "jqnetwork_overalltest.h"
 
 // Qt lib import
 #include <QtTest>
@@ -18,7 +18,7 @@
 #include <JQNetworkLan>
 #include <JQNetworkForwarf>
 
-void JQNetworkTest::jqNetworkThreadPoolTest()
+void JQNetworkOverallTest::jqNetworkThreadPoolTest()
 {
     QMutex mutex;
     QMap< QThread *, int > flag;
@@ -63,7 +63,7 @@ void JQNetworkTest::jqNetworkThreadPoolTest()
     }
 }
 
-void JQNetworkTest::jqNetworkThreadPoolBenchmark()
+void JQNetworkOverallTest::jqNetworkThreadPoolBenchmark()
 {
     int number = 0;
 
@@ -89,7 +89,7 @@ void JQNetworkTest::jqNetworkThreadPoolBenchmark()
     }
 }
 
-void JQNetworkTest::jqNetworkThreadPoolBenchmark2()
+void JQNetworkOverallTest::jqNetworkThreadPoolBenchmark2()
 {
     int number = 0;
 
@@ -107,7 +107,7 @@ void JQNetworkTest::jqNetworkThreadPoolBenchmark2()
     QCOMPARE( number, 90000 );
 }
 
-void JQNetworkTest::jqNetworkNodeMarkTest()
+void JQNetworkOverallTest::jqNetworkNodeMarkTest()
 {
     JQNetworkNodeMark nodeMark( "test" );
 
@@ -136,7 +136,7 @@ void JQNetworkTest::jqNetworkNodeMarkTest()
     QCOMPARE( nodeMarkSummary1 != nodeMarkSummary2, true );
 }
 
-void JQNetworkTest::jqNetworkConnectTest()
+void JQNetworkOverallTest::jqNetworkConnectTest()
 {
     auto connectSettings = JQNetworkConnectSettingsSharedPointer( new JQNetworkConnectSettings );
 
@@ -226,7 +226,7 @@ void JQNetworkTest::jqNetworkConnectTest()
     QCOMPARE( flag5, true );
 }
 
-void JQNetworkTest::jeNetworkPackageTest()
+void JQNetworkOverallTest::jeNetworkPackageTest()
 {
     {
         QCOMPARE( JQNetworkPackage::headSize(), 24 );
@@ -407,7 +407,7 @@ void JQNetworkTest::jeNetworkPackageTest()
     }
 }
 
-void JQNetworkTest::jqNetworkServerTest()
+void JQNetworkOverallTest::jqNetworkServerTest()
 {
     auto serverSettings = JQNetworkServerSettingsSharedPointer( new JQNetworkServerSettings );
     auto connectPoolSettings = JQNetworkConnectPoolSettingsSharedPointer( new JQNetworkConnectPoolSettings );
@@ -447,7 +447,7 @@ void JQNetworkTest::jqNetworkServerTest()
     QCOMPARE( succeedCount, 1 );
 }
 
-void JQNetworkTest::jqNetworkClientTest()
+void JQNetworkOverallTest::jqNetworkClientTest()
 {
     bool flag1 = false;
     bool flag2 = false;
@@ -512,7 +512,7 @@ void JQNetworkTest::jqNetworkClientTest()
     connectSettings->maximumReceivePackageWaitTime = 30 * 1000;
 }
 
-void JQNetworkTest::jqNetworkServerAndClientTest()
+void JQNetworkOverallTest::jqNetworkServerAndClientTest()
 {
     QString serverFlag;
     QString clientFlag;
@@ -669,7 +669,7 @@ void JQNetworkTest::jqNetworkServerAndClientTest()
           );
 }
 
-void JQNetworkTest::jqNetworkServerAndClientTest2()
+void JQNetworkOverallTest::jqNetworkServerAndClientTest2()
 {
     QString serverFlag;
     QString clientFlag;
@@ -760,7 +760,7 @@ void JQNetworkTest::jqNetworkServerAndClientTest2()
           );
 }
 
-void JQNetworkTest::jqNetworkLanTest()
+void JQNetworkOverallTest::jqNetworkLanTest()
 {
     bool flag1 = false;
     bool flag2 = false;
@@ -809,7 +809,7 @@ void JQNetworkTest::jqNetworkLanTest()
     QCOMPARE( flag2, true );
     QCOMPARE( flag3, true );
 
-    const auto &&lanAddressEntries = JQNetworkLan::getLanAddressEntries();
+    const auto &&lanAddressEntries = JQNetworkLan::lanAddressEntries();
 
     QCOMPARE( lanAddressEntries.size() >= 1, true );
 
