@@ -49,5 +49,7 @@ CMakeLists.txt.user*
 *.DS_Store
 
 ### JQNetworkLib ###
+JQNetwork/lib/5.7.0_macos_x64_clang/libJQNetworkd.a
 JQNetwork/lib/5.7.0_macos_x64_clang/libJQNetwork.a
+JQNetwork/lib/5.7.0_windows_x86_gcc/libJQNetworkd.a
 JQNetwork/lib/5.7.0_windows_x86_gcc/libJQNetwork.a
