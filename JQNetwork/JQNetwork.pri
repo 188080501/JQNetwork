@@ -68,7 +68,7 @@ equals(JQNETWORK_COMPILE_MODE,SRC) {
         $$PWD/include/jqnetwork_processor.h \
         $$PWD/include/jqnetwork_processor.inc \
         $$PWD/include/jqnetwork_client.h \
-        $$PWD/include/jqnetwork_client.inch \
+        $$PWD/include/jqnetwork_client.inc \
         $$PWD/include/jqnetwork_lan.h \
         $$PWD/include/jqnetwork_lan.inc \
         $$PWD/include/jqnetwork_encrypt.h \
