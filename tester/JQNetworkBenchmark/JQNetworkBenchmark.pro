@@ -14,8 +14,8 @@ QT       += core testlib
 
 TEMPLATE = app
 
-include( $$PWD/../../JQNetwork/JQNetworkSrc.pri )
-#include( $$PWD/../../JQNetwork/JQNetworkLib.pri )
+#JQNETWORK_COMPILE_MODE = SRC
+include( $$PWD/../../JQNetwork/JQNetwork.pri )
 
 SOURCES += \
     $$PWD/cpp/main.cpp \

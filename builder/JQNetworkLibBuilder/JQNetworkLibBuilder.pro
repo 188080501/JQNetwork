@@ -18,4 +18,9 @@ CONFIG += staticlib
 
 TARGET = JQNetwork
 
-include( $$PWD/../../JQNetwork/JQNetworkSrc.pri )
+JQNETWORK_COMPILE_MODE = SRC
+include( $$PWD/../../JQNetwork/JQNetwork.pri )
+
+jqnetworklib.files = $$OUT_PWD/$$JQNETWORK_LIB_FILENAME
+jqnetworklib.path = $$JQNETWORK_LIB_DIR
+INSTALLS += jqnetworklib
