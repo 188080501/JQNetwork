@@ -11,6 +11,7 @@
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
+    JQNetwork::printVersionInformation();
 
     // 创建一个服务端
     const quint16 &&listenPort = 34543; // 监听端口

@@ -14,12 +14,13 @@ QT       += core testlib
 
 TEMPLATE = app
 
-#JQNETWORK_COMPILE_MODE = SRC
+JQNETWORK_COMPILE_MODE = SRC
 include( $$PWD/../../JQNetwork/JQNetwork.pri )
+
+HEADERS += \
+    $$PWD/cpp/jqnetwork_overalltest.h \
+    $$PWD/cpp/myprocessor.hpp
 
 SOURCES += \
     $$PWD/cpp/main.cpp \
     $$PWD/cpp/jqnetwork_overalltest.cpp
-
-HEADERS += \
-    $$PWD/cpp/jqnetwork_overalltest.h

@@ -18,6 +18,9 @@
 #include <JQNetworkLan>
 #include <JQNetworkForwarf>
 
+// Project lib import
+#include "myprocessor.hpp"
+
 void JQNetworkOverallTest::jqNetworkThreadPoolTest()
 {
     QMutex mutex;
@@ -239,7 +242,7 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
 
         {
             auto rawData = QByteArray::fromHex( "7d 01 04030201 01 02000000 02000000 01 03000000 03000000 1122334455" );
-            const auto &&package = JQNetworkPackage::createPackage( rawData );
+            const auto &&package = JQNetworkPackage::readPackage( rawData );
 
             QCOMPARE( rawData.size(), 0 );
             QCOMPARE( package->isCompletePackage(), true );
@@ -261,9 +264,9 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
             auto rawData1 = QByteArray::fromHex( "7d 01 04030201 01 05000000 02000000 01 05000000 03000000 1122334455" );
             auto rawData2 = QByteArray::fromHex( "7d 01 04030201 01 05000000 03000000 01 05000000 02000000 1122334455" );
             auto rawData3 = QByteArray::fromHex( "7d 01 04030201 01 05000000 03000000 01 05000000 02000000 1122334455" );
-            const auto &&package1 = JQNetworkPackage::createPackage( rawData1 );
-            const auto &&package2 = JQNetworkPackage::createPackage( rawData2 );
-            const auto &&package3 = JQNetworkPackage::createPackage( rawData3 );
+            const auto &&package1 = JQNetworkPackage::readPackage( rawData1 );
+            const auto &&package2 = JQNetworkPackage::readPackage( rawData2 );
+            const auto &&package3 = JQNetworkPackage::readPackage( rawData3 );
 
             QCOMPARE( package1->isCompletePackage(), false );
             QCOMPARE( package1->isAbandonPackage(), false );
@@ -851,4 +854,22 @@ void JQNetworkOverallTest::jqNetworkLanTest()
             QCOMPARE( flag.size(), 5 );
         }
     }
+}
+
+void JQNetworkOverallTest::jqNetworkProcessorTest()
+{
+    MyProcessor myProcessor;
+
+    QCOMPARE( myProcessor.availableSlots(), QSet< QString >( { "actionFlag" } ) );
+
+    auto test = [ & ](){ return myProcessor.handlePackage( nullptr, JQNetworkPackage::createTransportPackages( "{\"key\":\"value\"}", 0x1234 ).first() ); };
+
+    QCOMPARE( test(), false );
+
+    myProcessor.setReceivedPossibleThreads( { QThread::currentThread() } );
+
+    QCOMPARE( test(), true );
+
+    QCOMPARE( myProcessor.testData_, QJsonDocument::fromJson( "{\"key\":\"value\"}" ).object() );
+    QCOMPARE( myProcessor.testData2_, QThread::currentThread() );
 }

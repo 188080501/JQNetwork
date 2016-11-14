@@ -7,6 +7,7 @@
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
+    JQNetwork::printVersionInformation();
 
     std::function< void() > printLanNodeList;
 

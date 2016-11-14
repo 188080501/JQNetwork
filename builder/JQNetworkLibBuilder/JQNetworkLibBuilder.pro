@@ -16,7 +16,13 @@ TEMPLATE = lib
 
 CONFIG += staticlib
 
-TARGET = JQNetwork
+CONFIG( debug, debug | release ) {
+    TARGET = JQNetworkd
+}
+
+CONFIG( release, debug | release ) {
+    TARGET = JQNetwork
+}
 
 JQNETWORK_COMPILE_MODE = SRC
 include( $$PWD/../../JQNetwork/JQNetwork.pri )
