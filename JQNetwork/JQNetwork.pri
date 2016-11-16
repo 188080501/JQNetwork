@@ -22,15 +22,23 @@ lessThan(QT_MAJOR_VERSION, 5) | lessThan(QT_MINOR_VERSION, 6) {
     error( JQNetwork request minimum Qt version is 5.6.0 )
 }
 
-equals(QT_VERSION, 5.7.0) : win32-g++ {
-    JQNETWORK_LIB_DIR = $$PWD/lib/5.7.0_windows_x86_gcc
+equals(QT_VERSION, 5.6.0) : win32-g++ : contains( CONFIG, static ) {
+    JQNETWORK_LIB_DIR = $$PWD/lib/5.6.0_windows_x86_gcc_static
     CONFIG( debug, debug | release ) {
         JQNETWORK_LIB_FILENAME = libJQNetworkd.a
     }
     CONFIG( release, debug | release ) {
         JQNETWORK_LIB_FILENAME = libJQNetwork.a
     }
-    JQNETWORK_LIB_FILEPATH = $$JQNETWORK_LIB_DIR/$$JQNETWORK_LIB_FILENAME
+}
+else : equals(QT_VERSION, 5.6.0) : win32-g++ {
+    JQNETWORK_LIB_DIR = $$PWD/lib/5.6.0_windows_x86_gcc
+    CONFIG( debug, debug | release ) {
+        JQNETWORK_LIB_FILENAME = libJQNetworkd.a
+    }
+    CONFIG( release, debug | release ) {
+        JQNETWORK_LIB_FILENAME = libJQNetwork.a
+    }
 }
 else : equals(QT_VERSION, 5.7.0) : mac {
     JQNETWORK_LIB_DIR = $$PWD/lib/5.7.0_macos_x64_clang
@@ -40,7 +48,6 @@ else : equals(QT_VERSION, 5.7.0) : mac {
     CONFIG( release, debug | release ) {
         JQNETWORK_LIB_FILENAME = libJQNetwork.a
     }
-    JQNETWORK_LIB_FILEPATH = $$JQNETWORK_LIB_DIR/$$JQNETWORK_LIB_FILENAME
 }
 else {
     JQNETWORK_LIB_DIR = $$PWD/lib/unknow_unknow_unknow
@@ -50,8 +57,9 @@ else {
     CONFIG( release, debug | release ) {
         JQNETWORK_LIB_FILENAME = libJQNetwork.a
     }
-    JQNETWORK_LIB_FILEPATH = $$JQNETWORK_LIB_DIR/$$JQNETWORK_LIB_FILENAME
 }
+
+JQNETWORK_LIB_FILEPATH = $$JQNETWORK_LIB_DIR/$$JQNETWORK_LIB_FILENAME
 
 !equals(JQNETWORK_COMPILE_MODE, SRC) {
     exists($$JQNETWORK_LIB_FILEPATH) {

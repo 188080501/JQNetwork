@@ -51,5 +51,8 @@ CMakeLists.txt.user*
 ### JQNetworkLib ###
 JQNetwork/lib/5.7.0_macos_x64_clang/libJQNetworkd.a
 JQNetwork/lib/5.7.0_macos_x64_clang/libJQNetwork.a
-JQNetwork/lib/5.7.0_windows_x86_gcc/libJQNetworkd.a
-JQNetwork/lib/5.7.0_windows_x86_gcc/libJQNetwork.a
+JQNetwork/lib/5.6.0_windows_x86_gcc/libJQNetworkd.a
+JQNetwork/lib/5.6.0_windows_x86_gcc/libJQNetwork.a
+JQNetwork/lib/5.6.0_windows_x86_gcc_static/libJQNetworkd.a
+JQNetwork/lib/5.6.0_windows_x86_gcc_static/libJQNetwork.a
+
