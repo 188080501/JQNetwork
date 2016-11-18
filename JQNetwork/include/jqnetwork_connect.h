@@ -31,6 +31,7 @@ struct JQNetworkConnectSettings
     qint64 maximumReceiveForTotalByteCount = -1;
     qint64 maximumReceivePackageByteCount = -1;
     int maximumReceiveSpeed = -1; // Byte/s
+    bool fileTransferEnabled = false;
 
     qint32 randomFlagRangeStart = -1;
     qint32 randomFlagRangeEnd = -1;
@@ -49,9 +50,11 @@ struct JQNetworkConnectSettings
     std::function< void( const JQNetworkConnectPointer &, const qint32 &, const qint64 &, const qint64 &, const qint64 & ) > packageSendingCallback = nullptr;
     std::function< void( const JQNetworkConnectPointer &, const qint32 &, const qint64 &, const qint64 &, const qint64 & ) > packageReceivingCallback = nullptr;
     std::function< void( const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer & ) > packageReceivedCallback = nullptr;
-    std::function< void( const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer &,
-                         const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > & ) > waitReplyPackageSucceedCallback = nullptr;
-    std::function< void( const JQNetworkConnectPointer &, const std::function< void(const JQNetworkConnectPointer &connect) > & ) > waitReplyPackageFailCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer &, const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer & ) > & ) > waitReplyPackageSucceedCallback = nullptr;
+    std::function< void( const JQNetworkConnectPointer &, const std::function< void(const JQNetworkConnectPointer &connect ) > & ) > waitReplyPackageFailCallback = nullptr;
+    std::function< QString( const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer &, const QString & ) > filePathProvider = nullptr;
+
+    void setFilePathProviderToDefaultDir();
 };
 
 class JQNetworkConnect: public QObject
@@ -67,7 +70,7 @@ private:
     };
 
 private:
-    JQNetworkConnect();
+    JQNetworkConnect(const JQNetworkConnectSettingsSharedPointer &connectSettings);
 
     JQNetworkConnect(const JQNetworkConnect &) = delete;
 
@@ -113,9 +116,20 @@ public:
             const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback = nullptr
         );
 
+    qint32 sendFile(
+            const QString &filePath,
+            const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &succeedCallback = nullptr,
+            const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback = nullptr
+        );
+
     qint32 replyPayloadData(
-            const qint32 &randomFlag,
+            const qint32 &receivedPackageRandomFlag,
             const QByteArray &payloadData
+        );
+
+    qint32 replyFile(
+            const qint32 &receivedPackageRandomFlag,
+            const QString &filePath
         );
 
 private Q_SLOTS:
@@ -134,9 +148,11 @@ private:
 
     void startTimerForSendPackageCheck();
 
-    void onTransportPackageReceived(const JQNetworkPackageSharedPointer &package);
+    void onPayloadDataTransportPackageReceived(const JQNetworkPackageSharedPointer &package);
 
     void onReadyToDelete();
+
+    qint32 nextRandomFlag();
 
     void realSendPackage(const JQNetworkPackageSharedPointer &package);
 
@@ -154,7 +170,7 @@ private:
             const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback
         );
 
-    void realSendDataRequest(const qint32 &randomFlag);
+    void realSendPayloadDataRequest(const qint32 &randomFlag);
 
 private:
     // Settings
@@ -178,6 +194,10 @@ private:
     QMap< qint32, JQNetworkPackageSharedPointer > receivePackagePool_; // randomFlag -> package
     QMap< qint32, ReceivedCallbackPackage > onReceivedCallbacks_; // randomFlag -> package
 
+    // File
+    QMap< QString, QSharedPointer< QFile > > waitForSendFiles_;
+    QMap< QString, QSharedPointer< QFile > > waitForReceiveFiles_;
+
     // Statistics
     qint64 connectCreateTime_ = 0;
     qint64 connectSucceedTime_ = 0;
@@ -185,6 +205,7 @@ private:
     qint64 alreadyWrittenBytes_ = 0;
 };
 
+// inc import
 #include "jqnetwork_connect.inc"
 
 #endif//JQNETWORK_INCLUDE_JQNETWORK_CONNECT_H

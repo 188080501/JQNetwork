@@ -14,7 +14,7 @@ QT       += core testlib
 
 TEMPLATE = app
 
-JQNETWORK_COMPILE_MODE = SRC
+#JQNETWORK_COMPILE_MODE = SRC
 include( $$PWD/../../JQNetwork/JQNetwork.pri )
 
 HEADERS += \

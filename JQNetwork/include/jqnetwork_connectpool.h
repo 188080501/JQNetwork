@@ -102,7 +102,7 @@ private:
 
     inline void onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package);
 
-    inline void onWaitReplySucceedPackage(
+    inline void onWaitReplyPackageSucceed(
             const JQNetworkConnectPointer &connect,
             const JQNetworkPackageSharedPointer &package,
             const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &callback
@@ -131,6 +131,7 @@ private:
     QMutex mutex_;
 };
 
+// inc import
 #include "jqnetwork_connectpool.inc"
 
 #endif//JQNETWORK_INCLUDE_JQNETWORK_CONNECTPOOL_H

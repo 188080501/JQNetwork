@@ -18,18 +18,37 @@
 #include <QTimer>
 #include <QThread>
 #include <QDateTime>
+#include <QStandardPaths>
+#include <QFile>
 
 // JQNetwork lib import
 #include <JQNetworkPackage>
 
+// JQNetworkConnectSettings
+void JQNetworkConnectSettings::setFilePathProviderToDefaultDir()
+{
+    const auto &&defaultDir = QStandardPaths::writableLocation( QStandardPaths::TempLocation );
+
+    filePathProvider = [ defaultDir ](const auto &, const auto &, const auto &fileName)
+    { return QString( "%1/%2" ).arg( defaultDir ).arg( fileName ); };
+}
+
 // JQNetworkConnect
-JQNetworkConnect::JQNetworkConnect():
+JQNetworkConnect::JQNetworkConnect(const JQNetworkConnectSettingsSharedPointer &connectSettings):
+    connectSettings_( connectSettings ),
     tcpSocket_( new QTcpSocket ),
     connectCreateTime_( QDateTime::currentMSecsSinceEpoch() )
 {
     connect( tcpSocket_.data(), &QAbstractSocket::stateChanged, this, &JQNetworkConnect::onTcpSocketStateChanged, Qt::DirectConnection );
     connect( tcpSocket_.data(), &QAbstractSocket::bytesWritten, this, &JQNetworkConnect::onTcpSocketBytesWritten, Qt::DirectConnection );
     connect( tcpSocket_.data(), &QTcpSocket::readyRead, this, &JQNetworkConnect::onTcpSocketReadyRead, Qt::DirectConnection );
+
+    if ( connectSettings_->fileTransferEnabled && !connectSettings_->filePathProvider )
+    {
+        connectSettings_->setFilePathProviderToDefaultDir();
+        qDebug() << "JQNetworkConnect: fileTransfer is enabled, but filePathProvider is null, use default dir:"
+                 << connectSettings_->filePathProvider( JQNetworkConnectPointer( nullptr ), JQNetworkPackageSharedPointer( nullptr ), QString() );
+    }
 }
 
 void JQNetworkConnect::createConnect(
@@ -40,8 +59,7 @@ void JQNetworkConnect::createConnect(
         const quint16 &port
     )
 {
-    JQNetworkConnectSharedPointer newConnect( new JQNetworkConnect );
-    newConnect->connectSettings_ = connectSettings;
+    JQNetworkConnectSharedPointer newConnect( new JQNetworkConnect( connectSettings ) );
     newConnect->runOnConnectThreadCallback_ = runOnConnectThreadCallback;
     newConnect->sendRandomFlagRotaryIndex_ = connectSettings->randomFlagRangeStart - 1;
 
@@ -60,8 +78,7 @@ void JQNetworkConnect::createConnect(
         const qintptr &socketDescriptor
     )
 {
-    JQNetworkConnectSharedPointer newConnect( new JQNetworkConnect );
-    newConnect->connectSettings_ = connectSettings;
+    JQNetworkConnectSharedPointer newConnect( new JQNetworkConnect( connectSettings ) );
     newConnect->runOnConnectThreadCallback_ = runOnConnectThreadCallback;
     newConnect->sendRandomFlagRotaryIndex_ = connectSettings->randomFlagRangeStart - 1;
 
@@ -90,37 +107,53 @@ qint32 JQNetworkConnect::sendPayloadData(
     if ( isAbandonTcpSocket_ ) { return 0; }
     JQNETWORK_NULLPTR_CHECK( runOnConnectThreadCallback_, 0 );
 
-    mutexForSend_.lock();
-
-    if ( sendRandomFlagRotaryIndex_ >= connectSettings_->randomFlagRangeEnd )
-    {
-        sendRandomFlagRotaryIndex_ = connectSettings_->randomFlagRangeStart;
-    }
-    else
-    {
-        ++sendRandomFlagRotaryIndex_;
-    }
-
-    const auto currentRandomFlag = sendRandomFlagRotaryIndex_;
-
-    mutexForSend_.unlock();
+    const auto currentRandomFlag = this->nextRandomFlag();
 
     this->realSendPayloadData( currentRandomFlag, payloadData, succeedCallback, failCallback );
 
     return currentRandomFlag;
 }
 
+qint32 JQNetworkConnect::sendFile(
+        const QString &filePath,
+        const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &succeedCallback,
+        const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback
+    )
+{
+    if ( isAbandonTcpSocket_ ) { return 0; }
+    JQNETWORK_NULLPTR_CHECK( runOnConnectThreadCallback_, 0 );
+
+    const auto currentRandomFlag = this->nextRandomFlag();
+
+    //...
+
+    return currentRandomFlag;
+}
+
 qint32 JQNetworkConnect::replyPayloadData(
-        const qint32 &randomFlag,
+        const qint32 &receivedPackageRandomFlag,
         const QByteArray &payloadData
     )
 {
     if ( isAbandonTcpSocket_ ) { return 0; }
     JQNETWORK_NULLPTR_CHECK( runOnConnectThreadCallback_, 0 );
 
-    this->realSendPayloadData( randomFlag, payloadData, nullptr, nullptr );
+    this->realSendPayloadData( receivedPackageRandomFlag, payloadData, nullptr, nullptr );
 
-    return randomFlag;
+    return receivedPackageRandomFlag;
+}
+
+qint32 JQNetworkConnect::replyFile(
+        const qint32 &receivedPackageRandomFlag,
+        const QString &filePath
+    )
+{
+    if ( isAbandonTcpSocket_ ) { return 0; }
+    JQNETWORK_NULLPTR_CHECK( runOnConnectThreadCallback_, 0 );
+
+    //...
+
+    return receivedPackageRandomFlag;
 }
 
 void JQNetworkConnect::onTcpSocketStateChanged()
@@ -220,15 +253,15 @@ void JQNetworkConnect::onTcpSocketReadyRead()
             {
                 switch ( package->packageFlag() )
                 {
-                    case JQNETWORKPACKAGE_DATATRANSPORTPACKGEFLAG:
+                    case JQNETWORKPACKAGE_PAYLOADDATATRANSPORTPACKGEFLAG:
                     {
                         JQNETWORK_NULLPTR_CHECK( connectSettings_->packageReceivingCallback );
                         connectSettings_->packageReceivingCallback( this, package->randomFlag(), 0, package->payloadDataCurrentSize(), package->payloadDataTotalSize() );
 
-                        this->onTransportPackageReceived( package );
+                        this->onPayloadDataTransportPackageReceived( package );
                         break;
                     }
-                    case JQNETWORKPACKAGE_DATAREQUESTPACKGEFLAG:
+                    case JQNETWORKPACKAGE_PAYLOADDATAREQUESTPACKGEFLAG:
                     {
                         if ( !sendPackagePool_.contains( package->randomFlag() ) )
                         {
@@ -294,12 +327,12 @@ void JQNetworkConnect::onTcpSocketReadyRead()
 
                     if ( (*itForPackage)->isCompletePackage() )
                     {
-                        this->onTransportPackageReceived( *itForPackage );
+                        this->onPayloadDataTransportPackageReceived( *itForPackage );
                         receivePackagePool_.erase( itForPackage );
                     }
                     else
                     {
-                        this->realSendDataRequest( package->randomFlag() );
+                        this->realSendPayloadDataRequest( package->randomFlag() );
                     }
                 }
                 else
@@ -309,7 +342,7 @@ void JQNetworkConnect::onTcpSocketReadyRead()
 
                     receivePackagePool_[ package->randomFlag() ] = package;
 
-                    this->realSendDataRequest( package->randomFlag() );
+                    this->realSendPayloadDataRequest( package->randomFlag() );
                 }
             }
         }
@@ -400,7 +433,7 @@ void JQNetworkConnect::startTimerForSendPackageCheck()
     timerForSendPackageCheck_->start( 1000 );
 }
 
-void JQNetworkConnect::onTransportPackageReceived(const JQNetworkPackageSharedPointer &package)
+void JQNetworkConnect::onPayloadDataTransportPackageReceived(const JQNetworkPackageSharedPointer &package)
 {
     if ( ( package->randomFlag() >= connectSettings_->randomFlagRangeStart ) &&
          ( package->randomFlag() < connectSettings_->randomFlagRangeEnd ) )
@@ -451,6 +484,26 @@ void JQNetworkConnect::onReadyToDelete()
     connectSettings_->readyToDeleteCallback( this );
 }
 
+qint32 JQNetworkConnect::nextRandomFlag()
+{
+    mutexForSend_.lock();
+
+    if ( sendRandomFlagRotaryIndex_ >= connectSettings_->randomFlagRangeEnd )
+    {
+        sendRandomFlagRotaryIndex_ = connectSettings_->randomFlagRangeStart;
+    }
+    else
+    {
+        ++sendRandomFlagRotaryIndex_;
+    }
+
+    const auto currentRandomFlag = sendRandomFlagRotaryIndex_;
+
+    mutexForSend_.unlock();
+
+    return currentRandomFlag;
+}
+
 void JQNetworkConnect::realSendPackage(const JQNetworkPackageSharedPointer &package)
 {
     const auto &&buffer = package->toByteArray();
@@ -482,7 +535,7 @@ void JQNetworkConnect::realSendPayloadData(
         }
     }
 
-    auto packages = JQNetworkPackage::createTransportPackages(
+    auto packages = JQNetworkPackage::createPayloadTransportPackages(
                 payloadData,
                 randomFlag,
                 connectSettings_->cutPackageSize,
@@ -557,10 +610,10 @@ void JQNetworkConnect::realSendPayloadData(
             );
 }
 
-void JQNetworkConnect::realSendDataRequest(const qint32 &randomFlag)
+void JQNetworkConnect::realSendPayloadDataRequest(const qint32 &randomFlag)
 {
     if ( isAbandonTcpSocket_ ) { return; }
     JQNETWORK_NULLPTR_CHECK( tcpSocket_ );
 
-    this->realSendPackage( JQNetworkPackage::createDataRequestPackage( randomFlag ) );
+    this->realSendPackage( JQNetworkPackage::createPayloadDataRequestPackage( randomFlag ) );
 }

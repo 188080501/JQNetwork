@@ -285,7 +285,7 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
         }
 
         {
-            auto packages = JQNetworkPackage::createTransportPackages( "12345", 1, 2 );
+            auto packages = JQNetworkPackage::createPayloadTransportPackages( "12345", 1, 2 );
             QCOMPARE( packages.size(), 3 );
 
             auto package1 = packages.at( 0 );
@@ -329,7 +329,7 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
         }
 
         {
-            auto packages = JQNetworkPackage::createTransportPackages( "12345", 2, 5 );
+            auto packages = JQNetworkPackage::createPayloadTransportPackages( "12345", 2, 5 );
             QCOMPARE( packages.size(), 1 );
 
             auto package = packages.first();
@@ -341,7 +341,7 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
         }
 
         {
-            auto packages = JQNetworkPackage::createTransportPackages( "12345", 2, 6 );
+            auto packages = JQNetworkPackage::createPayloadTransportPackages( "12345", 2, 6 );
             QCOMPARE( packages.size(), 1 );
 
             auto package = packages.first();
@@ -353,7 +353,7 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
         }
 
         {
-            auto packages = JQNetworkPackage::createTransportPackages( { }, 2 );
+            auto packages = JQNetworkPackage::createPayloadTransportPackages( { }, 2 );
             QCOMPARE( packages.size(), 1 );
 
             auto package = packages.first();
@@ -366,8 +366,8 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
     }
 
     {
-        auto package1 = JQNetworkPackage::createTransportPackages( "Jason", 1, -1, false ).first();
-        auto package2 = JQNetworkPackage::createTransportPackages( "Jason", 1, -1, true ).first();
+        auto package1 = JQNetworkPackage::createPayloadTransportPackages( "Jason", 1, -1, false ).first();
+        auto package2 = JQNetworkPackage::createPayloadTransportPackages( "Jason", 1, -1, true ).first();
 
         QCOMPARE( package1->payloadDataFlag(), JQNETWORKPACKAGE_UNCOMPRESSEDFLAG );
         QCOMPARE( package2->payloadDataFlag(), JQNETWORKPACKAGE_COMPRESSEDFLAG );
@@ -386,7 +386,7 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
     }
 
     {
-        auto packagesForSource = JQNetworkPackage::createTransportPackages( "12345", 1, 1, true );
+        auto packagesForSource = JQNetworkPackage::createPayloadTransportPackages( "12345", 1, 1, true );
 
         QCOMPARE( packagesForSource.size(), 5 );
 
@@ -485,7 +485,7 @@ void JQNetworkOverallTest::jqNetworkClientTest()
         QCOMPARE( count1, 500 );
     }
 
-    connectSettings->maximumReceivePackageWaitTime = 500;
+    connectSettings->maximumReceivePackageWaitTime = 800;
 
     {
         JQNetworkClient client( clientSettings, connectPoolSettings, connectSettings );
@@ -506,7 +506,7 @@ void JQNetworkOverallTest::jqNetworkClientTest()
         QThread::msleep( 100 );
         QCOMPARE( flag2, false );
 
-        QThread::msleep( 1000 );
+        QThread::msleep( 1500 );
         QCOMPARE( flag2, true );
     }
 
@@ -862,7 +862,7 @@ void JQNetworkOverallTest::jqNetworkProcessorTest()
 
     QCOMPARE( myProcessor.availableSlots(), QSet< QString >( { "actionFlag" } ) );
 
-    auto test = [ & ](){ return myProcessor.handlePackage( nullptr, JQNetworkPackage::createTransportPackages( "{\"key\":\"value\"}", 0x1234 ).first() ); };
+    auto test = [ & ](){ return myProcessor.handlePackage( nullptr, JQNetworkPackage::createPayloadTransportPackages( "{\"key\":\"value\"}", 0x1234 ).first() ); };
 
     QCOMPARE( test(), false );
 
@@ -870,6 +870,6 @@ void JQNetworkOverallTest::jqNetworkProcessorTest()
 
     QCOMPARE( test(), true );
 
-    QCOMPARE( myProcessor.testData_, QJsonDocument::fromJson( "{\"key\":\"value\"}" ).object() );
+    QCOMPARE( myProcessor.testData_, QVariantMap( { { "key", "value" } } ) );
     QCOMPARE( myProcessor.testData2_, QThread::currentThread() );
 }

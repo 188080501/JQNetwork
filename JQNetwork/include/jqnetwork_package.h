@@ -13,6 +13,9 @@
 #ifndef JQNETWORK_INCLUDE_JQNETWORK_PACKAGE_H
 #define JQNETWORK_INCLUDE_JQNETWORK_PACKAGE_H
 
+// Qt lib import
+#include <QVariant>
+
 // JQNetwork lib import
 #include <JQNetworkFoundation>
 
@@ -35,24 +38,24 @@ public:
 
     static JQNetworkPackageSharedPointer readPackage(QByteArray &rawData);
 
-    static QList< JQNetworkPackageSharedPointer > createTransportPackages(
+    static QList< JQNetworkPackageSharedPointer > createPayloadTransportPackages(
             const QByteArray &payloadData,
             const qint32 &randomFlag,
             const qint64 cutPackageSize = -1,
             const bool &compressionData = false
         );
 
-    static QList< JQNetworkPackageSharedPointer > createTransportPackages(
+    static QList< JQNetworkPackageSharedPointer > createPayloadTransportPackages(
             const QString &targetNodeFlag,
             const QString &targerActionFlag,
-            const QJsonObject &appendData,
+            const QVariantMap &appendData,
             const QByteArray &payloadData,
             const qint32 &randomFlag,
             const qint64 cutPackageSize = -1,
             const bool &compressionData = false
         );
 
-    static JQNetworkPackageSharedPointer createDataRequestPackage(const qint32 &randomFlag);
+    static JQNetworkPackageSharedPointer createPayloadDataRequestPackage(const qint32 &randomFlag);
 
     inline bool isCompletePackage() const;
 
@@ -96,6 +99,15 @@ public:
     inline qint32 payloadDataOriginalCurrentSize() const;
 
 
+    QVariantMap metaDataInVariantMap();
+
+    QString targetNodeFlag();
+
+    QString targerActionFlag();
+
+    QVariantMap appendData();
+
+
     inline QByteArray toByteArray() const;
 
     bool mixPackage(const JQNetworkPackageSharedPointer &mixPackage);
@@ -131,8 +143,11 @@ private:
     qint32 metaDataOriginalCurrentSize_ = -1;
     qint32 payloadDataOriginalIndex_ = -1;
     qint32 payloadDataOriginalCurrentSize_ = -1;
+
+    QVariantMap metaDataInVariantMap_;
 };
 
+// inc import
 #include "jqnetwork_package.inc"
 
 #endif//JQNETWORK_INCLUDE_JQNETWORK_PACKAGE_H

@@ -86,7 +86,7 @@ inline void JQNetworkConnectPool::onPackageReceived(const JQNetworkConnectPointe
     connectPoolSettings_->packageReceivedCallback( connect, this, package );
 }
 
-inline void JQNetworkConnectPool::onWaitReplySucceedPackage(
+inline void JQNetworkConnectPool::onWaitReplyPackageSucceed(
         const JQNetworkConnectPointer &connect,
         const JQNetworkPackageSharedPointer &package,
         const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &callback

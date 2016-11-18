@@ -17,8 +17,9 @@
 #include <QThread>
 #include <QMetaObject>
 #include <QMetaMethod>
-#include <QJsonObject>
+#include <QVariantMap>
 #include <QJsonDocument>
+#include <QJsonObject>
 
 // JQNetwork lib import
 #include <JQNetworkServer>
@@ -48,32 +49,76 @@ QSet< QString > JQNetworkProcessor::availableSlots()
             continue;
         }
 
-        const auto &&parameterTypesString = method.parameterTypes().join( "," );
+        const auto &&slotString = QString( "(%1):(%2)" ).arg( QString( method.parameterTypes().join( "," ) ), QString( method.parameterNames().join( "," ) ) );
 
-        if ( parameterTypesString == "QJsonObject,QJsonObject&" )
+        if ( slotString == "(QVariantMap,QVariantMap&):(received,send)" )
         {
-            onPackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &, const auto &package)
+            onPackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &connect, const auto &package)
             {
-                QJsonObject received = QJsonDocument::fromJson( package->payloadData() ).object();
-                QJsonObject send;
+                QVariantMap received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
+                QVariantMap send;
 
-                QMetaObject::invokeMethod(
+                const auto &&invokeMethodReply = QMetaObject::invokeMethod(
                             this,
                             methodName.data(),
                             Qt::DirectConnection,
-                            Q_ARG( QJsonObject, received ),
-                            Q_ARG( QJsonObject &, send )
+                            Q_ARG( QVariantMap, received ),
+                            Q_ARG( QVariantMap &, send )
                         );
+                if ( !invokeMethodReply )
+                {
+                    qDebug() << "JQNetworkProcessor: invokeMethod slot error:" << methodName;
+                }
 
                 if ( !send.isEmpty() )
                 {
-                    //...
+                    const auto &&replyReply = connect->replyPayloadData(
+                                package->randomFlag(),
+                                QJsonDocument( QJsonObject::fromVariantMap( send ) ).toJson( QJsonDocument::Compact )
+                            );
+                    if ( !replyReply )
+                    {
+                        qDebug() << "JQNetworkProcessor: replyPayloadData error";
+                    }
+                }
+            };
+        }
+        else if ( slotString == "(QVariantMap):(received)" )
+        {
+            onPackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &, const auto &package)
+            {
+                QVariantMap received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
+
+                const auto &&invokeMethodReply = QMetaObject::invokeMethod(
+                            this,
+                            methodName.data(),
+                            Qt::DirectConnection,
+                            Q_ARG( QVariantMap, received )
+                        );
+                if ( !invokeMethodReply )
+                {
+                    qDebug() << "JQNetworkProcessor: invokeMethod slot error:" << methodName;
+                }
+            };
+        }
+        else if ( slotString == "():()" )
+        {
+            onPackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &, const auto &)
+            {
+                const auto &&invokeMethodReply = QMetaObject::invokeMethod(
+                            this,
+                            methodName.data(),
+                            Qt::DirectConnection
+                        );
+                if ( !invokeMethodReply )
+                {
+                    qDebug() << "JQNetworkProcessor: invokeMethod slot error:" << methodName;
                 }
             };
         }
         else
         {
-            qDebug() << "JQNetworkProcessor::availableSlots: unknow parameter type:" << parameterTypesString;
+            qDebug() << "JQNetworkProcessor::availableSlots: unknow parameter type:" << slotString;
             continue;
         }
 

@@ -50,6 +50,7 @@ private:
     QMap< QString, std::function<void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package)> > onPackageReceivedCallbacks_;
 };
 
+// inc import
 #include "jqnetwork_processor.inc"
 
 #endif//JQNETWORK_INCLUDE_JQNETWORK_PROCESSOR_H

@@ -43,8 +43,8 @@ qint32 JQNetworkPackage::checkDataIsReadyReceive(const QByteArray &rawData)
     if ( head->bootFlag_ != JQNETWORKPACKAGE_BOOTFLAG ) { return -1; }
     switch ( head->packageFlag_ )
     {
-        case JQNETWORKPACKAGE_DATATRANSPORTPACKGEFLAG:
-        case JQNETWORKPACKAGE_DATAREQUESTPACKGEFLAG: { break; }
+        case JQNETWORKPACKAGE_PAYLOADDATATRANSPORTPACKGEFLAG:
+        case JQNETWORKPACKAGE_PAYLOADDATAREQUESTPACKGEFLAG: { break; }
         default: { return -1; }
     }
     if ( head->randomFlag_ == 0 ) { return -1; }
@@ -109,14 +109,14 @@ JQNetworkPackageSharedPointer JQNetworkPackage::readPackage(QByteArray &rawData)
     return package;
 }
 
-QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createTransportPackages(
+QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createPayloadTransportPackages(
         const QByteArray &payloadData,
         const qint32 &randomFlag,
         const qint64 cutPackageSize,
         const bool &compressionData
     )
 {
-    return JQNetworkPackage::createTransportPackages(
+    return JQNetworkPackage::createPayloadTransportPackages(
                 "",
                 "",
                 { },
@@ -127,10 +127,10 @@ QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createTransportPackages
             );
 }
 
-QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createTransportPackages(
+QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createPayloadTransportPackages(
         const QString &targetNodeFlag,
         const QString &targerActionFlag,
-        const QJsonObject &appendData,
+        const QVariantMap &appendData,
         const QByteArray &payloadData,
         const qint32 &randomFlag,
         const qint64 cutPackageSize,
@@ -138,19 +138,39 @@ QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createTransportPackages
     )
 {
     QList< JQNetworkPackageSharedPointer > result;
-    QJsonObject metaData;
+
+    QByteArray metaData;
+
+    if ( !targetNodeFlag.isEmpty() || !targerActionFlag.isEmpty() || !appendData.isEmpty() )
+    {
+        QVariantMap metaDataInVariantMap;
+
+        metaDataInVariantMap[ "targetNodeFlag" ] = targetNodeFlag;
+        metaDataInVariantMap[ "targerActionFlag" ] = targerActionFlag;
+        metaDataInVariantMap[ "appendData" ] = appendData;
+
+        metaData = QJsonDocument( QJsonObject::fromVariantMap( metaDataInVariantMap ) ).toJson( QJsonDocument::Compact );
+    }
 
     if ( payloadData.isEmpty() )
     {
         auto package = JQNetworkPackageSharedPointer( new JQNetworkPackage );
 
         package->head_.bootFlag_ = JQNETWORKPACKAGE_BOOTFLAG;
-        package->head_.packageFlag_ = JQNETWORKPACKAGE_DATATRANSPORTPACKGEFLAG;
+        package->head_.packageFlag_ = JQNETWORKPACKAGE_PAYLOADDATATRANSPORTPACKGEFLAG;
         package->head_.randomFlag_ = randomFlag;
 
         package->head_.metaDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSEDFLAG;
 
         package->head_.payloadDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSEDFLAG;
+
+        if ( !metaData.isEmpty() )
+        {
+            package->head_.payloadDataTotalSize_ = metaData.size();
+            package->head_.payloadDataCurrentSize_ = metaData.size();
+
+            package->metaData_ = metaData;
+        }
 
         package->payloadDataOriginalIndex_ = 0;
         package->payloadDataOriginalCurrentSize_ = 0;
@@ -166,10 +186,18 @@ QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createTransportPackages
             auto package = JQNetworkPackageSharedPointer( new JQNetworkPackage );
 
             package->head_.bootFlag_ = JQNETWORKPACKAGE_BOOTFLAG;
-            package->head_.packageFlag_ = JQNETWORKPACKAGE_DATATRANSPORTPACKGEFLAG;
+            package->head_.packageFlag_ = JQNETWORKPACKAGE_PAYLOADDATATRANSPORTPACKGEFLAG;
             package->head_.randomFlag_ = randomFlag;
 
             package->head_.metaDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSEDFLAG;
+
+            if ( !metaData.isEmpty() )
+            {
+                package->head_.payloadDataTotalSize_ = metaData.size();
+                package->head_.payloadDataCurrentSize_ = metaData.size();
+
+                package->metaData_ = metaData;
+            }
 
             package->head_.payloadDataFlag_ = ( compressionData ) ? ( JQNETWORKPACKAGE_COMPRESSEDFLAG ) : ( JQNETWORKPACKAGE_UNCOMPRESSEDFLAG );
             package->head_.payloadDataTotalSize_ = payloadData.size();
@@ -218,12 +246,12 @@ QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createTransportPackages
     return result;
 }
 
-JQNetworkPackageSharedPointer JQNetworkPackage::createDataRequestPackage(const qint32 &randomFlag)
+JQNetworkPackageSharedPointer JQNetworkPackage::createPayloadDataRequestPackage(const qint32 &randomFlag)
 {
     auto package = JQNetworkPackageSharedPointer( new JQNetworkPackage );
 
     package->head_.bootFlag_ = JQNETWORKPACKAGE_BOOTFLAG;
-    package->head_.packageFlag_ = JQNETWORKPACKAGE_DATAREQUESTPACKGEFLAG;
+    package->head_.packageFlag_ = JQNETWORKPACKAGE_PAYLOADDATAREQUESTPACKGEFLAG;
     package->head_.randomFlag_ = randomFlag;
 
     package->head_.metaDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSEDFLAG;
@@ -231,6 +259,26 @@ JQNetworkPackageSharedPointer JQNetworkPackage::createDataRequestPackage(const q
     package->head_.payloadDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSEDFLAG;
 
     return package;
+}
+
+QVariantMap JQNetworkPackage::metaDataInVariantMap()
+{
+    return metaDataInVariantMap_;
+}
+
+QString JQNetworkPackage::targetNodeFlag()
+{
+    return ( metaDataInVariantMap_.contains( "targetNodeFlag" ) ) ? ( metaDataInVariantMap_[ "targetNodeFlag" ].toString() ) : ( QString() );
+}
+
+QString JQNetworkPackage::targerActionFlag()
+{
+    return ( metaDataInVariantMap_.contains( "targerActionFlag" ) ) ? ( metaDataInVariantMap_[ "targerActionFlag" ].toString() ) : ( QString() );
+}
+
+QVariantMap JQNetworkPackage::appendData()
+{
+    return ( metaDataInVariantMap_.contains( "appendData" ) ) ? ( metaDataInVariantMap_[ "appendData" ].toMap() ) : ( QVariantMap() );
 }
 
 bool JQNetworkPackage::mixPackage(const JQNetworkPackageSharedPointer &mixPackage)
