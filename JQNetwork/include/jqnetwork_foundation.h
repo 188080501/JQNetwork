@@ -106,6 +106,9 @@ typedef QSharedPointer< JQNetworkClientSettings > JQNetworkClientSettingsSharedP
 typedef QSharedPointer< JQNetworkLanSettings > JQNetworkLanSettingsSharedPointer;
 typedef QSharedPointer< JQNetworkForwarfSettings > JQNetworkForwarfSettingsSharedPointer;
 
+typedef std::function< void(const JQNetworkConnectPointer &connect ) > JQNetworkConnectPointerFunction;
+typedef std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package ) > JQNetworkConnectPointerAndPackageSharedPointerFunction;
+
 struct JQNetworkOnReceivedCallbackPackage
 {
     std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > succeedCallback = nullptr;

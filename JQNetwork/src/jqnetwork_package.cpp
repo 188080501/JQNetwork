@@ -16,6 +16,8 @@
 #include <QDebug>
 #include <QJsonObject>
 #include <QJsonDocument>
+#include <QFileInfo>
+#include <QDateTime>
 
 #define BOOL_CHECK( actual, message )           \
     if ( !( actual ) )                          \
@@ -45,6 +47,8 @@ qint32 JQNetworkPackage::checkDataIsReadyReceive(const QByteArray &rawData)
     {
         case JQNETWORKPACKAGE_PAYLOADDATATRANSPORTPACKGEFLAG:
         case JQNETWORKPACKAGE_PAYLOADDATAREQUESTPACKGEFLAG: { break; }
+        case JQNETWORKPACKAGE_FILEDATATRANSPORTPACKGEFLAG:
+        case JQNETWORKPACKAGE_FILEDATAREQUESTPACKGEFLAG: { break; }
         default: { return -1; }
     }
     if ( head->randomFlag_ == 0 ) { return -1; }
@@ -166,12 +170,14 @@ QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createPayloadTransportP
 
         if ( !metaData.isEmpty() )
         {
-            package->head_.payloadDataTotalSize_ = metaData.size();
-            package->head_.payloadDataCurrentSize_ = metaData.size();
+            package->head_.metaDataTotalSize_ = metaData.size();
+            package->head_.metaDataCurrentSize_ = metaData.size();
 
             package->metaData_ = metaData;
         }
 
+        package->metaDataOriginalIndex_ = 0;
+        package->metaDataOriginalCurrentSize_ = 0;
         package->payloadDataOriginalIndex_ = 0;
         package->payloadDataOriginalCurrentSize_ = 0;
 
@@ -193,8 +199,8 @@ QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createPayloadTransportP
 
             if ( !metaData.isEmpty() )
             {
-                package->head_.payloadDataTotalSize_ = metaData.size();
-                package->head_.payloadDataCurrentSize_ = metaData.size();
+                package->head_.metaDataTotalSize_ = metaData.size();
+                package->head_.metaDataCurrentSize_ = metaData.size();
 
                 package->metaData_ = metaData;
             }
@@ -208,6 +214,8 @@ QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createPayloadTransportP
                 package->head_.payloadDataCurrentSize_ = package->payloadData_.size();
                 package->isCompletePackage_ = true;
 
+                package->metaDataOriginalIndex_ = 0;
+                package->metaDataOriginalCurrentSize_ = 0;
                 package->payloadDataOriginalIndex_ = index;
                 package->payloadDataOriginalCurrentSize_ = payloadData.size();
 
@@ -220,6 +228,12 @@ QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createPayloadTransportP
                     package->payloadData_ = ( compressionData ) ? ( qCompress( payloadData.mid( index ), 4 ) ) : ( payloadData.mid( index ) );
                     package->head_.payloadDataCurrentSize_ = package->payloadData_.size();
                     package->isCompletePackage_ = result.isEmpty();
+
+                    if ( index == 0 )
+                    {
+                        package->metaDataOriginalIndex_ = 0;
+                        package->metaDataOriginalCurrentSize_ = 0;
+                    }
 
                     package->payloadDataOriginalIndex_ = index;
                     package->payloadDataOriginalCurrentSize_ = payloadData.size() - index;
@@ -246,6 +260,80 @@ QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createPayloadTransportP
     return result;
 }
 
+JQNetworkPackageSharedPointer JQNetworkPackage::createFileTransportPackage(
+        const QFileInfo &fileInfo,
+        const QByteArray &fileData,
+        const qint32 &randomFlag,
+        const bool &compressionData
+    )
+{
+    return JQNetworkPackage::createFileTransportPackage(
+                "",
+                "",
+                { },
+                fileInfo,
+                fileData,
+                randomFlag,
+                compressionData
+            );
+}
+
+JQNetworkPackageSharedPointer JQNetworkPackage::createFileTransportPackage(
+        const QString &targetNodeFlag,
+        const QString &targerActionFlag,
+        const QVariantMap &appendData,
+        const QFileInfo &fileInfo,
+        const QByteArray &fileData,
+        const qint32 &randomFlag,
+        const bool &compressionData
+    )
+{
+    JQNetworkPackageSharedPointer package( new JQNetworkPackage );
+
+    QByteArray metaData;
+
+    {
+        QVariantMap metaDataInVariantMap;
+
+        metaDataInVariantMap[ "targetNodeFlag" ] = targetNodeFlag;
+        metaDataInVariantMap[ "targerActionFlag" ] = targerActionFlag;
+        metaDataInVariantMap[ "appendData" ] = appendData;
+
+        if ( fileInfo.isFile() )
+        {
+            metaDataInVariantMap[ "fileName" ] = fileInfo.fileName();
+            metaDataInVariantMap[ "fileSize" ] = fileInfo.size();
+            metaDataInVariantMap[ "filePermissions" ] = (qint32)fileInfo.permissions();
+            metaDataInVariantMap[ "fileCreatedTime" ] = fileInfo.created().toMSecsSinceEpoch();
+            metaDataInVariantMap[ "fileLastReadTime" ] = fileInfo.lastRead().toMSecsSinceEpoch();
+            metaDataInVariantMap[ "fileLastModifiedTime" ] = fileInfo.lastModified().toMSecsSinceEpoch();
+        }
+
+        metaData = QJsonDocument( QJsonObject::fromVariantMap( metaDataInVariantMap ) ).toJson( QJsonDocument::Compact );
+    }
+
+    package->head_.bootFlag_ = JQNETWORKPACKAGE_BOOTFLAG;
+    package->head_.packageFlag_ = JQNETWORKPACKAGE_FILEDATATRANSPORTPACKGEFLAG;
+    package->head_.randomFlag_ = randomFlag;
+
+    package->head_.metaDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSEDFLAG;
+    package->head_.metaDataTotalSize_ = metaData.size();
+    package->head_.metaDataCurrentSize_ = metaData.size();
+    package->metaData_ = metaData;
+
+    package->head_.payloadDataFlag_ = ( compressionData ) ? ( JQNETWORKPACKAGE_COMPRESSEDFLAG ) : ( JQNETWORKPACKAGE_UNCOMPRESSEDFLAG );
+    package->head_.payloadDataTotalSize_ = fileData.size();
+    package->payloadData_ = ( compressionData ) ? ( qCompress( fileData, 4 ) ) : ( fileData );
+    package->head_.payloadDataCurrentSize_ = package->payloadData_.size();
+
+    package->metaDataOriginalIndex_ = 0;
+    package->metaDataOriginalCurrentSize_ = 0;
+    package->payloadDataOriginalIndex_ = 0;
+    package->payloadDataOriginalCurrentSize_ = 0;
+
+    return package;
+}
+
 JQNetworkPackageSharedPointer JQNetworkPackage::createPayloadDataRequestPackage(const qint32 &randomFlag)
 {
     auto package = JQNetworkPackageSharedPointer( new JQNetworkPackage );
@@ -261,24 +349,34 @@ JQNetworkPackageSharedPointer JQNetworkPackage::createPayloadDataRequestPackage(
     return package;
 }
 
-QVariantMap JQNetworkPackage::metaDataInVariantMap()
+JQNetworkPackageSharedPointer JQNetworkPackage::createFileDataRequestPackage(const qint32 &randomFlag)
 {
-    return metaDataInVariantMap_;
+    auto package = JQNetworkPackageSharedPointer( new JQNetworkPackage );
+
+    package->head_.bootFlag_ = JQNETWORKPACKAGE_BOOTFLAG;
+    package->head_.packageFlag_ = JQNETWORKPACKAGE_FILEDATAREQUESTPACKGEFLAG;
+    package->head_.randomFlag_ = randomFlag;
+
+    package->head_.metaDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSEDFLAG;
+
+    package->head_.payloadDataFlag_ = JQNETWORKPACKAGE_UNCOMPRESSEDFLAG;
+
+    return package;
 }
 
-QString JQNetworkPackage::targetNodeFlag()
+QDateTime JQNetworkPackage::fileCreatedTime() const
 {
-    return ( metaDataInVariantMap_.contains( "targetNodeFlag" ) ) ? ( metaDataInVariantMap_[ "targetNodeFlag" ].toString() ) : ( QString() );
+    return ( metaDataInVariantMap_.contains( "fileCreatedTime" ) ) ? ( QDateTime::fromMSecsSinceEpoch( metaDataInVariantMap_[ "fileCreatedTime" ].toLongLong() ) ) : ( QDateTime() );
 }
 
-QString JQNetworkPackage::targerActionFlag()
+QDateTime JQNetworkPackage::fileLastReadTime() const
 {
-    return ( metaDataInVariantMap_.contains( "targerActionFlag" ) ) ? ( metaDataInVariantMap_[ "targerActionFlag" ].toString() ) : ( QString() );
+    return ( metaDataInVariantMap_.contains( "fileLastReadTime" ) ) ? ( QDateTime::fromMSecsSinceEpoch( metaDataInVariantMap_[ "fileLastReadTime" ].toLongLong() ) ) : ( QDateTime() );
 }
 
-QVariantMap JQNetworkPackage::appendData()
+QDateTime JQNetworkPackage::fileLastModifiedTime() const
 {
-    return ( metaDataInVariantMap_.contains( "appendData" ) ) ? ( metaDataInVariantMap_[ "appendData" ].toMap() ) : ( QVariantMap() );
+    return ( metaDataInVariantMap_.contains( "fileLastModifiedTime" ) ) ? ( QDateTime::fromMSecsSinceEpoch( metaDataInVariantMap_[ "fileLastModifiedTime" ].toLongLong() ) ) : ( QDateTime() );
 }
 
 bool JQNetworkPackage::mixPackage(const JQNetworkPackageSharedPointer &mixPackage)
@@ -337,4 +435,9 @@ void JQNetworkPackage::refreshPackage()
     if ( this->payloadDataTotalSize() != this->payloadDataCurrentSize() ) { return; }
 
     this->isCompletePackage_ = true;
+
+    if ( !metaData_.isEmpty() )
+    {
+        metaDataInVariantMap_ = QJsonDocument::fromJson( metaData_ ).object().toVariantMap();
+    }
 }

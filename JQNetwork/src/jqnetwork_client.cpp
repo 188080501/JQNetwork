@@ -135,9 +135,9 @@ void JQNetworkClient::createConnect(const QString &hostName, const quint16 &port
             [
                 this,
                 rotaryIndex
-            ](const std::function< void() > &callback)
+            ](const std::function< void() > &runCallback)
             {
-                this->socketThreadPool_->run( callback, rotaryIndex );
+                this->socketThreadPool_->run( runCallback, rotaryIndex );
             };
 
     socketThreadPool_->run(
@@ -185,23 +185,38 @@ qint32 JQNetworkClient::sendPayloadData(
         const QString &hostName,
         const quint16 &port,
         const QByteArray &payloadData,
-        const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &succeedCallback,
-        const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback
+        const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback,
+        const JQNetworkConnectPointerFunction &failCallback
     )
 {
     auto connect = this->getConnect( hostName, port );
 
     if ( !connect ) { return 0; }
 
-    auto randomFlag = connect->sendPayloadData(
+    return connect->sendPayloadData(
                 payloadData,
                 succeedCallback,
                 failCallback
             );
+}
 
-    if ( !randomFlag ) { return randomFlag; }
+qint32 JQNetworkClient::sendFileData(
+        const QString &hostName,
+        const quint16 &port,
+        const QString &filePath,
+        const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback,
+        const JQNetworkConnectPointerFunction &failCallback
+    )
+{
+    auto connect = this->getConnect( hostName, port );
 
-    return randomFlag;
+    if ( !connect ) { return 0; }
+
+    return connect->sendFileData(
+                filePath,
+                succeedCallback,
+                failCallback
+            );
 }
 
 JQNetworkConnectPointer JQNetworkClient::getConnect(const QString &hostName, const quint16 &port)
@@ -476,17 +491,17 @@ void JQNetworkClient::onWaitReplySucceedPackage(
         const JQNetworkConnectPointer &connect,
         const JQNetworkConnectPoolPointer &,
         const JQNetworkPackageSharedPointer &package,
-        const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &callback
+        const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback
     )
 {
     processorThreadPool_->run(
                 [
                     connect,
                     package,
-                    callback
+                    succeedCallback
                 ]()
                 {
-                    callback( connect, package );
+                    succeedCallback( connect, package );
                 }
     );
 }
@@ -494,16 +509,16 @@ void JQNetworkClient::onWaitReplySucceedPackage(
 void JQNetworkClient::onWaitReplyPackageFail(
         const JQNetworkConnectPointer &connect,
         const JQNetworkConnectPoolPointer &,
-        const std::function< void(const JQNetworkConnectPointer &connect) > &callback
+        const JQNetworkConnectPointerFunction &failCallback
     )
 {
     processorThreadPool_->run(
                 [
                     connect,
-                    callback
+                    failCallback
                 ]()
                 {
-                    callback( connect );
+                    failCallback( connect );
                 }
     );
 }

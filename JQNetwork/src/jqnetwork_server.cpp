@@ -167,14 +167,14 @@ bool JQNetworkServer::begin()
                     JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings( new JQNetworkConnectPoolSettings( *this->connectPoolSettings_ ) );
                     JQNetworkConnectSettingsSharedPointer connectSettings( new JQNetworkConnectSettings( *this->connectSettings_ ) );
 
-                    connectPoolSettings->connectToHostErrorCallback   = bind( &JQNetworkServer::onConnectToHostError, this, _1, _2 );
-                    connectPoolSettings->connectToHostTimeoutCallback = bind( &JQNetworkServer::onConnectToHostTimeout, this, _1, _2 );
-                    connectPoolSettings->connectToHostSucceedCallback = bind( &JQNetworkServer::onConnectToHostSucceed, this, _1, _2 );
-                    connectPoolSettings->remoteHostClosedCallback     = bind( &JQNetworkServer::onRemoteHostClosed, this, _1, _2 );
-                    connectPoolSettings->readyToDeleteCallback        = bind( &JQNetworkServer::onReadyToDelete, this, _1, _2 );
-                    connectPoolSettings->packageSendingCallback       = bind( &JQNetworkServer::onPackageSending, this, _1, _2, _3, _4, _5, _6 );
-                    connectPoolSettings->packageReceivingCallback     = bind( &JQNetworkServer::onPackageReceiving, this, _1, _2, _3, _4, _5, _6 );
-                    connectPoolSettings->packageReceivedCallback      = bind( &JQNetworkServer::onPackageReceived, this, _1, _2, _3 );
+                    connectPoolSettings->connectToHostErrorCallback     = bind( &JQNetworkServer::onConnectToHostError, this, _1, _2 );
+                    connectPoolSettings->connectToHostTimeoutCallback   = bind( &JQNetworkServer::onConnectToHostTimeout, this, _1, _2 );
+                    connectPoolSettings->connectToHostSucceedCallback   = bind( &JQNetworkServer::onConnectToHostSucceed, this, _1, _2 );
+                    connectPoolSettings->remoteHostClosedCallback       = bind( &JQNetworkServer::onRemoteHostClosed, this, _1, _2 );
+                    connectPoolSettings->readyToDeleteCallback          = bind( &JQNetworkServer::onReadyToDelete, this, _1, _2 );
+                    connectPoolSettings->packageSendingCallback         = bind( &JQNetworkServer::onPackageSending, this, _1, _2, _3, _4, _5, _6 );
+                    connectPoolSettings->packageReceivingCallback       = bind( &JQNetworkServer::onPackageReceiving, this, _1, _2, _3, _4, _5, _6 );
+                    connectPoolSettings->packageReceivedCallback        = bind( &JQNetworkServer::onPackageReceived, this, _1, _2, _3 );
 
                     connectSettings->randomFlagRangeStart = 1000000000;
                     connectSettings->randomFlagRangeEnd = 1999999999;

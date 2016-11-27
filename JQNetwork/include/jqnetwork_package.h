@@ -19,6 +19,9 @@
 // JQNetwork lib import
 #include <JQNetworkFoundation>
 
+class QFileInfo;
+class QDateTime;
+
 class JQNetworkPackage
 {
 private:
@@ -55,7 +58,26 @@ public:
             const bool &compressionData = false
         );
 
+    static JQNetworkPackageSharedPointer createFileTransportPackage(
+            const QFileInfo &fileInfo,
+            const QByteArray &fileData,
+            const qint32 &randomFlag,
+            const bool &compressionData = false
+        );
+
+    static JQNetworkPackageSharedPointer createFileTransportPackage(
+            const QString &targetNodeFlag,
+            const QString &targerActionFlag,
+            const QVariantMap &appendData,
+            const QFileInfo &fileInfo,
+            const QByteArray &fileData,
+            const qint32 &randomFlag,
+            const bool &compressionData = false
+        );
+
     static JQNetworkPackageSharedPointer createPayloadDataRequestPackage(const qint32 &randomFlag);
+
+    static JQNetworkPackageSharedPointer createFileDataRequestPackage(const qint32 &randomFlag);
 
     inline bool isCompletePackage() const;
 
@@ -99,13 +121,35 @@ public:
     inline qint32 payloadDataOriginalCurrentSize() const;
 
 
-    QVariantMap metaDataInVariantMap();
+    inline QVariantMap metaDataInVariantMap() const;
 
-    QString targetNodeFlag();
+    inline QString targetNodeFlag() const;
 
-    QString targerActionFlag();
+    inline QString targerActionFlag() const;
 
-    QVariantMap appendData();
+    inline QVariantMap appendData() const;
+
+    inline QString fileName() const;
+
+    inline qint64 fileSize() const;
+
+    inline qint32 filePermissions() const;
+
+    QDateTime fileCreatedTime() const;
+
+    QDateTime fileLastReadTime() const;
+
+    QDateTime fileLastModifiedTime() const;
+
+    inline bool containsFile() const;
+
+    inline QString localFilePath() const;
+
+    inline void setLocalFilePath(const QString &localFilePath);
+
+    inline void clearMetaData();
+
+    inline void clearPayloadData();
 
 
     inline QByteArray toByteArray() const;
@@ -138,6 +182,8 @@ private:
 
     QByteArray metaData_;
     QByteArray payloadData_;
+
+    QString localFilePath_;
 
     qint32 metaDataOriginalIndex_ = -1;
     qint32 metaDataOriginalCurrentSize_ = -1;

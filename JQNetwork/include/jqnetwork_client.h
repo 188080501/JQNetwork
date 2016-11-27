@@ -72,13 +72,17 @@ public:
             const QString &hostName,
             const quint16 &port,
             const QByteArray &payloadData,
-            const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &succeedCallback = nullptr,
-            const std::function< void(const JQNetworkConnectPointer &connect) > &failCallback = nullptr
+            const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback = nullptr,
+            const JQNetworkConnectPointerFunction &failCallback = nullptr
         );
 
-//    qint32 sendFile(
-//            /
-//        );
+    qint32 sendFileData(
+            const QString &hostName,
+            const quint16 &port,
+            const QString &filePath,
+            const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback = nullptr,
+            const JQNetworkConnectPointerFunction &failCallback = nullptr
+        );
 
     JQNetworkConnectPointer getConnect(const QString &hostName, const quint16 &port);
 
@@ -121,13 +125,13 @@ private:
             const JQNetworkConnectPointer &connect,
             const JQNetworkConnectPoolPointer &connectPool,
             const JQNetworkPackageSharedPointer &package,
-            const std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &) > &callback
+            const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback
         );
 
     void onWaitReplyPackageFail(
             const JQNetworkConnectPointer &connect,
             const JQNetworkConnectPoolPointer &connectPool,
-            const std::function< void(const JQNetworkConnectPointer &connect) > &callback
+            const JQNetworkConnectPointerFunction &failCallback
         );
 
 private:

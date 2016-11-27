@@ -4,6 +4,9 @@
 // Qt lib import
 #include <QObject>
 
+//#define PRIVATEMACRO public
+#define PRIVATEMACRO private
+
 class JQNetworkOverallTest: public QObject
 {
      Q_OBJECT
@@ -13,40 +16,43 @@ public:
 
     ~JQNetworkOverallTest() = default;
 
-public slots:
+PRIVATEMACRO slots:
     void jqNetworkThreadPoolTest();
 
-public slots:
+PRIVATEMACRO slots:
     void jqNetworkThreadPoolBenchmark();
 
     void jqNetworkThreadPoolBenchmark2();
 
-public slots:
+PRIVATEMACRO slots:
     void jqNetworkNodeMarkTest();
 
-public slots:
+PRIVATEMACRO slots:
     void jqNetworkConnectTest();
 
-public slots:
+PRIVATEMACRO slots:
     void jeNetworkPackageTest();
 
-public slots:
+PRIVATEMACRO slots:
     void jqNetworkServerTest();
 
-public slots:
+PRIVATEMACRO slots:
     void jqNetworkClientTest();
 
-public slots:
+PRIVATEMACRO slots:
     void jqNetworkServerAndClientTest();
 
-public slots:
+PRIVATEMACRO slots:
     void jqNetworkServerAndClientTest2();
 
-public slots:
+PRIVATEMACRO slots:
     void jqNetworkLanTest();
 
-private slots:
+PRIVATEMACRO slots:
     void jqNetworkProcessorTest();
+
+PRIVATEMACRO slots:
+    void jqNetworkSendFile();
 };
 
 #endif//__CPP_JQNETWORK_OVERALLTEST_H__

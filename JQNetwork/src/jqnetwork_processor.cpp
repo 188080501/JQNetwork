@@ -43,7 +43,7 @@ QSet< QString > JQNetworkProcessor::availableSlots()
 
         if ( exceptionSlots_.contains( methodName ) ) { continue; }
 
-        if ( onPackageReceivedCallbacks_.contains( methodName ) )
+        if ( onpackageReceivedCallbacks_.contains( methodName ) )
         {
             qDebug() << "JQNetworkProcessor::availableSlots: same name slot:" << methodName;
             continue;
@@ -53,7 +53,7 @@ QSet< QString > JQNetworkProcessor::availableSlots()
 
         if ( slotString == "(QVariantMap,QVariantMap&):(received,send)" )
         {
-            onPackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &connect, const auto &package)
+            onpackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &connect, const auto &package)
             {
                 QVariantMap received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
                 QVariantMap send;
@@ -85,7 +85,7 @@ QSet< QString > JQNetworkProcessor::availableSlots()
         }
         else if ( slotString == "(QVariantMap):(received)" )
         {
-            onPackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &, const auto &package)
+            onpackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &, const auto &package)
             {
                 QVariantMap received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
 
@@ -103,7 +103,7 @@ QSet< QString > JQNetworkProcessor::availableSlots()
         }
         else if ( slotString == "():()" )
         {
-            onPackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &, const auto &)
+            onpackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &, const auto &)
             {
                 const auto &&invokeMethodReply = QMetaObject::invokeMethod(
                             this,
@@ -142,8 +142,8 @@ bool JQNetworkProcessor::handlePackage(const JQNetworkConnectPointer &connect, c
 
     const auto &&actionFlag = package->metaDataActionFlag();
 
-    auto itForCallback = onPackageReceivedCallbacks_.find( actionFlag );
-    if ( itForCallback == onPackageReceivedCallbacks_.end() )
+    auto itForCallback = onpackageReceivedCallbacks_.find( actionFlag );
+    if ( itForCallback == onpackageReceivedCallbacks_.end() )
     {
         qDebug() << "JQNetworkProcessor::onPackageReceived: expectation actionFlag:" << actionFlag;
         *currentThreadConnect = nullptr;

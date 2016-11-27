@@ -873,3 +873,52 @@ void JQNetworkOverallTest::jqNetworkProcessorTest()
     QCOMPARE( myProcessor.testData_, QVariantMap( { { "key", "value" } } ) );
     QCOMPARE( myProcessor.testData2_, QThread::currentThread() );
 }
+
+void JQNetworkOverallTest::jqNetworkSendFile()
+{
+    QEventLoop eventLoop;
+
+    auto flag1 = false;
+
+    auto server = JQNetworkServer::createServer( 12457, QHostAddress::Any, true );
+
+    server->serverSettings()->packageReceivedCallback = [ &flag1, &eventLoop ](const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer &package)
+    {
+        eventLoop.quit();
+        flag1 = true;
+
+        QCOMPARE( package->containsFile(), true );
+        QCOMPARE( package->metaData().isEmpty(), false );
+        QCOMPARE( package->payloadData().isEmpty(), true );
+    };
+
+    QCOMPARE( server->begin(), true );
+
+    auto client = JQNetworkClient::createClient( true );
+    QCOMPARE( client->begin(), true );
+
+    QCOMPARE( client->waitForCreateConnect( "127.0.0.1", 12457 ), true );
+
+    const auto &&testFileDir = QString( "%1/JQNetworkTestFile" ).arg( QStandardPaths::writableLocation( QStandardPaths::TempLocation ) );
+    if ( !QDir( testFileDir ).exists() )
+    {
+        QCOMPARE( QDir().mkdir( testFileDir ), true );
+    }
+
+    const auto &&testSourceFilePath = QString( "%1/testfile" ).arg( testFileDir );
+    const auto &&testSourceFileInfo = QFileInfo( testSourceFilePath );
+
+    if ( !testSourceFileInfo.exists() || ( testSourceFileInfo.size() != ( 64 * 1024 * 1024 ) ) )
+    {
+        QFile testSourceFile( testSourceFilePath );
+        QCOMPARE( testSourceFile.open( QIODevice::WriteOnly ), true );
+        QCOMPARE( testSourceFile.resize( 64 * 1024 * 1024 ), true );
+    }
+
+    QCOMPARE( client->sendFileData( "127.0.0.1", 12457, testSourceFilePath ) > 0, true );
+
+    QTimer::singleShot( 10 * 1000, &eventLoop, &QEventLoop::quit );
+    eventLoop.exec();
+
+    QCOMPARE( flag1, true );
+}
