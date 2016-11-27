@@ -2,14 +2,20 @@
 #include <QCoreApplication>
 #include <QtTest>
 
+// JQNetwork lib import
+#include "JQNetworkFoundation"
+
 // Project import
-#include "jqnetwork_test.h"
+#include "jqnetwork_overalltest.h"
+
+#include <utime.h>
 
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
+    JQNetwork::printVersionInformation();
 
-    JQNetworkTest jqNetworkTest;
+    JQNetworkOverallTest jqNetworkTest;
 
     return QTest::qExec( &jqNetworkTest, argc, argv );
 }

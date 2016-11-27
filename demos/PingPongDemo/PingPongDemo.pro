@@ -14,8 +14,12 @@ QT       += core
 
 TEMPLATE = app
 
-include( $$PWD/../../JQNetwork/JQNetworkSrc.pri )
-#include( $$PWD/../../JQNetwork/JQNetworkLib.pri )
+#JQNETWORK_COMPILE_MODE = SRC
+include( $$PWD/../../JQNetwork/JQNetwork.pri )
+
+HEADERS += \
+    $$PWD/cpp/ping.hpp \
+    $$PWD/cpp/pong.hpp
 
 SOURCES += \
     $$PWD/cpp/main.cpp

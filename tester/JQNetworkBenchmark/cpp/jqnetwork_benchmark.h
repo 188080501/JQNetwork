@@ -4,14 +4,14 @@
 // Qt lib import
 #include <QObject>
 
-class JQNetworkBenchmark: public QObject
+class JQNetworkPersisteneTest: public QObject
 {
      Q_OBJECT
 
 public:
-    JQNetworkBenchmark() = default;
+    JQNetworkPersisteneTest() = default;
 
-    ~JQNetworkBenchmark() = default;
+    ~JQNetworkPersisteneTest() = default;
 
     void test1();
 

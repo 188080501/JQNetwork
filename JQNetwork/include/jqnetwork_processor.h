@@ -28,8 +28,26 @@ public:
     JQNetworkProcessor(const JQNetworkProcessor &) = delete;
 
     JQNetworkProcessor &operator =(const JQNetworkProcessor &) = delete;
+
+    QSet< QString > availableSlots();
+
+    bool handlePackage(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package);
+
+    void setReceivedPossibleThreads(const QSet< QThread * > &threads);
+
+protected:
+    JQNetworkConnectPointer currentThreadConnect();
+
+private:
+    static QSet< QString > exceptionSlots_;
+
+    QSet< QString > availableSlots_;
+    QMap< QThread *, JQNetworkConnectPointer > connectMapByThread_;
+
+    QMap< QString, std::function<void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package)> > onpackageReceivedCallbacks_;
 };
 
+// inc import
 #include "jqnetwork_processor.inc"
 
 #endif//JQNETWORK_INCLUDE_JQNETWORK_PROCESSOR_H

@@ -16,7 +16,7 @@
 #include <JQNetworkClient>
 #include <JQNetworkForwarf>
 
-void JQNetworkBenchmark::test1()
+void JQNetworkPersisteneTest::test1()
 {
     auto server = JQNetworkServer::createServer( 12345 );
 
@@ -75,7 +75,7 @@ void JQNetworkBenchmark::test1()
                 arg( int( double(testCount) / ( ( finishTime - startTime ) / 1000.0 ) ) );
 }
 
-void JQNetworkBenchmark::test2()
+void JQNetworkPersisteneTest::test2()
 {
     QByteArray testData;
     for ( auto count = 0; count < 32 * 1024; ++count )
@@ -142,7 +142,7 @@ void JQNetworkBenchmark::test2()
                 arg( result * 32 / 1024 * 8 );
 }
 
-void JQNetworkBenchmark::test3()
+void JQNetworkPersisteneTest::test3()
 {
     auto server = JQNetworkServer::createServer( 34567 );
 
@@ -208,7 +208,7 @@ void JQNetworkBenchmark::test3()
                 arg( int( double(testCount) / ( ( finishTime - startTime ) / 1000.0 ) ) );
 }
 
-void JQNetworkBenchmark::test4()
+void JQNetworkPersisteneTest::test4()
 {
     QByteArray testData;
     for ( auto count = 0; count < 32 * 1024; ++count )
@@ -282,7 +282,7 @@ void JQNetworkBenchmark::test4()
                 arg( result * 32 / 1024 * 8 );
 }
 
-void JQNetworkBenchmark::test5()
+void JQNetworkPersisteneTest::test5()
 {
     static QByteArray testData;
     for ( auto count = 0; count < 512 * 1024 * 1024; ++count )

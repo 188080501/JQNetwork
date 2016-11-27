@@ -16,10 +16,15 @@
 #include <QDebug>
 #include <QTcpServer>
 #include <QThread>
+#include <QMetaObject>
 
 // JQNetwork lib import
 #include <JQNetworkConnectPool>
 #include <JQNetworkConnect>
+#include <JQNetworkProcessor>
+
+using namespace std;
+using namespace std::placeholders;
 
 // JQNetworkServerHelper
 class JQNetworkServerHelper: public QTcpServer
@@ -80,7 +85,8 @@ JQNetworkServer::~JQNetworkServer()
 
 JQNetworkServerSharedPointer JQNetworkServer::createServer(
         const quint16 &listenPort,
-        const QHostAddress &listenAddress
+        const QHostAddress &listenAddress,
+        const bool &fileTransferEnabled
     )
 {
     JQNetworkServerSettingsSharedPointer serverSettings( new JQNetworkServerSettings );
@@ -89,6 +95,12 @@ JQNetworkServerSharedPointer JQNetworkServer::createServer(
 
     serverSettings->listenAddress = listenAddress;
     serverSettings->listenPort = listenPort;
+
+    if ( fileTransferEnabled )
+    {
+        connectSettings->fileTransferEnabled = true;
+        connectSettings->setFilePathProviderToDefaultDir();
+    }
 
     return JQNetworkServerSharedPointer( new JQNetworkServer( serverSettings, connectPoolSettings, connectSettings ) );
 }
@@ -155,22 +167,14 @@ bool JQNetworkServer::begin()
                     JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings( new JQNetworkConnectPoolSettings( *this->connectPoolSettings_ ) );
                     JQNetworkConnectSettingsSharedPointer connectSettings( new JQNetworkConnectSettings( *this->connectSettings_ ) );
 
-                    connectPoolSettings->connectToHostErrorCallback   = [ this ](const auto &connect, const auto &connectPool)
-                        { this->onConnectToHostError( connect, connectPool ); };
-                    connectPoolSettings->connectToHostTimeoutCallback = [ this ](const auto &connect, const auto &connectPool)
-                        { this->onConnectToHostTimeout( connect, connectPool ); };
-                    connectPoolSettings->connectToHostSucceedCallback = [ this ](const auto &connect, const auto &connectPool)
-                        { this->onConnectToHostSucceed( connect, connectPool ); };
-                    connectPoolSettings->remoteHostClosedCallback     = [ this ](const auto &connect, const auto &connectPool)
-                        { this->onRemoteHostClosed( connect, connectPool ); };
-                    connectPoolSettings->readyToDeleteCallback        = [ this ](const auto &connect, const auto &connectPool)
-                        { this->onReadyToDelete( connect, connectPool ); };
-                    connectPoolSettings->packageSendingCallback       = [ this ](const auto &connect, const auto &connectPool, const auto &randomFlag, const auto &payloadCurrentIndex, const auto &payloadCurrentSize, const auto &payloadTotalSize)
-                        { this->onPackageSending( connect, connectPool, randomFlag, payloadCurrentIndex, payloadCurrentSize, payloadTotalSize ); };
-                    connectPoolSettings->packageReceivingCallback     = [ this ](const auto &connect, const auto &connectPool, const auto &randomFlag, const auto &payloadCurrentIndex, const auto &payloadCurrentSize, const auto &payloadTotalSize)
-                        { this->onPackageReceiving( connect, connectPool, randomFlag, payloadCurrentIndex, payloadCurrentSize, payloadTotalSize ); };
-                    connectPoolSettings->packageReceivedCallback      = [ this ](const auto &connect, const auto &connectPool, const auto &package)
-                        { this->onPackageReceived( connect, connectPool, package ); };
+                    connectPoolSettings->connectToHostErrorCallback     = bind( &JQNetworkServer::onConnectToHostError, this, _1, _2 );
+                    connectPoolSettings->connectToHostTimeoutCallback   = bind( &JQNetworkServer::onConnectToHostTimeout, this, _1, _2 );
+                    connectPoolSettings->connectToHostSucceedCallback   = bind( &JQNetworkServer::onConnectToHostSucceed, this, _1, _2 );
+                    connectPoolSettings->remoteHostClosedCallback       = bind( &JQNetworkServer::onRemoteHostClosed, this, _1, _2 );
+                    connectPoolSettings->readyToDeleteCallback          = bind( &JQNetworkServer::onReadyToDelete, this, _1, _2 );
+                    connectPoolSettings->packageSendingCallback         = bind( &JQNetworkServer::onPackageSending, this, _1, _2, _3, _4, _5, _6 );
+                    connectPoolSettings->packageReceivingCallback       = bind( &JQNetworkServer::onPackageReceiving, this, _1, _2, _3, _4, _5, _6 );
+                    connectPoolSettings->packageReceivedCallback        = bind( &JQNetworkServer::onPackageReceived, this, _1, _2, _3 );
 
                     connectSettings->randomFlagRangeStart = 1000000000;
                     connectSettings->randomFlagRangeEnd = 1999999999;
@@ -185,6 +189,32 @@ bool JQNetworkServer::begin()
     );
 
     return true;
+}
+
+void JQNetworkServer::registerProcessor(const JQNetworkProcessorPointer &processor)
+{
+    const auto &&availableSlots = processor->availableSlots();
+
+    for ( const auto &currentSlot: availableSlots )
+    {
+        if ( processor_.contains( currentSlot ) )
+        {
+            qDebug() << "JQNetworkServer::registerProcessor: double register:" << currentSlot;
+            continue;
+        }
+
+        const auto &&callback = [ processor ](const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package)
+        {
+            if ( !processor )
+            {
+                qDebug() << "JQNetworkServer::registerProcessor: processor is null";
+                return;
+            }
+
+            processor->handlePackage( connect, package );
+        };
+        processor_[ currentSlot ] = callback;
+    }
 }
 
 void JQNetworkServer::incomingConnection(const qintptr &socketDescriptor)

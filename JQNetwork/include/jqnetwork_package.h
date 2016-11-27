@@ -13,8 +13,14 @@
 #ifndef JQNETWORK_INCLUDE_JQNETWORK_PACKAGE_H
 #define JQNETWORK_INCLUDE_JQNETWORK_PACKAGE_H
 
+// Qt lib import
+#include <QVariant>
+
 // JQNetwork lib import
 #include <JQNetworkFoundation>
+
+class QFileInfo;
+class QDateTime;
 
 class JQNetworkPackage
 {
@@ -33,16 +39,45 @@ public:
 
     static qint32 checkDataIsReadyReceive(const QByteArray &rawData);
 
-    static JQNetworkPackageSharedPointer createPackage(QByteArray &rawData);
+    static JQNetworkPackageSharedPointer readPackage(QByteArray &rawData);
 
-    static QList< JQNetworkPackageSharedPointer > createTransportPackages(
+    static QList< JQNetworkPackageSharedPointer > createPayloadTransportPackages(
             const QByteArray &payloadData,
             const qint32 &randomFlag,
             const qint64 cutPackageSize = -1,
-            const bool &compressionPayloadData = false
+            const bool &compressionData = false
         );
 
-    static JQNetworkPackageSharedPointer createRequestPackage(const qint32 &randomFlag);
+    static QList< JQNetworkPackageSharedPointer > createPayloadTransportPackages(
+            const QString &targetNodeFlag,
+            const QString &targerActionFlag,
+            const QVariantMap &appendData,
+            const QByteArray &payloadData,
+            const qint32 &randomFlag,
+            const qint64 cutPackageSize = -1,
+            const bool &compressionData = false
+        );
+
+    static JQNetworkPackageSharedPointer createFileTransportPackage(
+            const QFileInfo &fileInfo,
+            const QByteArray &fileData,
+            const qint32 &randomFlag,
+            const bool &compressionData = false
+        );
+
+    static JQNetworkPackageSharedPointer createFileTransportPackage(
+            const QString &targetNodeFlag,
+            const QString &targerActionFlag,
+            const QVariantMap &appendData,
+            const QFileInfo &fileInfo,
+            const QByteArray &fileData,
+            const qint32 &randomFlag,
+            const bool &compressionData = false
+        );
+
+    static JQNetworkPackageSharedPointer createPayloadDataRequestPackage(const qint32 &randomFlag);
+
+    static JQNetworkPackageSharedPointer createFileDataRequestPackage(const qint32 &randomFlag);
 
     inline bool isCompletePackage() const;
 
@@ -71,6 +106,8 @@ public:
 
     inline int metaDataSize() const;
 
+    inline QString metaDataActionFlag() const;
+
     inline QByteArray payloadData() const;
 
     inline int payloadDataSize() const;
@@ -82,6 +119,37 @@ public:
     inline qint32 payloadDataOriginalIndex() const;
 
     inline qint32 payloadDataOriginalCurrentSize() const;
+
+
+    inline QVariantMap metaDataInVariantMap() const;
+
+    inline QString targetNodeFlag() const;
+
+    inline QString targerActionFlag() const;
+
+    inline QVariantMap appendData() const;
+
+    inline QString fileName() const;
+
+    inline qint64 fileSize() const;
+
+    inline qint32 filePermissions() const;
+
+    QDateTime fileCreatedTime() const;
+
+    QDateTime fileLastReadTime() const;
+
+    QDateTime fileLastModifiedTime() const;
+
+    inline bool containsFile() const;
+
+    inline QString localFilePath() const;
+
+    inline void setLocalFilePath(const QString &localFilePath);
+
+    inline void clearMetaData();
+
+    inline void clearPayloadData();
 
 
     inline QByteArray toByteArray() const;
@@ -115,12 +183,17 @@ private:
     QByteArray metaData_;
     QByteArray payloadData_;
 
+    QString localFilePath_;
+
     qint32 metaDataOriginalIndex_ = -1;
     qint32 metaDataOriginalCurrentSize_ = -1;
     qint32 payloadDataOriginalIndex_ = -1;
     qint32 payloadDataOriginalCurrentSize_ = -1;
+
+    QVariantMap metaDataInVariantMap_;
 };
 
+// inc import
 #include "jqnetwork_package.inc"
 
 #endif//JQNETWORK_INCLUDE_JQNETWORK_PACKAGE_H

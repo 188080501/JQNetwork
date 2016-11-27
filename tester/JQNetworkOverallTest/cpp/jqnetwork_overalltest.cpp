@@ -1,4 +1,4 @@
-﻿#include "jqnetwork_test.h"
+﻿#include "jqnetwork_overalltest.h"
 
 // Qt lib import
 #include <QtTest>
@@ -18,7 +18,10 @@
 #include <JQNetworkLan>
 #include <JQNetworkForwarf>
 
-void JQNetworkTest::jqNetworkThreadPoolTest()
+// Project lib import
+#include "myprocessor.hpp"
+
+void JQNetworkOverallTest::jqNetworkThreadPoolTest()
 {
     QMutex mutex;
     QMap< QThread *, int > flag;
@@ -63,7 +66,7 @@ void JQNetworkTest::jqNetworkThreadPoolTest()
     }
 }
 
-void JQNetworkTest::jqNetworkThreadPoolBenchmark()
+void JQNetworkOverallTest::jqNetworkThreadPoolBenchmark()
 {
     int number = 0;
 
@@ -89,7 +92,7 @@ void JQNetworkTest::jqNetworkThreadPoolBenchmark()
     }
 }
 
-void JQNetworkTest::jqNetworkThreadPoolBenchmark2()
+void JQNetworkOverallTest::jqNetworkThreadPoolBenchmark2()
 {
     int number = 0;
 
@@ -107,7 +110,7 @@ void JQNetworkTest::jqNetworkThreadPoolBenchmark2()
     QCOMPARE( number, 90000 );
 }
 
-void JQNetworkTest::jqNetworkNodeMarkTest()
+void JQNetworkOverallTest::jqNetworkNodeMarkTest()
 {
     JQNetworkNodeMark nodeMark( "test" );
 
@@ -136,7 +139,7 @@ void JQNetworkTest::jqNetworkNodeMarkTest()
     QCOMPARE( nodeMarkSummary1 != nodeMarkSummary2, true );
 }
 
-void JQNetworkTest::jqNetworkConnectTest()
+void JQNetworkOverallTest::jqNetworkConnectTest()
 {
     auto connectSettings = JQNetworkConnectSettingsSharedPointer( new JQNetworkConnectSettings );
 
@@ -226,7 +229,7 @@ void JQNetworkTest::jqNetworkConnectTest()
     QCOMPARE( flag5, true );
 }
 
-void JQNetworkTest::jeNetworkPackageTest()
+void JQNetworkOverallTest::jeNetworkPackageTest()
 {
     {
         QCOMPARE( JQNetworkPackage::headSize(), 24 );
@@ -239,7 +242,7 @@ void JQNetworkTest::jeNetworkPackageTest()
 
         {
             auto rawData = QByteArray::fromHex( "7d 01 04030201 01 02000000 02000000 01 03000000 03000000 1122334455" );
-            const auto &&package = JQNetworkPackage::createPackage( rawData );
+            const auto &&package = JQNetworkPackage::readPackage( rawData );
 
             QCOMPARE( rawData.size(), 0 );
             QCOMPARE( package->isCompletePackage(), true );
@@ -261,9 +264,9 @@ void JQNetworkTest::jeNetworkPackageTest()
             auto rawData1 = QByteArray::fromHex( "7d 01 04030201 01 05000000 02000000 01 05000000 03000000 1122334455" );
             auto rawData2 = QByteArray::fromHex( "7d 01 04030201 01 05000000 03000000 01 05000000 02000000 1122334455" );
             auto rawData3 = QByteArray::fromHex( "7d 01 04030201 01 05000000 03000000 01 05000000 02000000 1122334455" );
-            const auto &&package1 = JQNetworkPackage::createPackage( rawData1 );
-            const auto &&package2 = JQNetworkPackage::createPackage( rawData2 );
-            const auto &&package3 = JQNetworkPackage::createPackage( rawData3 );
+            const auto &&package1 = JQNetworkPackage::readPackage( rawData1 );
+            const auto &&package2 = JQNetworkPackage::readPackage( rawData2 );
+            const auto &&package3 = JQNetworkPackage::readPackage( rawData3 );
 
             QCOMPARE( package1->isCompletePackage(), false );
             QCOMPARE( package1->isAbandonPackage(), false );
@@ -282,7 +285,7 @@ void JQNetworkTest::jeNetworkPackageTest()
         }
 
         {
-            auto packages = JQNetworkPackage::createTransportPackages( "12345", 1, 2 );
+            auto packages = JQNetworkPackage::createPayloadTransportPackages( "12345", 1, 2 );
             QCOMPARE( packages.size(), 3 );
 
             auto package1 = packages.at( 0 );
@@ -326,7 +329,7 @@ void JQNetworkTest::jeNetworkPackageTest()
         }
 
         {
-            auto packages = JQNetworkPackage::createTransportPackages( "12345", 2, 5 );
+            auto packages = JQNetworkPackage::createPayloadTransportPackages( "12345", 2, 5 );
             QCOMPARE( packages.size(), 1 );
 
             auto package = packages.first();
@@ -338,7 +341,7 @@ void JQNetworkTest::jeNetworkPackageTest()
         }
 
         {
-            auto packages = JQNetworkPackage::createTransportPackages( "12345", 2, 6 );
+            auto packages = JQNetworkPackage::createPayloadTransportPackages( "12345", 2, 6 );
             QCOMPARE( packages.size(), 1 );
 
             auto package = packages.first();
@@ -350,7 +353,7 @@ void JQNetworkTest::jeNetworkPackageTest()
         }
 
         {
-            auto packages = JQNetworkPackage::createTransportPackages( { }, 2 );
+            auto packages = JQNetworkPackage::createPayloadTransportPackages( { }, 2 );
             QCOMPARE( packages.size(), 1 );
 
             auto package = packages.first();
@@ -363,8 +366,8 @@ void JQNetworkTest::jeNetworkPackageTest()
     }
 
     {
-        auto package1 = JQNetworkPackage::createTransportPackages( "Jason", 1, -1, false ).first();
-        auto package2 = JQNetworkPackage::createTransportPackages( "Jason", 1, -1, true ).first();
+        auto package1 = JQNetworkPackage::createPayloadTransportPackages( "Jason", 1, -1, false ).first();
+        auto package2 = JQNetworkPackage::createPayloadTransportPackages( "Jason", 1, -1, true ).first();
 
         QCOMPARE( package1->payloadDataFlag(), JQNETWORKPACKAGE_UNCOMPRESSEDFLAG );
         QCOMPARE( package2->payloadDataFlag(), JQNETWORKPACKAGE_COMPRESSEDFLAG );
@@ -383,7 +386,7 @@ void JQNetworkTest::jeNetworkPackageTest()
     }
 
     {
-        auto packagesForSource = JQNetworkPackage::createTransportPackages( "12345", 1, 1, true );
+        auto packagesForSource = JQNetworkPackage::createPayloadTransportPackages( "12345", 1, 1, true );
 
         QCOMPARE( packagesForSource.size(), 5 );
 
@@ -407,7 +410,7 @@ void JQNetworkTest::jeNetworkPackageTest()
     }
 }
 
-void JQNetworkTest::jqNetworkServerTest()
+void JQNetworkOverallTest::jqNetworkServerTest()
 {
     auto serverSettings = JQNetworkServerSettingsSharedPointer( new JQNetworkServerSettings );
     auto connectPoolSettings = JQNetworkConnectPoolSettingsSharedPointer( new JQNetworkConnectPoolSettings );
@@ -447,7 +450,7 @@ void JQNetworkTest::jqNetworkServerTest()
     QCOMPARE( succeedCount, 1 );
 }
 
-void JQNetworkTest::jqNetworkClientTest()
+void JQNetworkOverallTest::jqNetworkClientTest()
 {
     bool flag1 = false;
     bool flag2 = false;
@@ -482,7 +485,7 @@ void JQNetworkTest::jqNetworkClientTest()
         QCOMPARE( count1, 500 );
     }
 
-    connectSettings->maximumReceivePackageWaitTime = 500;
+    connectSettings->maximumReceivePackageWaitTime = 800;
 
     {
         JQNetworkClient client( clientSettings, connectPoolSettings, connectSettings );
@@ -503,7 +506,7 @@ void JQNetworkTest::jqNetworkClientTest()
         QThread::msleep( 100 );
         QCOMPARE( flag2, false );
 
-        QThread::msleep( 1000 );
+        QThread::msleep( 1500 );
         QCOMPARE( flag2, true );
     }
 
@@ -512,7 +515,7 @@ void JQNetworkTest::jqNetworkClientTest()
     connectSettings->maximumReceivePackageWaitTime = 30 * 1000;
 }
 
-void JQNetworkTest::jqNetworkServerAndClientTest()
+void JQNetworkOverallTest::jqNetworkServerAndClientTest()
 {
     QString serverFlag;
     QString clientFlag;
@@ -669,7 +672,7 @@ void JQNetworkTest::jqNetworkServerAndClientTest()
           );
 }
 
-void JQNetworkTest::jqNetworkServerAndClientTest2()
+void JQNetworkOverallTest::jqNetworkServerAndClientTest2()
 {
     QString serverFlag;
     QString clientFlag;
@@ -760,7 +763,7 @@ void JQNetworkTest::jqNetworkServerAndClientTest2()
           );
 }
 
-void JQNetworkTest::jqNetworkLanTest()
+void JQNetworkOverallTest::jqNetworkLanTest()
 {
     bool flag1 = false;
     bool flag2 = false;
@@ -809,7 +812,7 @@ void JQNetworkTest::jqNetworkLanTest()
     QCOMPARE( flag2, true );
     QCOMPARE( flag3, true );
 
-    const auto &&lanAddressEntries = JQNetworkLan::getLanAddressEntries();
+    const auto &&lanAddressEntries = JQNetworkLan::lanAddressEntries();
 
     QCOMPARE( lanAddressEntries.size() >= 1, true );
 
@@ -851,4 +854,71 @@ void JQNetworkTest::jqNetworkLanTest()
             QCOMPARE( flag.size(), 5 );
         }
     }
+}
+
+void JQNetworkOverallTest::jqNetworkProcessorTest()
+{
+    MyProcessor myProcessor;
+
+    QCOMPARE( myProcessor.availableSlots(), QSet< QString >( { "actionFlag" } ) );
+
+    auto test = [ & ](){ return myProcessor.handlePackage( nullptr, JQNetworkPackage::createPayloadTransportPackages( "{\"key\":\"value\"}", 0x1234 ).first() ); };
+
+    QCOMPARE( test(), false );
+
+    myProcessor.setReceivedPossibleThreads( { QThread::currentThread() } );
+
+    QCOMPARE( test(), true );
+
+    QCOMPARE( myProcessor.testData_, QVariantMap( { { "key", "value" } } ) );
+    QCOMPARE( myProcessor.testData2_, QThread::currentThread() );
+}
+
+void JQNetworkOverallTest::jqNetworkSendFile()
+{
+    QEventLoop eventLoop;
+
+    auto flag1 = false;
+
+    auto server = JQNetworkServer::createServer( 12457, QHostAddress::Any, true );
+
+    server->serverSettings()->packageReceivedCallback = [ &flag1, &eventLoop ](const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer &package)
+    {
+        eventLoop.quit();
+        flag1 = true;
+
+        QCOMPARE( package->containsFile(), true );
+        QCOMPARE( package->metaData().isEmpty(), false );
+        QCOMPARE( package->payloadData().isEmpty(), true );
+    };
+
+    QCOMPARE( server->begin(), true );
+
+    auto client = JQNetworkClient::createClient( true );
+    QCOMPARE( client->begin(), true );
+
+    QCOMPARE( client->waitForCreateConnect( "127.0.0.1", 12457 ), true );
+
+    const auto &&testFileDir = QString( "%1/JQNetworkTestFile" ).arg( QStandardPaths::writableLocation( QStandardPaths::TempLocation ) );
+    if ( !QDir( testFileDir ).exists() )
+    {
+        QCOMPARE( QDir().mkdir( testFileDir ), true );
+    }
+
+    const auto &&testSourceFilePath = QString( "%1/testfile" ).arg( testFileDir );
+    const auto &&testSourceFileInfo = QFileInfo( testSourceFilePath );
+
+    if ( !testSourceFileInfo.exists() || ( testSourceFileInfo.size() != ( 64 * 1024 * 1024 ) ) )
+    {
+        QFile testSourceFile( testSourceFilePath );
+        QCOMPARE( testSourceFile.open( QIODevice::WriteOnly ), true );
+        QCOMPARE( testSourceFile.resize( 64 * 1024 * 1024 ), true );
+    }
+
+    QCOMPARE( client->sendFileData( "127.0.0.1", 12457, testSourceFilePath ) > 0, true );
+
+    QTimer::singleShot( 10 * 1000, &eventLoop, &QEventLoop::quit );
+    eventLoop.exec();
+
+    QCOMPARE( flag1, true );
 }

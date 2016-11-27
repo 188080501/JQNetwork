@@ -19,7 +19,7 @@ include( $$PWD/../../JQNetwork/JQNetwork.pri )
 
 SOURCES += \
     $$PWD/cpp/main.cpp \
-    $$PWD/cpp/jqnetwork_benchmark.cpp
+    $$PWD/cpp/jqnetwork_persistenetest.cpp
 
 HEADERS += \
-    $$PWD/cpp/jqnetwork_benchmark.h
+    $$PWD/cpp/jqnetwork_persistenetest.h
