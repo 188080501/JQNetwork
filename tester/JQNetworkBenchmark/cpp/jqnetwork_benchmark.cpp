@@ -322,8 +322,7 @@ void JQNetworkPersisteneTest::test5()
     client->sendPayloadData(
                 "127.0.0.1",
                 56789,
-                testData,
-                { }
+                testData
             );
 
     semaphore.acquire( 1 );

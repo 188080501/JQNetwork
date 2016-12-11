@@ -71,8 +71,7 @@ void JQNetworkPersisteneTest::test()
         client->sendPayloadData(
                 "127.0.0.1",
                 56789,
-                testData,
-                { }
+                testData
             );
 
         mutex.lock();
