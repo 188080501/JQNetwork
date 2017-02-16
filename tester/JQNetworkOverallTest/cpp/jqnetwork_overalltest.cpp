@@ -8,7 +8,6 @@
 
 // JQNetwork lib import
 #include <JQNetworkFoundation>
-#include <JQNetworkEncrypt>
 #include <JQNetworkPackage>
 #include <JQNetworkConnect>
 #include <JQNetworkConnectPool>
@@ -16,7 +15,6 @@
 #include <JQNetworkProcessor>
 #include <JQNetworkClient>
 #include <JQNetworkLan>
-#include <JQNetworkForwarf>
 
 // Project lib import
 #include "myprocessor.hpp"
@@ -182,7 +180,7 @@ void JQNetworkOverallTest::jqNetworkConnectTest()
 
         JQNetworkConnect::createConnect(
                     [ &connect ](const auto &connect_){ connect = connect_; },
-                    {},
+                    { },
                     connectSettings,
                     "www.baidu.com",
                     80
@@ -211,7 +209,7 @@ void JQNetworkOverallTest::jqNetworkConnectTest()
 
         JQNetworkConnect::createConnect(
                     [ &connect ](const auto &connect_){ connect = connect_; },
-                    {},
+                    { },
                     connectSettings,
                     "www.baidu.com",
                     80
@@ -492,7 +490,7 @@ void JQNetworkOverallTest::jqNetworkClientTest()
         client.begin();
 
         flag1 = false;
-        QCOMPARE( client.waitForCreateConnect( "Hello,world!", 12345, 1000 ), false );
+        QCOMPARE( client.waitForCreateConnect( "Hello,world!", 12345 ), false );
         QThread::msleep( 200 );
         QCOMPARE( flag1, true );
 

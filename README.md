@@ -66,10 +66,6 @@ SSL支持|等待开发|V1.0
 
 	基础库
 
-* JQNetworkEncrypt
-
-	加密库（私有加密，可选）
-
 * JQNetworkPackage
 
 	数据包
@@ -93,10 +89,6 @@ SSL支持|等待开发|V1.0
 * JQNetworkClient
 
 	客户端
-
-* JQNetworkForwarf
-
-	转发器
 
 * JQNetworkLan
 

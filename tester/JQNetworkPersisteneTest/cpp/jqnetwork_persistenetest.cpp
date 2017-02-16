@@ -7,14 +7,12 @@
 
 // JQNetwork lib import
 #include <JQNetworkFoundation>
-#include <JQNetworkEncrypt>
 #include <JQNetworkPackage>
 #include <JQNetworkConnect>
 #include <JQNetworkConnectPool>
 #include <JQNetworkServer>
 #include <JQNetworkProcessor>
 #include <JQNetworkClient>
-#include <JQNetworkForwarf>
 
 void JQNetworkPersisteneTest::test()
 {
