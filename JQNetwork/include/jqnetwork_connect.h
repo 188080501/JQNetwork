@@ -61,6 +61,7 @@ struct JQNetworkConnectSettings
 class JQNetworkConnect: public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY( JQNetworkConnect )
 
 private:
     struct ReceivedCallbackPackage
@@ -72,10 +73,6 @@ private:
 
 private:
     JQNetworkConnect(const JQNetworkConnectSettingsSharedPointer &connectSettings);
-
-    JQNetworkConnect(const JQNetworkConnect &) = delete;
-
-    JQNetworkConnect &operator =(const JQNetworkConnect &) = delete;
 
 public:
     ~JQNetworkConnect() = default;

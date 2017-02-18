@@ -36,6 +36,7 @@ struct JQNetworkClientSettings
 class JQNetworkClient: public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY( JQNetworkClient )
 
 public:
     JQNetworkClient(
@@ -45,10 +46,6 @@ public:
         );
 
     ~JQNetworkClient();
-
-    JQNetworkClient(const JQNetworkClient &) = delete;
-
-    JQNetworkClient &operator =(const JQNetworkClient &) = delete;
 
     static JQNetworkClientSharedPointer createClient(
             const bool &fileTransferEnabled = false
@@ -171,6 +168,16 @@ private:
     QString nodeMarkSummary_;
     QMutex mutex_;
     QMap< QString, QSharedPointer< QSemaphore > > waitConnectSucceedSemaphore_; // "127.0.0.1:34543" -> Connect
+};
+
+class JQNetworkClientForQml: public QObject
+{
+    Q_OBJECT
+
+public:
+    JQNetworkClientForQml() = default;
+
+    ~JQNetworkClientForQml() = default;
 };
 
 // inc import

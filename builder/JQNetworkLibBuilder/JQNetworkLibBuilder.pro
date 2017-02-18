@@ -36,5 +36,6 @@ else : win32 : CONFIG( release, debug | release ) {
 else {
     jqnetworklib.files = $$OUT_PWD/$$JQNETWORK_LIB_FILENAME
 }
-jqnetworklib.path = $$JQNETWORK_LIB_DIR
+jqnetworklib.path = $$JQNETWORK_BIN_DIR
+
 INSTALLS += jqnetworklib

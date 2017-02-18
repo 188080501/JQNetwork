@@ -10,6 +10,7 @@
 class JQNetworkOverallTest: public QObject
 {
      Q_OBJECT
+    Q_DISABLE_COPY( JQNetworkOverallTest )
 
 public:
     JQNetworkOverallTest() = default;

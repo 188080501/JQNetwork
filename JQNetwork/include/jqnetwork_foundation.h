@@ -114,6 +114,7 @@ struct JQNetworkOnReceivedCallbackPackage
 class JQNetworkThreadPoolHelper: public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY( JQNetworkThreadPoolHelper )
 
 public:
     JQNetworkThreadPoolHelper();
@@ -136,15 +137,12 @@ private:
 class JQNetworkThreadPool: public QObject
 {
     Q_OBJECT
+    Q_DISABLE_COPY( JQNetworkThreadPool )
 
 public:
     JQNetworkThreadPool(const int &threadCount);
 
     ~JQNetworkThreadPool();
-
-    JQNetworkThreadPool(const JQNetworkThreadPool &) = delete;
-
-    JQNetworkThreadPool &operator =(const JQNetworkThreadPool &) = delete;
 
     inline int nextRotaryIndex();
 
