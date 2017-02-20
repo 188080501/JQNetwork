@@ -167,17 +167,7 @@ private:
     // Other
     QString nodeMarkSummary_;
     QMutex mutex_;
-    QMap< QString, QSharedPointer< QSemaphore > > waitConnectSucceedSemaphore_; // "127.0.0.1:34543" -> Connect
-};
-
-class JQNetworkClientForQml: public QObject
-{
-    Q_OBJECT
-
-public:
-    JQNetworkClientForQml() = default;
-
-    ~JQNetworkClientForQml() = default;
+    QMap< QString, QSharedPointer< QSemaphore > > waitConnectSucceedSemaphore_; // "127.0.0.1:34543" -> SemaphoreForConnect
 };
 
 // inc import

@@ -12,6 +12,11 @@ class MyProcessor: public JQNetworkProcessor
     Q_OBJECT
     Q_DISABLE_COPY( MyProcessor )
 
+public:
+    MyProcessor() = default;
+
+    ~MyProcessor() = default;
+
 public slots:
     void actionFlag(const QVariantMap &received, QVariantMap &send)
     {
