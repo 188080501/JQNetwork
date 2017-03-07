@@ -68,6 +68,7 @@ public:
     qint32 sendPayloadData(
             const QString &hostName,
             const quint16 &port,
+            const QString &targetActionFlag,
             const QByteArray &payloadData,
             const QVariantMap &appendData,
             const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback = nullptr,
@@ -85,6 +86,7 @@ public:
     qint32 sendFileData(
             const QString &hostName,
             const quint16 &port,
+            const QString &targetActionFlag,
             const QFileInfo &fileInfo,
             const QVariantMap &appendData,
             const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback = nullptr,

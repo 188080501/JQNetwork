@@ -5,10 +5,7 @@
 #include <QTimer>
 
 // JQNetwork lib improt
-#include <JQNetworkPackage>
-#include <JQNetworkServer>
-#include <JQNetworkConnect>
-#include <JQNetworkProcessor>
+#include <JQNetwork>
 
 class MyServer: public QObject
 {
@@ -23,7 +20,7 @@ public:
     bool begin()
     {
         // 创建一个服务端
-        const quint16 &&listenPort = 34543; // 监听端口
+        const quint16 &&listenPort = 23456; // 监听端口
         server_ = JQNetworkServer::createServer( listenPort );
 
         // 设置接收到数据包后的回调
@@ -32,11 +29,11 @@ public:
         // 初始化服务端
         if ( !server_->begin() )
         {
-            qDebug() << "Pong: begin fail";
+            qDebug() << "MyServer: begin fail";
             return false;
         }
 
-        qDebug() << "Pong: begin succeed";
+        qDebug() << "MyServer: begin succeed";
 
         return true;
     }

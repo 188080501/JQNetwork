@@ -7,14 +7,7 @@
 #include <QTcpServer>
 
 // JQNetwork lib import
-#include <JQNetworkFoundation>
-#include <JQNetworkPackage>
-#include <JQNetworkConnect>
-#include <JQNetworkConnectPool>
-#include <JQNetworkServer>
-#include <JQNetworkProcessor>
-#include <JQNetworkClient>
-#include <JQNetworkLan>
+#include <JQNetwork>
 
 // Project lib import
 #include "myprocessor.hpp"
@@ -283,7 +276,13 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
         }
 
         {
-            auto packages = JQNetworkPackage::createPayloadTransportPackages( "12345", 1, 2 );
+            auto packages = JQNetworkPackage::createPayloadTransportPackages(
+                        { }, // empty targerActionFlag
+                        "12345",
+                        { }, // empty appendData
+                        1,
+                        2
+                    );
             QCOMPARE( packages.size(), 3 );
 
             auto package1 = packages.at( 0 );
@@ -327,7 +326,13 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
         }
 
         {
-            auto packages = JQNetworkPackage::createPayloadTransportPackages( "12345", 2, 5 );
+            auto packages = JQNetworkPackage::createPayloadTransportPackages(
+                        { }, // empty targerActionFlag
+                        "12345",
+                        { }, // empty appendData
+                        2,
+                        5
+                   );
             QCOMPARE( packages.size(), 1 );
 
             auto package = packages.first();
@@ -339,7 +344,13 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
         }
 
         {
-            auto packages = JQNetworkPackage::createPayloadTransportPackages( "12345", 2, 6 );
+            auto packages = JQNetworkPackage::createPayloadTransportPackages(
+                        { }, // empty targerActionFlag
+                        "12345",
+                        { }, // empty appendData
+                        2,
+                        5
+                   );
             QCOMPARE( packages.size(), 1 );
 
             auto package = packages.first();
@@ -351,7 +362,12 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
         }
 
         {
-            auto packages = JQNetworkPackage::createPayloadTransportPackages( { }, 2 );
+            auto packages = JQNetworkPackage::createPayloadTransportPackages(
+                        { }, // empty targerActionFlag
+                        { }, // empty payloadData
+                        { }, // empty appendData
+                        2
+                    );
             QCOMPARE( packages.size(), 1 );
 
             auto package = packages.first();
@@ -364,8 +380,8 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
     }
 
     {
-        auto package1 = JQNetworkPackage::createPayloadTransportPackages( "Jason", 1, -1, false ).first();
-        auto package2 = JQNetworkPackage::createPayloadTransportPackages( "Jason", 1, -1, true ).first();
+        auto package1 = JQNetworkPackage::createPayloadTransportPackages( { }, "Jason", { }, 1, -1, false ).first();
+        auto package2 = JQNetworkPackage::createPayloadTransportPackages( { }, "Jason", { }, 1, -1, true ).first();
 
         QCOMPARE( package1->payloadDataFlag(), JQNETWORKPACKAGE_UNCOMPRESSEDFLAG );
         QCOMPARE( package2->payloadDataFlag(), JQNETWORKPACKAGE_COMPRESSEDFLAG );
@@ -384,7 +400,7 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
     }
 
     {
-        auto packagesForSource = JQNetworkPackage::createPayloadTransportPackages( "12345", 1, 1, true );
+        auto packagesForSource = JQNetworkPackage::createPayloadTransportPackages( { }, "12345", { }, 1, 1, true );
 
         QCOMPARE( packagesForSource.size(), 5 );
 
@@ -860,7 +876,7 @@ void JQNetworkOverallTest::jqNetworkProcessorTest()
 
     QCOMPARE( myProcessor.availableSlots(), QSet< QString >( { "actionFlag" } ) );
 
-    auto test = [ & ](){ return myProcessor.handlePackage( nullptr, JQNetworkPackage::createPayloadTransportPackages( "{\"key\":\"value\"}", 0x1234 ).first() ); };
+    auto test = [ & ](){ return myProcessor.handlePackage( nullptr, JQNetworkPackage::createPayloadTransportPackages( { }, "{\"key\":\"value\"}", { }, 0x1234 ).first() ); };
 
     QCOMPARE( test(), false );
 

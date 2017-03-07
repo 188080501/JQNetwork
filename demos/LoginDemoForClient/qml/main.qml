@@ -33,6 +33,7 @@ Window {
         Component.onCompleted: {
             var beginClientSucceed = networkClient.beginClient();
             print( "JQNetworkClientForQml::beginClient:", beginClientSucceed );
+
             if ( !beginClientSucceed ) { return; }
 
             networkClient.createConnect( "127.0.0.1", 23456 );

@@ -6,13 +6,7 @@
 #include <QTcpSocket>
 
 // JQNetwork lib import
-#include <JQNetworkFoundation>
-#include <JQNetworkPackage>
-#include <JQNetworkConnect>
-#include <JQNetworkConnectPool>
-#include <JQNetworkServer>
-#include <JQNetworkProcessor>
-#include <JQNetworkClient>
+#include <JQNetwork>
 
 void JQNetworkPersisteneTest::test()
 {

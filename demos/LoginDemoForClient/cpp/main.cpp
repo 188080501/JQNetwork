@@ -3,7 +3,7 @@
 #include <QQmlApplicationEngine>
 
 // JQNetwork lib improt
-#include <JQNetworkClientForQml>
+#include <JQNetwork>
 
 int main(int argc, char *argv[])
 {

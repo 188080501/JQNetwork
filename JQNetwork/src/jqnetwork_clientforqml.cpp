@@ -14,6 +14,8 @@
 
 // Qt lib import
 #include <QDebug>
+#include <QJsonObject>
+#include <QJsonDocument>
 
 // JQNetwork lib import
 #include <JQNetworkClient>
@@ -44,13 +46,27 @@ void JQNetworkClientForQml::createConnect(const QString &hostName, const quint16
 void JQNetworkClientForQml::sendPayloadData(
         const QString &hostName,
         const quint16 &port,
-        const QString &actionFlag,
+        const QString &targetActionFlag,
         const QVariantMap &payloadData,
         QJSValue succeedCallback,
         QJSValue failCallback
     )
 {
-    qDebug() << "JQNetworkClientForQml::sendPayloadData:" << hostName << port << actionFlag;
+    if ( !jqNetworkClient_ )
+    {
+        qDebug() << "JQNetworkClientForQml::sendPayloadData: error, client need beginClient";
+        return;
+    }
 
-    //...
+    qDebug() << "JQNetworkClientForQml::sendPayloadData:" << hostName << port << targetActionFlag;
+
+    jqNetworkClient_->sendPayloadData(
+                hostName,
+                port,
+                targetActionFlag,
+                QJsonDocument( QJsonObject::fromVariantMap( payloadData ) ).toJson( QJsonDocument::Compact ),
+                { }, // emptyvappendData
+                [ succeedCallback ](const auto &, const auto &){ },
+                [ failCallback ](const auto &){ }
+            );
 }

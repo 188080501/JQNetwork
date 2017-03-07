@@ -42,7 +42,7 @@ public slots:
     void sendPayloadData(
             const QString &hostName,
             const quint16 &port,
-            const QString &actionFlag,
+            const QString &targetActionFlag,
             const QVariantMap &payloadData,
             QJSValue succeedCallback,
             QJSValue failCallback

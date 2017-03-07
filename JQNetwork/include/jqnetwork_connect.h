@@ -109,6 +109,7 @@ public:
     void close();
 
     qint32 sendPayloadData(
+            const QString &targetActionFlag,
             const QByteArray &payloadData,
             const QVariantMap &appendData,
             const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback = nullptr,
@@ -122,6 +123,7 @@ public:
         );
 
     qint32 sendFileData(
+            const QString &targetActionFlag,
             const QFileInfo &fileInfo,
             const QVariantMap &appendData,
             const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback = nullptr,
@@ -184,6 +186,7 @@ private:
 
     bool readySendPayloadData(
             const qint32 &randomFlag,
+            const QString &targetActionFlag,
             const QByteArray &payloadData,
             const QVariantMap &appendData,
             const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback,
@@ -192,6 +195,7 @@ private:
 
     bool readySendFileData(
             const qint32 &randomFlag,
+            const QString &targetActionFlag,
             const QFileInfo &fileInfo,
             const QVariantMap &appendData,
             const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback,

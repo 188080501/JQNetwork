@@ -2,9 +2,7 @@
 #define __CPP_PONG_HPP__
 
 // JQNetwork lib improt
-#include <JQNetworkPackage>
-#include <JQNetworkConnect>
-#include <JQNetworkServer>
+#include <JQNetwork>
 
 // Pong 为服务端
 class Pong
