@@ -7,6 +7,7 @@
 class JQNetworkPersisteneTest: public QObject
 {
      Q_OBJECT
+    Q_DISABLE_COPY( JQNetworkPersisteneTest )
 
 public:
     JQNetworkPersisteneTest() = default;

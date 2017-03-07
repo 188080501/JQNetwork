@@ -28,13 +28,12 @@ JQNETWORK_COMPILE_MODE = SRC
 include( $$PWD/../../JQNetwork/JQNetwork.pri )
 
 win32 : CONFIG( debug, debug | release ) {
-    jqnetworklib.files = $$OUT_PWD/debug/$$JQNETWORK_LIB_FILENAME
+    QMAKE_POST_LINK += copy $$OUT_PWD/debug/$$JQNETWORK_LIB_FILENAME $$JQNETWORK_LIB_FILEPATH
 }
 else : win32 : CONFIG( release, debug | release ) {
-    jqnetworklib.files = $$OUT_PWD/release/$$JQNETWORK_LIB_FILENAME
+    QMAKE_POST_LINK += copy $$OUT_PWD/release/$$JQNETWORK_LIB_FILENAME $$JQNETWORK_LIB_FILEPATH
 }
 else {
-    jqnetworklib.files = $$OUT_PWD/$$JQNETWORK_LIB_FILENAME
+    QMAKE_POST_LINK += cp $$OUT_PWD/$$JQNETWORK_LIB_FILENAME $$JQNETWORK_LIB_FILEPATH
 }
-jqnetworklib.path = $$JQNETWORK_LIB_DIR
-INSTALLS += jqnetworklib
+jqnetworklib.path = $$JQNETWORK_BIN_DIR

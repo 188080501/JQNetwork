@@ -158,7 +158,7 @@ void JQNetworkClient::createConnect(const QString &hostName, const quint16 &port
     );
 }
 
-bool JQNetworkClient::waitForCreateConnect(const QString &hostName, const quint16 &port, const int &timeout)
+bool JQNetworkClient::waitForCreateConnect(const QString &hostName, const quint16 &port)
 {
     QSharedPointer< QSemaphore > semaphore( new QSemaphore );
     const auto &&hostKey = QString( "%1:%2" ).arg( hostName, QString::number( port ) );
@@ -170,7 +170,7 @@ bool JQNetworkClient::waitForCreateConnect(const QString &hostName, const quint1
 
     mutex_.unlock();
 
-    const auto &&acquireSucceed = semaphore->tryAcquire( 1, timeout );
+    const auto &&acquireSucceed = semaphore->tryAcquire( 1, connectSettings_->maximumConnectToHostWaitTime );
 
     mutex_.lock();
 
@@ -184,6 +184,7 @@ bool JQNetworkClient::waitForCreateConnect(const QString &hostName, const quint1
 qint32 JQNetworkClient::sendPayloadData(
         const QString &hostName,
         const quint16 &port,
+        const QString &targetActionFlag,
         const QByteArray &payloadData,
         const QVariantMap &appendData,
         const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback,
@@ -195,6 +196,7 @@ qint32 JQNetworkClient::sendPayloadData(
     if ( !connect ) { return 0; }
 
     return connect->sendPayloadData(
+                targetActionFlag,
                 payloadData,
                 appendData,
                 succeedCallback,
@@ -205,6 +207,7 @@ qint32 JQNetworkClient::sendPayloadData(
 qint32 JQNetworkClient::sendFileData(
         const QString &hostName,
         const quint16 &port,
+        const QString &targetActionFlag,
         const QFileInfo &fileInfo,
         const QVariantMap &appendData,
         const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback,
@@ -216,6 +219,7 @@ qint32 JQNetworkClient::sendFileData(
     if ( !connect ) { return 0; }
 
     return connect->sendFileData(
+                targetActionFlag,
                 fileInfo,
                 appendData,
                 succeedCallback,

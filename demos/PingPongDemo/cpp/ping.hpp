@@ -5,9 +5,7 @@
 #include <QTimer>
 
 // JQNetwork lib improt
-#include <JQNetworkPackage>
-#include <JQNetworkConnect>
-#include <JQNetworkClient>
+#include <JQNetwork>
 
 // Ping 为客户端
 class Ping

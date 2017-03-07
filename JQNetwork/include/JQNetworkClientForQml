@@ -10,10 +10,4 @@
     GitHub: https://github.com/188080501/
 */
 
-#ifndef JQNETWORK_INCLUDE_JQNETWORK_ENCRYPT_INC
-#define JQNETWORK_INCLUDE_JQNETWORK_ENCRYPT_INC
-
-// JQNetwork lib import
-#include "jqnetwork_encrypt.h"
-
-#endif//JQNETWORK_INCLUDE_JQNETWORK_ENCRYPT_INC
+#include "jqnetwork_clientforqml.h"

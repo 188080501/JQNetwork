@@ -2,7 +2,7 @@
 #include <QCoreApplication>
 
 // JQNetwork lib improt
-#include <JQNetworkLan>
+#include <JQNetwork>
 
 int main(int argc, char *argv[])
 {

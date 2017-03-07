@@ -6,15 +6,7 @@
 #include <QTcpSocket>
 
 // JQNetwork lib import
-#include <JQNetworkFoundation>
-#include <JQNetworkEncrypt>
-#include <JQNetworkPackage>
-#include <JQNetworkConnect>
-#include <JQNetworkConnectPool>
-#include <JQNetworkServer>
-#include <JQNetworkProcessor>
-#include <JQNetworkClient>
-#include <JQNetworkForwarf>
+#include <JQNetwork>
 
 void JQNetworkPersisteneTest::test1()
 {
@@ -322,8 +314,7 @@ void JQNetworkPersisteneTest::test5()
     client->sendPayloadData(
                 "127.0.0.1",
                 56789,
-                testData,
-                { }
+                testData
             );
 
     semaphore.acquire( 1 );

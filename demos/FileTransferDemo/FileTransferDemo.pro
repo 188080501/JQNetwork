@@ -10,14 +10,14 @@
 #   GitHub: https://github.com/188080501/
 #
 
-QT       += core testlib
+QT       += core
 
 TEMPLATE = app
 
 #JQNETWORK_COMPILE_MODE = SRC
 include( $$PWD/../../JQNetwork/JQNetwork.pri )
 
+HEADERS +=
+
 SOURCES += \
     $$PWD/cpp/main.cpp
-
-HEADERS +=

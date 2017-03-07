@@ -10,10 +10,14 @@
 #   GitHub: https://github.com/188080501/
 #
 
-TEMPLATE = subdirs
+QT       += core testlib
 
-SUBDIRS += PingPongDemo
-SUBDIRS += LanNodeSearchDemo
-SUBDIRS += FileTransferDemo
-SUBDIRS += LoginDemoForClient
-SUBDIRS += LoginDemoForServer
+TEMPLATE = app
+
+#JQNETWORK_COMPILE_MODE = SRC
+include( $$PWD/../../JQNetwork/JQNetwork.pri )
+
+HEADERS +=
+
+SOURCES += \
+    $$PWD/cpp/main.cpp

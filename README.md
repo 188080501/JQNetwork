@@ -43,7 +43,6 @@ TCP长连接|已实现|V0.1
 数据压缩|已实现|V0.3
 局域网自组网|已实现|V0.4
 大文件传输支持|已实现|V0.5
-数据中转|等待开发|V0.6
 SSL支持|等待开发|V1.0
 
 ## 性能介绍
@@ -65,10 +64,6 @@ SSL支持|等待开发|V1.0
 * JQNetworkFoundation
 
 	基础库
-
-* JQNetworkEncrypt
-
-	加密库（私有加密，可选）
 
 * JQNetworkPackage
 
@@ -93,10 +88,6 @@ SSL支持|等待开发|V1.0
 * JQNetworkClient
 
 	客户端
-
-* JQNetworkForwarf
-
-	转发器
 
 * JQNetworkLan
 

@@ -6,15 +6,7 @@
 #include <QTcpSocket>
 
 // JQNetwork lib import
-#include <JQNetworkFoundation>
-#include <JQNetworkEncrypt>
-#include <JQNetworkPackage>
-#include <JQNetworkConnect>
-#include <JQNetworkConnectPool>
-#include <JQNetworkServer>
-#include <JQNetworkProcessor>
-#include <JQNetworkClient>
-#include <JQNetworkForwarf>
+#include <JQNetwork>
 
 void JQNetworkPersisteneTest::test()
 {
@@ -71,8 +63,7 @@ void JQNetworkPersisteneTest::test()
         client->sendPayloadData(
                 "127.0.0.1",
                 56789,
-                testData,
-                { }
+                testData
             );
 
         mutex.lock();
