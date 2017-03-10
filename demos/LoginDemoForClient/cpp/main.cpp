@@ -10,9 +10,10 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
     JQNetwork::printVersionInformation();
 
-    JQNETWORKCLIENTFORQML_REGISTERTYPE
-
     QQmlApplicationEngine engine;
+
+    JQNETWORKCLIENTFORQML_REGISTERTYPE( engine );
+
     engine.load( QUrl( QStringLiteral( "qrc:/main.qml" ) ) );
 
     return app.exec();

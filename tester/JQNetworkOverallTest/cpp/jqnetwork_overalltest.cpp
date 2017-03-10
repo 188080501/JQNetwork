@@ -277,7 +277,7 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
 
         {
             auto packages = JQNetworkPackage::createPayloadTransportPackages(
-                        { }, // empty targerActionFlag
+                        { }, // empty targetActionFlag
                         "12345",
                         { }, // empty appendData
                         1,
@@ -327,7 +327,7 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
 
         {
             auto packages = JQNetworkPackage::createPayloadTransportPackages(
-                        { }, // empty targerActionFlag
+                        { }, // empty targetActionFlag
                         "12345",
                         { }, // empty appendData
                         2,
@@ -345,7 +345,7 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
 
         {
             auto packages = JQNetworkPackage::createPayloadTransportPackages(
-                        { }, // empty targerActionFlag
+                        { }, // empty targetActionFlag
                         "12345",
                         { }, // empty appendData
                         2,
@@ -363,7 +363,7 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
 
         {
             auto packages = JQNetworkPackage::createPayloadTransportPackages(
-                        { }, // empty targerActionFlag
+                        { }, // empty targetActionFlag
                         { }, // empty payloadData
                         { }, // empty appendData
                         2

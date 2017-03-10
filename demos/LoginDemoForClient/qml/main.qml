@@ -9,25 +9,25 @@ Window {
     height: 480
     title: "LoginDemo"
 
-    JQNetworkClientForQml {
+    JQNetworkClient {
         id: networkClient
 
         onConnectToHostError: {
             print( "onConnectToHostError:", hostName, port );
 
-            text.text = "ConnectToHostError";
+            textForMessage.text = "ConnectToHostError";
         }
 
         onConnectToHostTimeout: {
             print( "onConnectToHostTimeout:", hostName, port );
 
-            text.text = "ConnectToHostTimeout";
+            textForMessage.text = "ConnectToHostTimeout";
         }
 
         onConnectToHostSucceed: {
             print( "onConnectToHostSucceed:", hostName, port );
 
-            text.text = "ConnectToHostSucceed";
+            textForMessage.text = "ConnectToHostSucceed";
         }
 
         Component.onCompleted: {
@@ -94,26 +94,38 @@ Window {
 
         onClicked: {
             networkClient.sendPayloadData(
-                        "127.0.0.1",
-                        23456,
-                        "userLogin",
-                        { },
-                        onLoginSucceed,
-                        onLoginFail
+                        "127.0.0.1",                                // 服务端的IP地址
+                        23456,                                      // 服务端的端口
+                        "userLogin",                                // 需要调用的方法名称
+                        {                                           // \
+                            username: textEditForUsername.text,     //  |--> 传给服务端的参数
+                            password: textEditForPassword.text      //  |
+                        },                                          // /
+                        onLoginSucceed,                             // 当请求执行成功时的回调，这里可以接受匿名回调作为参数
+                        onLoginFail                                 // 当请求执行失败时的回调，这里可以接受匿名回调作为参数
                     );
         }
 
-        function onLoginSucceed() {
-            print( "onLoginSucceed" );
+        // 请求成功，也就是传输的数据已经到达服务端，会调用这个回调
+        function onLoginSucceed(received) {
+            if ( received[ "succeed" ] )
+            {
+                textForMessage.text = "LoginSucceed";
+            }
+            else
+            {
+                textForMessage.text = "LoginFail: Message" + received[ "message" ];
+            }
         }
 
+        // 请求失败，也就是传输的数据未到达幅度按，会调用这个回调
         function onLoginFail() {
-            print( "onLoginFail" );
+            textForMessage.text = "LoginFail";
         }
     }
 
     Text {
-        id: text
+        id: textForMessage
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 50

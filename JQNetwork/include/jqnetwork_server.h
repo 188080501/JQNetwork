@@ -128,7 +128,8 @@ private:
     QString nodeMarkSummary_;
 
     // Processor
-    QMap< QString, std::function< void( const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer & ) > > processor_;
+    QSet< JQNetworkProcessor * > processors_;
+    QMap< QString, std::function< void( const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer & ) > > processorCallbacks_;
 };
 
 // inc import

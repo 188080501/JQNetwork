@@ -7,7 +7,7 @@
 // JQNetwork lib improt
 #include <JQNetwork>
 
-class MyServer: public QObject
+class MyServer: public JQNetworkProcessor
 {
     Q_OBJECT
     Q_DISABLE_COPY( MyServer )
@@ -23,8 +23,8 @@ public:
         const quint16 &&listenPort = 23456; // 监听端口
         server_ = JQNetworkServer::createServer( listenPort );
 
-        // 设置接收到数据包后的回调
-        server_->serverSettings()->packageReceivedCallback = std::bind( &MyServer::onPackageReceived, this, std::placeholders::_1, std::placeholders::_2 );
+        // 注册当前类
+        server_->registerProcessor( this );
 
         // 初始化服务端
         if ( !server_->begin() )
@@ -38,15 +38,32 @@ public:
         return true;
     }
 
-    void onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package)
+    // 用于处理的函数必须是槽函数
+public slots:
+    void userLogin(const QVariantMap &received, QVariantMap &send)
     {
         // 回调会发生在一个专用的线程，请注意线程安全
 
         // 打印客户端发送的数据
-        qDebug() << "MyServer: received data:" << package->payloadData() << ", randomFlag:" << package->randomFlag();
+        qDebug() << "MyServer::userLogin: received data:" << received;
+
+        if ( !received.contains( "username" ) || received[ "username" ].toString().isEmpty() )
+        {
+            send[ "succeed" ] = false;
+            send[ "message" ] = "username is empty";
+            return;
+        }
+
+        if ( !received.contains( "password" ) || received[ "password" ].toString().isEmpty() )
+        {
+            send[ "succeed" ] = false;
+            send[ "message" ] = "password is empty";
+            return;
+        }
 
         // 返回一个数据，需要指定 randomFlag 以告知客户端
-        connect->replyPayloadData( package->randomFlag(), "OK" );
+        send[ "succeed" ] = true;
+        send[ "message" ] = "";
     }
 
 private:
