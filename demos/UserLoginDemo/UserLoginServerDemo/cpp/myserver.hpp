@@ -61,7 +61,7 @@ public slots:
             return;
         }
 
-        // 返回一个数据，需要指定 randomFlag 以告知客户端
+        // 返回数据
         send[ "succeed" ] = true;
         send[ "message" ] = "";
     }

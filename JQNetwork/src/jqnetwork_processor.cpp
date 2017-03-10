@@ -20,6 +20,7 @@
 #include <QVariantMap>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QFileInfo>
 
 // JQNetwork lib import
 #include <JQNetworkServer>
@@ -94,6 +95,56 @@ QSet< QString > JQNetworkProcessor::availableSlots()
                             methodName.data(),
                             Qt::DirectConnection,
                             Q_ARG( QVariantMap, received )
+                        );
+                if ( !invokeMethodReply )
+                {
+                    qDebug() << "JQNetworkProcessor::availableSlots: invokeMethod slot error:" << methodName;
+                }
+            };
+        }
+        else if ( slotString == "(QFileInfo,QVariantMap&):(received,send)" )
+        {
+            onpackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &connect, const auto &package)
+            {
+                const auto &received = QFileInfo( package->localFilePath() );
+                QVariantMap send;
+
+                const auto &&invokeMethodReply = QMetaObject::invokeMethod(
+                            this,
+                            methodName.data(),
+                            Qt::DirectConnection,
+                            Q_ARG( QFileInfo, received ),
+                            Q_ARG( QVariantMap &, send )
+                        );
+                if ( !invokeMethodReply )
+                {
+                    qDebug() << "JQNetworkProcessor::availableSlots: invokeMethod slot error:" << methodName;
+                }
+
+                if ( !send.isEmpty() )
+                {
+                    const auto &&replyReply = connect->replyPayloadData(
+                                package->randomFlag(),
+                                QJsonDocument( QJsonObject::fromVariantMap( send ) ).toJson( QJsonDocument::Compact )
+                            );
+                    if ( !replyReply )
+                    {
+                        qDebug() << "JQNetworkProcessor::availableSlots: replyPayloadData error";
+                    }
+                }
+            };
+        }
+        else if ( slotString == "(QFileInfo):(received)" )
+        {
+            onpackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &, const auto &package)
+            {
+                const auto &received = QFileInfo( package->localFilePath() );
+
+                const auto &&invokeMethodReply = QMetaObject::invokeMethod(
+                            this,
+                            methodName.data(),
+                            Qt::DirectConnection,
+                            Q_ARG( QFileInfo, received )
                         );
                 if ( !invokeMethodReply )
                 {

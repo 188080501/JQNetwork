@@ -96,7 +96,7 @@ Window {
             networkClient.sendPayloadData(
                         "127.0.0.1",                                // 服务端的IP地址
                         23456,                                      // 服务端的端口
-                        "userLogin",                                // 需要调用的方法名称
+                        "userLogin",                                // 需要调用的服务端方法名称
                         {                                           // \
                             username: textEditForUsername.text,     //  |--> 传给服务端的参数
                             password: textEditForPassword.text      //  |

@@ -876,7 +876,21 @@ void JQNetworkOverallTest::jqNetworkProcessorTest()
 
     QCOMPARE( myProcessor.availableSlots(), QSet< QString >( { "actionFlag" } ) );
 
-    auto test = [ & ](){ return myProcessor.handlePackage( nullptr, JQNetworkPackage::createPayloadTransportPackages( { }, "{\"key\":\"value\"}", { }, 0x1234 ).first() ); };
+    auto test = [ &myProcessor ]()
+    {
+        auto package = JQNetworkPackage::createPayloadTransportPackages(
+                    "actionFlag",
+                    "{\"key\":\"value\"}",
+                    { }, // empty appendData
+                    0x1234
+                ).first();
+        package->refreshPackage();
+
+        return myProcessor.handlePackage(
+                    nullptr,
+                    package
+                );
+    };
 
     QCOMPARE( test(), false );
 
