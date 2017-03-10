@@ -10,17 +10,15 @@
 #   GitHub: https://github.com/188080501/
 #
 
-QT       += core qml quick
+QT       += core
 
 TEMPLATE = app
 
 #JQNETWORK_COMPILE_MODE = SRC
-include( $$PWD/../../JQNetwork/JQNetwork.pri )
+include( $$PWD/../../../JQNetwork/JQNetwork.pri )
+
+HEADERS += \
+    $$PWD/cpp/ping.hpp
 
 SOURCES += \
     $$PWD/cpp/main.cpp
-
-HEADERS +=
-
-RESOURCES += \
-    $$PWD/qml/qml.qrc

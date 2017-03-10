@@ -10,7 +10,15 @@
 #   GitHub: https://github.com/188080501/
 #
 
-TEMPLATE = subdirs
+QT       += core
 
-SUBDIRS += PongDemo
-SUBDIRS += PingDemo
+TEMPLATE = app
+
+#JQNETWORK_COMPILE_MODE = SRC
+include( $$PWD/../../../JQNetwork/JQNetwork.pri )
+
+HEADERS += \
+    $$PWD/cpp/myserver.hpp
+
+SOURCES += \
+    $$PWD/cpp/main.cpp

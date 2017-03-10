@@ -20,6 +20,7 @@
 #include <QVariantMap>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QFileInfo>
 
 // JQNetwork lib import
 #include <JQNetworkServer>
@@ -67,7 +68,7 @@ QSet< QString > JQNetworkProcessor::availableSlots()
                         );
                 if ( !invokeMethodReply )
                 {
-                    qDebug() << "JQNetworkProcessor: invokeMethod slot error:" << methodName;
+                    qDebug() << "JQNetworkProcessor::availableSlots: invokeMethod slot error:" << methodName;
                 }
 
                 if ( !send.isEmpty() )
@@ -78,7 +79,7 @@ QSet< QString > JQNetworkProcessor::availableSlots()
                             );
                     if ( !replyReply )
                     {
-                        qDebug() << "JQNetworkProcessor: replyPayloadData error";
+                        qDebug() << "JQNetworkProcessor::availableSlots: replyPayloadData error";
                     }
                 }
             };
@@ -97,7 +98,57 @@ QSet< QString > JQNetworkProcessor::availableSlots()
                         );
                 if ( !invokeMethodReply )
                 {
-                    qDebug() << "JQNetworkProcessor: invokeMethod slot error:" << methodName;
+                    qDebug() << "JQNetworkProcessor::availableSlots: invokeMethod slot error:" << methodName;
+                }
+            };
+        }
+        else if ( slotString == "(QFileInfo,QVariantMap&):(received,send)" )
+        {
+            onpackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &connect, const auto &package)
+            {
+                const auto &received = QFileInfo( package->localFilePath() );
+                QVariantMap send;
+
+                const auto &&invokeMethodReply = QMetaObject::invokeMethod(
+                            this,
+                            methodName.data(),
+                            Qt::DirectConnection,
+                            Q_ARG( QFileInfo, received ),
+                            Q_ARG( QVariantMap &, send )
+                        );
+                if ( !invokeMethodReply )
+                {
+                    qDebug() << "JQNetworkProcessor::availableSlots: invokeMethod slot error:" << methodName;
+                }
+
+                if ( !send.isEmpty() )
+                {
+                    const auto &&replyReply = connect->replyPayloadData(
+                                package->randomFlag(),
+                                QJsonDocument( QJsonObject::fromVariantMap( send ) ).toJson( QJsonDocument::Compact )
+                            );
+                    if ( !replyReply )
+                    {
+                        qDebug() << "JQNetworkProcessor::availableSlots: replyPayloadData error";
+                    }
+                }
+            };
+        }
+        else if ( slotString == "(QFileInfo):(received)" )
+        {
+            onpackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &, const auto &package)
+            {
+                const auto &received = QFileInfo( package->localFilePath() );
+
+                const auto &&invokeMethodReply = QMetaObject::invokeMethod(
+                            this,
+                            methodName.data(),
+                            Qt::DirectConnection,
+                            Q_ARG( QFileInfo, received )
+                        );
+                if ( !invokeMethodReply )
+                {
+                    qDebug() << "JQNetworkProcessor::availableSlots: invokeMethod slot error:" << methodName;
                 }
             };
         }
@@ -112,7 +163,7 @@ QSet< QString > JQNetworkProcessor::availableSlots()
                         );
                 if ( !invokeMethodReply )
                 {
-                    qDebug() << "JQNetworkProcessor: invokeMethod slot error:" << methodName;
+                    qDebug() << "JQNetworkProcessor::availableSlots: invokeMethod slot error:" << methodName;
                 }
             };
         }
@@ -140,12 +191,12 @@ bool JQNetworkProcessor::handlePackage(const JQNetworkConnectPointer &connect, c
 
     *currentThreadConnect = connect;
 
-    const auto &&actionFlag = package->metaDataActionFlag();
+    const auto &&targetActionFlag = package->targetActionFlag();
 
-    auto itForCallback = onpackageReceivedCallbacks_.find( actionFlag );
+    auto itForCallback = onpackageReceivedCallbacks_.find( targetActionFlag );
     if ( itForCallback == onpackageReceivedCallbacks_.end() )
     {
-        qDebug() << "JQNetworkProcessor::onPackageReceived: expectation actionFlag:" << actionFlag;
+        qDebug() << "JQNetworkProcessor::onPackageReceived: expectation targetActionFlag:" << targetActionFlag;
         *currentThreadConnect = nullptr;
         return false;
     }

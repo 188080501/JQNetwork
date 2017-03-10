@@ -10,14 +10,7 @@
 #   GitHub: https://github.com/188080501/
 #
 
-QT       += core
+TEMPLATE = subdirs
 
-TEMPLATE = app
-
-#JQNETWORK_COMPILE_MODE = SRC
-include( $$PWD/../../JQNetwork/JQNetwork.pri )
-
-HEADERS +=
-
-SOURCES += \
-    $$PWD/cpp/main.cpp
+SUBDIRS += FileTransferServerDemo
+SUBDIRS += FileTransferClientDemo

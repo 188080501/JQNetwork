@@ -114,7 +114,7 @@ JQNetworkPackageSharedPointer JQNetworkPackage::readPackage(QByteArray &rawData)
 }
 
 QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createPayloadTransportPackages(
-        const QString &targerActionFlag,
+        const QString &targetActionFlag,
         const QByteArray &payloadData,
         const QVariantMap &appendData,
         const qint32 &randomFlag,
@@ -126,11 +126,11 @@ QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createPayloadTransportP
 
     QByteArray metaData;
 
-    if ( !targerActionFlag.isEmpty() || !appendData.isEmpty() )
+    if ( !targetActionFlag.isEmpty() || !appendData.isEmpty() )
     {
         QVariantMap metaDataInVariantMap;
 
-        metaDataInVariantMap[ "targerActionFlag" ] = targerActionFlag;
+        metaDataInVariantMap[ "targetActionFlag" ] = targetActionFlag;
         metaDataInVariantMap[ "appendData" ] = appendData;
 
         metaData = QJsonDocument( QJsonObject::fromVariantMap( metaDataInVariantMap ) ).toJson( QJsonDocument::Compact );
@@ -241,7 +241,7 @@ QList< JQNetworkPackageSharedPointer > JQNetworkPackage::createPayloadTransportP
 }
 
 JQNetworkPackageSharedPointer JQNetworkPackage::createFileTransportPackage(
-        const QString &targerActionFlag,
+        const QString &targetActionFlag,
         const QFileInfo &fileInfo,
         const QByteArray &fileData,
         const QVariantMap &appendData,
@@ -256,7 +256,7 @@ JQNetworkPackageSharedPointer JQNetworkPackage::createFileTransportPackage(
     {
         QVariantMap metaDataInVariantMap;
 
-        metaDataInVariantMap[ "targerActionFlag" ] = targerActionFlag;
+        metaDataInVariantMap[ "targetActionFlag" ] = targetActionFlag;
         metaDataInVariantMap[ "appendData" ] = appendData;
 
         if ( fileInfo.isFile() )

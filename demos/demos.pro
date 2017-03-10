@@ -13,7 +13,6 @@
 TEMPLATE = subdirs
 
 SUBDIRS += PingPongDemo
-SUBDIRS += LanNodeSearchDemo
 SUBDIRS += FileTransferDemo
-SUBDIRS += LoginDemoForClient
-SUBDIRS += LoginDemoForServer
+SUBDIRS += LanNodeSearchDemo
+SUBDIRS += UserLoginDemo

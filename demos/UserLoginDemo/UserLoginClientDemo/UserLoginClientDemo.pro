@@ -10,7 +10,15 @@
 #   GitHub: https://github.com/188080501/
 #
 
-TEMPLATE = subdirs
+QT       += core qml quick
 
-SUBDIRS += PongDemo
-SUBDIRS += PingDemo
+TEMPLATE = app
+
+#JQNETWORK_COMPILE_MODE = SRC
+include( $$PWD/../../../JQNetwork/JQNetwork.pri )
+
+SOURCES += \
+    $$PWD/cpp/main.cpp
+
+RESOURCES += \
+    $$PWD/qml/qml.qrc

@@ -12,5 +12,5 @@
 
 TEMPLATE = subdirs
 
-SUBDIRS += PongDemo
-SUBDIRS += PingDemo
+SUBDIRS += UserLoginServerDemo
+SUBDIRS += UserLoginClientDemo
