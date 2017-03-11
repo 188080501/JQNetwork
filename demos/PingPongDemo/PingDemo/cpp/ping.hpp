@@ -3,6 +3,8 @@
 
 // Qt lib import
 #include <QTimer>
+#include <QJsonObject>
+#include <QJsonDocument>
 
 // JQNetwork lib improt
 #include <JQNetwork>
@@ -60,7 +62,9 @@ public:
         const auto &&randomFlag = client_->sendPayloadData( // 发送数据，返回0表示失败，其余数表示发送成功
                     "127.0.0.1", // 服务端IP
                     34543, // 服务端端口
-                    "Ping",
+                    "pong",
+                    QJsonDocument( QJsonObject::fromVariantMap( QVariantMap( { { "ping", "ping" } } ) ) ).toJson( QJsonDocument::Compact ),
+                    { }, // empty appendData
                     std::bind( &Ping::onPingSucceed, this, std::placeholders::_1, std::placeholders::_2 ),
                     std::bind( &Ping::onPingFail, this, std::placeholders::_1  )
                 );

@@ -614,7 +614,7 @@ void JQNetworkConnect::onFileDataTransportPackageReceived(const JQNetworkPackage
         file.clear();
 
 #ifdef _POSIX_VERSION
-        utimbuf timeBuf = { firstPackage->fileLastReadTime().toTime_t(), firstPackage->fileLastModifiedTime().toTime_t() };
+        utimbuf timeBuf = { (time_t)firstPackage->fileLastReadTime().toTime_t(), (time_t)firstPackage->fileLastModifiedTime().toTime_t() };
         utime( firstPackage->localFilePath().toLatin1().data(), &timeBuf );
 #endif
 

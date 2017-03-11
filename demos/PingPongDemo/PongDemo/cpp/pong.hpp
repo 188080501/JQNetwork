@@ -5,8 +5,10 @@
 #include <JQNetwork>
 
 // Pong 为服务端
-class Pong
+class Pong: public JQNetworkProcessor
 {
+    Q_OBJECT
+
 public:
     Pong() = default;
 
@@ -18,8 +20,8 @@ public:
         const quint16 &&listenPort = 34543; // 监听端口
         server_ = JQNetworkServer::createServer( listenPort );
 
-        // 设置接收到数据包后的回调
-        server_->serverSettings()->packageReceivedCallback = std::bind( &Pong::onPackageReceived, this, std::placeholders::_1, std::placeholders::_2 );
+        // 注册当前类
+        server_->registerProcessor( this );
 
         // 初始化服务端
         if ( !server_->begin() )
@@ -33,15 +35,17 @@ public:
         return true;
     }
 
-    void onPackageReceived(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package)
+    // 用于处理的函数必须是槽函数
+public slots:
+    void pong(const QVariantMap &received, QVariantMap &send)
     {
         // 回调会发生在一个专用的线程，请注意线程安全
 
         // 打印客户端发送的数据
-        qDebug() << "Pong: received data:" << package->payloadData() << ", randomFlag:" << package->randomFlag();
+        qDebug() << "Pong: received data:" << received;
 
         // 返回一个数据，需要指定 randomFlag 以告知客户端
-        connect->replyPayloadData( package->randomFlag(), "Pong" );
+        send[ "pong" ] = "pong";
     }
 
 private:
