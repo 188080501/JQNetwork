@@ -19,13 +19,11 @@ public:
 
     bool begin()
     {
-        timer_.setInterval( 500 );
-        timer_.setSingleShot( true );
-        QObject::connect( &timer_, &QTimer::timeout, std::bind( &Ping::ping, this ) );
-
         // 创建一个客户端
         client_ = JQNetworkClient::createClient();
 
+        client_->clientSettings()->connectToHostErrorCallback = std::bind( &Ping::connectToHostErrorCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3 );
+        client_->clientSettings()->connectToHostTimeoutCallback = std::bind( &Ping::connectToHostTimeoutCallback, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3 );
         client_->clientSettings()->connectToHostSucceedCallback = std::bind( &Ping::onConnectSucceed, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3 );
 
         if ( !client_->begin() )
@@ -34,13 +32,37 @@ public:
             return false;
         }
 
-        // 创建一个连接，指向某个服务端，并保持长连接
-        // 创建只需一次，若没连接成功内部会自动维护重连，断开后也会自动重连
+        // 预创建一个连接，指向某个服务端，并保持长连接
         client_->createConnect( "127.0.0.1", 34543 );
+
+        // 设置定时器，定时发送数据
+        timer_.setInterval( 1000 );
+        timer_.setSingleShot( true );
+        QObject::connect( &timer_, &QTimer::timeout, std::bind( &Ping::ping, this ) );
 
         qDebug() << "Ping: begin succeed";
 
+        timer_.start();
+
         return true;
+    }
+
+    // 连接到服务端超时后的回调
+    void connectToHostErrorCallback(const JQNetworkConnectPointer & /*connect*/, const QString &hostName, const quint16 &port)
+    {
+        // 回调会发生在一个专用的线程，请注意线程安全
+
+        // 打印谁被连接成功了
+        qDebug() << "Client: connect to server error:" << hostName << port;
+    }
+
+    // 连接到服务端错误后的回调
+    void connectToHostTimeoutCallback(const JQNetworkConnectPointer & /*connect*/, const QString &hostName, const quint16 &port)
+    {
+        // 回调会发生在一个专用的线程，请注意线程安全
+
+        // 打印谁被连接成功了
+        qDebug() << "Client: connect to server timeout:" << hostName << port;
     }
 
     // 连接到服务端后的回调
@@ -50,15 +72,12 @@ public:
 
         // 打印谁被连接成功了
         qDebug() << "Client: connect to server succeed:" << hostName << port;
-
-        // 开启 PingPong 测试的定时器，循环发送
-        // 因为这里在一个新的线程，所以通过 invokeMethod 去调用 start
-        QMetaObject::invokeMethod( &timer_, "start" );
     }
 
     // Ping 测试
     void ping()
     {
+        // 会自动检查连接，如果有则使用已经有的链接，没有则创建一个新的（以阻塞方式创建）
         const auto &&randomFlag = client_->sendPayloadData( // 发送数据，返回0表示失败，其余数表示发送成功
                     "127.0.0.1", // 服务端IP
                     34543, // 服务端端口
@@ -71,16 +90,21 @@ public:
 
         if ( !randomFlag )
         {
+            // 发送失败
+
             qDebug() << "Ping: send fail";
+            QMetaObject::invokeMethod( &timer_, "start" );
         }
         else
         {
+            // 发送成功
+
             qDebug() << "Ping: send succeed, randomFlag:" << randomFlag;
             ++sendSucceedCount_;
         }
     }
 
-     // 成功接收回复的数据时的回调
+     // 发送成，并且成功接收回复的数据时的回调
     void onPingSucceed(const JQNetworkConnectPointer & /*connect*/, const JQNetworkPackageSharedPointer &package)
     {
         // 回调会发生在一个专用的线程，请注意线程安全
@@ -97,22 +121,24 @@ public:
             // 到达特定数量后，停止 PingPong 测试的循环发送
             // 因为这里在一个新的线程，所以通过 invokeMethod 去调用 stop
             QMetaObject::invokeMethod( &timer_, "stop" );
+            return;
         }
-        else
-        {
-            // 成功接收回复后，再发出Ping
-            // 因为这里在一个新的线程，所以通过 invokeMethod 去调用 stop
-            QMetaObject::invokeMethod( &timer_, "start" );
-        }
+
+        // 循环发送
+        // 因为这里在一个新的线程，所以通过 invokeMethod 去调用 start
+        QMetaObject::invokeMethod( &timer_, "start" );
     }
 
-    // 未能成功接收回复的数据时的回调
+    // 发送成功，但是未能成功接收回复的数据时的回调
     void onPingFail(const JQNetworkConnectPointer & /*connect*/)
     {
         // 回调会发生在一个专用的线程，请注意线程安全
 
         qDebug() << "Ping: received fail";
-        qApp->quit();
+
+        // 循环发送
+        // 因为这里在一个新的线程，所以通过 invokeMethod 去调用 start
+        QMetaObject::invokeMethod( &timer_, "start" );
     }
 
 private:

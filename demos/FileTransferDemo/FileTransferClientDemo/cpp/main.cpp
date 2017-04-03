@@ -23,6 +23,7 @@ int main(int argc, char *argv[])
     }
     qDebug() << "Client: begin succeed";
 
+    // 以阻塞方式创建连接
     qDebug() << "Client: waitForCreateConnect:" << client->waitForCreateConnect( "127.0.0.1", 26432 );
 
     // 创建一个测试文件
