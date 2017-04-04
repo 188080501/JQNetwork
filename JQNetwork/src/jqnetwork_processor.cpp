@@ -50,128 +50,217 @@ QSet< QString > JQNetworkProcessor::availableSlots()
             continue;
         }
 
-        const auto &&slotString = QString( "(%1):(%2)" ).arg( QString( method.parameterTypes().join( "," ) ), QString( method.parameterNames().join( "," ) ) );
+        QSharedPointer< std::function< JQNetworkVoidSharedPointer() > > receiveArgumentPreparer;
+        QSharedPointer< std::function< QGenericArgument(const JQNetworkVoidSharedPointer &sendArg, const JQNetworkPackageSharedPointer &package) > > receiveArgumentMaker;
 
-        if ( slotString == "(QVariantMap,QVariantMap&):(received,send)" )
+        QSharedPointer< std::function< JQNetworkVoidSharedPointer() > > sendArgumentPreparer;
+        QSharedPointer< std::function< QGenericArgument(const JQNetworkVoidSharedPointer &sendArg) > > sendArgumentMaker;
+        QSharedPointer< std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package, const JQNetworkVoidSharedPointer &sendArg) > > sendArgumentAnswer;
+
+        if ( method.parameterTypes().size() >= 1 )
         {
-            onpackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &connect, const auto &package)
+            const auto &&currentSum = QString( "%1:%2" ).arg( QString( method.parameterTypes()[ 0 ] ), QString( method.parameterNames()[ 0 ] ) );
+
+            if ( currentSum == "QByteArray:received" )
             {
-                QVariantMap received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
-                QVariantMap send;
-
-                const auto &&invokeMethodReply = QMetaObject::invokeMethod(
-                            this,
-                            methodName.data(),
-                            Qt::DirectConnection,
-                            Q_ARG( QVariantMap, received ),
-                            Q_ARG( QVariantMap &, send )
-                        );
-                if ( !invokeMethodReply )
+                receiveArgumentPreparer.reset( new std::function< JQNetworkVoidSharedPointer() >
+                                            ( [ ]()
                 {
-                    qDebug() << "JQNetworkProcessor::availableSlots: invokeMethod slot error:" << methodName;
-                }
-
-                if ( !send.isEmpty() )
+                    return JQNetworkVoidSharedPointer( new QByteArray, &JQNetworkProcessor::deleteByteArray );
+                } ) );
+                receiveArgumentMaker.reset( new std::function< QGenericArgument(const JQNetworkVoidSharedPointer &sendArg, const JQNetworkPackageSharedPointer &package) >
+                                            ( [ ](const auto &sendArg, const auto &package)
                 {
+                    ( *( QByteArray * )sendArg.get() ) = package->payloadData();
+                    return Q_ARG( const QByteArray &, *( const QByteArray * )sendArg.get() );
+                } ) );
+            }
+            else if ( currentSum == "QVariantMap:received" )
+            {
+                receiveArgumentPreparer.reset( new std::function< JQNetworkVoidSharedPointer() >
+                                            ( [ ]()
+                {
+                    return JQNetworkVoidSharedPointer( new QVariantMap, &JQNetworkProcessor::deleteVariantMap );
+                } ) );
+                receiveArgumentMaker.reset( new std::function< QGenericArgument(const JQNetworkVoidSharedPointer &sendArg, const JQNetworkPackageSharedPointer &package) >
+                                            ( [ ](const auto &sendArg, const auto &package)
+                {
+                    ( *( QVariantMap * )sendArg.get() ) = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
+                    return Q_ARG( const QVariantMap &, *( const QVariantMap * )sendArg.get() );
+                } ) );
+            }
+            else if ( currentSum == "QFileInfo:received" )
+            {
+                receiveArgumentPreparer.reset( new std::function< JQNetworkVoidSharedPointer() >
+                                            ( [ ]()
+                {
+                    return JQNetworkVoidSharedPointer( new QFileInfo, &JQNetworkProcessor::deleteFileInfo);
+                } ) );
+                receiveArgumentMaker.reset( new std::function< QGenericArgument(const JQNetworkVoidSharedPointer &sendArg, const JQNetworkPackageSharedPointer &package) >
+                                            ( [ ](const auto &sendArg, const auto &package)
+                {
+                    ( *( QFileInfo * )sendArg.get() ) = QFileInfo( package->localFilePath() );
+                    return Q_ARG( const QFileInfo &, *( const QFileInfo * )sendArg.get() );
+                } ) );
+            }
+            else
+            {
+                qDebug() << "JQNetworkProcessor::availableSlots: Unknow argument:" << currentSum;
+            }
+        }
+
+        if ( method.parameterTypes().size() >= 2 )
+        {
+            const auto &&currentSum = QString( "%1:%2" ).arg( QString( method.parameterTypes()[ 1 ] ), QString( method.parameterNames()[ 1 ] ) );
+
+            if ( currentSum == "QByteArray&:send" )
+            {
+                sendArgumentPreparer.reset( new std::function< JQNetworkVoidSharedPointer() >
+                                            ( [ ]()
+                {
+                    return JQNetworkVoidSharedPointer( new QByteArray, &JQNetworkProcessor::deleteByteArray );
+                } ) );
+                sendArgumentMaker.reset( new std::function< QGenericArgument(const JQNetworkVoidSharedPointer &sendArg) >
+                                         ( [ ](const auto &sendArg)
+                {
+                    return Q_ARG( QByteArray &, ( QByteArray & )*( QByteArray * )sendArg.get() );
+                } ) );
+                sendArgumentAnswer.reset( new std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package, const JQNetworkVoidSharedPointer &sendArg) >
+                                          ( [ ](const auto &connect, const auto &package, const auto &sendArg)
+                {
+                    if ( !connect )
+                    {
+                        qDebug() << "JQNetworkProcessor::availableSlots: connect is null";
+                        return;
+                    }
+
                     const auto &&replyReply = connect->replyPayloadData(
                                 package->randomFlag(),
-                                QJsonDocument( QJsonObject::fromVariantMap( send ) ).toJson( QJsonDocument::Compact )
+                                *( QByteArray * )sendArg.get()
                             );
                     if ( !replyReply )
                     {
                         qDebug() << "JQNetworkProcessor::availableSlots: replyPayloadData error";
                     }
-                }
-            };
-        }
-        else if ( slotString == "(QVariantMap):(received)" )
-        {
-            onpackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &, const auto &package)
+                } ) );
+            }
+            else if ( currentSum == "QVariantMap&:send" )
             {
-                QVariantMap received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
-
-                const auto &&invokeMethodReply = QMetaObject::invokeMethod(
-                            this,
-                            methodName.data(),
-                            Qt::DirectConnection,
-                            Q_ARG( QVariantMap, received )
-                        );
-                if ( !invokeMethodReply )
+                sendArgumentPreparer.reset( new std::function< JQNetworkVoidSharedPointer() >
+                                            ( [ ]()
                 {
-                    qDebug() << "JQNetworkProcessor::availableSlots: invokeMethod slot error:" << methodName;
-                }
-            };
-        }
-        else if ( slotString == "(QFileInfo,QVariantMap&):(received,send)" )
-        {
-            onpackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &connect, const auto &package)
-            {
-                const auto &received = QFileInfo( package->localFilePath() );
-                QVariantMap send;
-
-                const auto &&invokeMethodReply = QMetaObject::invokeMethod(
-                            this,
-                            methodName.data(),
-                            Qt::DirectConnection,
-                            Q_ARG( QFileInfo, received ),
-                            Q_ARG( QVariantMap &, send )
-                        );
-                if ( !invokeMethodReply )
+                    return JQNetworkVoidSharedPointer( new QVariantMap, &JQNetworkProcessor::deleteVariantMap );
+                } ) );
+                sendArgumentMaker.reset( new std::function< QGenericArgument(const JQNetworkVoidSharedPointer &sendArg) >
+                                         ( [ ](const auto &sendArg)
                 {
-                    qDebug() << "JQNetworkProcessor::availableSlots: invokeMethod slot error:" << methodName;
-                }
-
-                if ( !send.isEmpty() )
+                    return Q_ARG( QVariantMap &, ( QVariantMap & )*( QVariantMap * )sendArg.get() );
+                } ) );
+                sendArgumentAnswer.reset( new std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package, const JQNetworkVoidSharedPointer &sendArg) >
+                                          ( [ ](const auto &connect, const auto &package, const auto &sendArg)
                 {
+                    if ( !connect )
+                    {
+                        qDebug() << "JQNetworkProcessor::availableSlots: connect is null";
+                        return;
+                    }
+
                     const auto &&replyReply = connect->replyPayloadData(
                                 package->randomFlag(),
-                                QJsonDocument( QJsonObject::fromVariantMap( send ) ).toJson( QJsonDocument::Compact )
+                                QJsonDocument( QJsonObject::fromVariantMap( *( QVariantMap * )sendArg.get() ) ).toJson( QJsonDocument::Compact )
                             );
                     if ( !replyReply )
                     {
                         qDebug() << "JQNetworkProcessor::availableSlots: replyPayloadData error";
                     }
-                }
-            };
-        }
-        else if ( slotString == "(QFileInfo):(received)" )
-        {
-            onpackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &, const auto &package)
+                } ) );
+            }
+            else if ( currentSum == "QFileInfo&:send" )
             {
-                const auto &received = QFileInfo( package->localFilePath() );
+                sendArgumentPreparer.reset( new std::function< JQNetworkVoidSharedPointer() >
+                                            ( [ ]()
+                {
+                    return JQNetworkVoidSharedPointer( new QFileInfo, &JQNetworkProcessor::deleteFileInfo );
+                } ) );
+                sendArgumentMaker.reset( new std::function< QGenericArgument(const JQNetworkVoidSharedPointer &sendArg) >
+                                         ( [ ](const auto &sendArg)
+                {
+                    return Q_ARG( QFileInfo &, ( QFileInfo & )*( QFileInfo * )sendArg.get() );
+                } ) );
+                sendArgumentAnswer.reset( new std::function< void(const JQNetworkConnectPointer &connect, const JQNetworkPackageSharedPointer &package, const JQNetworkVoidSharedPointer &sendArg) >
+                                          ( [ ](const auto &connect, const auto &package, const auto &sendArg)
+                {
+                    if ( !connect )
+                    {
+                        qDebug() << "JQNetworkProcessor::availableSlots: connect is null";
+                        return;
+                    }
 
-                const auto &&invokeMethodReply = QMetaObject::invokeMethod(
-                            this,
-                            methodName.data(),
-                            Qt::DirectConnection,
-                            Q_ARG( QFileInfo, received )
-                        );
-                if ( !invokeMethodReply )
-                {
-                    qDebug() << "JQNetworkProcessor::availableSlots: invokeMethod slot error:" << methodName;
-                }
-            };
-        }
-        else if ( slotString == "():()" )
-        {
-            onpackageReceivedCallbacks_[ methodName ] = [ this, methodName ](const auto &, const auto &)
+                    const auto &sendFileInfo = *( QFileInfo * )sendArg.get();
+
+                    if ( !sendFileInfo.isFile() )
+                    {
+                        qDebug() << "JQNetworkProcessor::availableSlots: not file:" << sendFileInfo.filePath();
+                        return;
+                    }
+
+                    const auto &&replyReply = connect->replyFile(
+                                package->randomFlag(),
+                                sendFileInfo
+                            );
+                    if ( !replyReply )
+                    {
+                        qDebug() << "JQNetworkProcessor::availableSlots: replyPayloadData error";
+                    }
+                } ) );
+            }
+            else
             {
-                const auto &&invokeMethodReply = QMetaObject::invokeMethod(
-                            this,
-                            methodName.data(),
-                            Qt::DirectConnection
-                        );
-                if ( !invokeMethodReply )
-                {
-                    qDebug() << "JQNetworkProcessor::availableSlots: invokeMethod slot error:" << methodName;
-                }
-            };
+                qDebug() << "JQNetworkProcessor::availableSlots: Unknow argument:" << currentSum;
+            }
         }
-        else
+
+        onpackageReceivedCallbacks_[ methodName ] =
+                [
+                    this,
+                    methodName,
+                    receiveArgumentPreparer,
+                    receiveArgumentMaker,
+                    sendArgumentPreparer,
+                    sendArgumentMaker,
+                    sendArgumentAnswer
+                ]
+                (const auto &connect, const auto &package)
         {
-            qDebug() << "JQNetworkProcessor::availableSlots: unknow parameter type:" << slotString;
-            continue;
-        }
+            JQNetworkVoidSharedPointer receiveArg;
+            if ( receiveArgumentPreparer )
+            {
+                receiveArg = ( *receiveArgumentPreparer )();
+            }
+
+            JQNetworkVoidSharedPointer sendArg;
+            if ( sendArgumentPreparer )
+            {
+                sendArg = ( *sendArgumentPreparer )();
+            }
+
+            const auto &&invokeMethodReply = QMetaObject::invokeMethod(
+                        this,
+                        methodName.data(),
+                        Qt::DirectConnection,
+                        ( ( receiveArgumentMaker ) ? ( ( *receiveArgumentMaker )( receiveArg, package ) ) : ( QGenericArgument() ) ),
+                        ( ( sendArgumentMaker ) ? ( ( *sendArgumentMaker )( sendArg ) ) : ( QGenericArgument() ) )
+                    );
+            if ( !invokeMethodReply )
+            {
+                qDebug() << "JQNetworkProcessor::availableSlots: invokeMethod slot error:" << methodName;
+            }
+
+            if ( sendArgumentAnswer )
+            {
+                ( *sendArgumentAnswer )( connect, package, sendArg );
+            }
+        };
 
         availableSlots_.insert( methodName );
     }
@@ -227,4 +316,9 @@ JQNetworkConnectPointer JQNetworkProcessor::currentThreadConnect()
     }
 
     return *currentThreadConnect;
+}
+
+void JQNetworkProcessor::deleteFileInfo(QFileInfo *ptr)
+{
+    delete ptr;
 }

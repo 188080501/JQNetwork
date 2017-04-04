@@ -11,6 +11,7 @@
 
 // Project lib import
 #include "myprocessor.hpp"
+#include "myprocessor2.hpp"
 
 void JQNetworkOverallTest::jqNetworkThreadPoolTest()
 {
@@ -71,7 +72,7 @@ void JQNetworkOverallTest::jqNetworkThreadPoolBenchmark()
         }
     }
 
-    qDebug() << number;
+//    qDebug() << number;
 
     if ( QThreadPool::globalInstance()->maxThreadCount() > 1 )
     {
@@ -97,7 +98,7 @@ void JQNetworkOverallTest::jqNetworkThreadPoolBenchmark2()
         }
     }
 
-    qDebug() << number;
+//    qDebug() << number;
     QCOMPARE( number, 90000 );
 }
 
@@ -105,13 +106,13 @@ void JQNetworkOverallTest::jqNetworkNodeMarkTest()
 {
     JQNetworkNodeMark nodeMark( "test" );
 
-    qDebug() << "applicationStartTime:" << nodeMark.applicationStartTime();
-    qDebug() << "applicationFilePath:" << nodeMark.applicationFilePath();
-    qDebug() << "localHostName:" << nodeMark.localHostName();
-    qDebug() << "nodeMarkCreatedTime:" << nodeMark.nodeMarkCreatedTime();
-    qDebug() << "nodeMarkClassAddress:" << nodeMark.nodeMarkClassAddress();
-    qDebug() << "dutyMark:" << nodeMark.dutyMark();
-    qDebug() << "nodeMarkSummary:" << nodeMark.nodeMarkSummary();
+//    qDebug() << "applicationStartTime:" << nodeMark.applicationStartTime();
+//    qDebug() << "applicationFilePath:" << nodeMark.applicationFilePath();
+//    qDebug() << "localHostName:" << nodeMark.localHostName();
+//    qDebug() << "nodeMarkCreatedTime:" << nodeMark.nodeMarkCreatedTime();
+//    qDebug() << "nodeMarkClassAddress:" << nodeMark.nodeMarkClassAddress();
+//    qDebug() << "dutyMark:" << nodeMark.dutyMark();
+//    qDebug() << "nodeMarkSummary:" << nodeMark.nodeMarkSummary();
 
     QCOMPARE( nodeMark.applicationStartTime() > 0, true );
     QCOMPARE( nodeMark.applicationFilePath().isEmpty(), false );
@@ -140,11 +141,31 @@ void JQNetworkOverallTest::jqNetworkConnectTest()
     bool flag4 = false;
     bool flag5 = false;
 
-    connectSettings->connectToHostErrorCallback   = [ & ]( auto ){ flag1 = true; qDebug( "connectToHostErrorCallback" ); };
-    connectSettings->connectToHostTimeoutCallback = [ & ]( auto ){ flag2 = true; qDebug( "connectToHostTimeoutCallback" ); };
-    connectSettings->connectToHostSucceedCallback = [ & ]( auto ){ flag3 = true; qDebug( "connectToHostSucceedCallback" ); };
-    connectSettings->remoteHostClosedCallback     = [ & ]( auto ){ flag4 = true; qDebug( "remoteHostClosedCallback" ); };
-    connectSettings->readyToDeleteCallback        = [ & ]( auto ){ flag5 = true; qDebug( "readyToDeleteCallback" ); };
+    connectSettings->connectToHostErrorCallback   = [ & ](const auto &)
+    {
+        flag1 = true;
+//        qDebug( "connectToHostErrorCallback" );
+    };
+    connectSettings->connectToHostTimeoutCallback = [ & ](const auto &)
+    {
+        flag2 = true;
+//        qDebug( "connectToHostTimeoutCallback" );
+    };
+    connectSettings->connectToHostSucceedCallback = [ & ](const auto &)
+    {
+        flag3 = true;
+//        qDebug( "connectToHostSucceedCallback" );
+    };
+    connectSettings->remoteHostClosedCallback     = [ & ](const auto &)
+    {
+        flag4 = true;
+//        qDebug( "remoteHostClosedCallback" );
+    };
+    connectSettings->readyToDeleteCallback        = [ & ](const auto &)
+    {
+        flag5 = true;
+//        qDebug( "readyToDeleteCallback" );
+    };
 
     {
         JQNetworkConnect::createConnect(
@@ -547,7 +568,7 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest()
             const auto &payloadTotalSize
         )
     {
-        qDebug() << "server packageSendingCallback:" << randomFlag << payloadCurrentIndex << payloadCurrentSize << payloadTotalSize;
+//        qDebug() << "server packageSendingCallback:" << randomFlag << payloadCurrentIndex << payloadCurrentSize << payloadTotalSize;
 
         serverFlag += QString( "server packageSendingCallback: %1 %2 %3 %4\n" ).arg( randomFlag ).arg( payloadCurrentIndex ).arg( payloadCurrentSize ).arg( payloadTotalSize );
 
@@ -561,7 +582,7 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest()
             const auto &payloadTotalSize
         )
     {
-        qDebug() << "server packageReceivingCallback:" << randomFlag << payloadCurrentIndex << payloadCurrentSize << payloadTotalSize;
+//        qDebug() << "server packageReceivingCallback:" << randomFlag << payloadCurrentIndex << payloadCurrentSize << payloadTotalSize;
 
         serverFlag += QString( "server packageReceivingCallback: %1 %2 %3 %4\n" ).arg( randomFlag ).arg( payloadCurrentIndex ).arg( payloadCurrentSize ).arg( payloadTotalSize );
 
@@ -576,7 +597,7 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest()
             const auto &package
         )
     {
-        qDebug() << "server packageReceivedCallback:" << package->payloadData();
+//        qDebug() << "server packageReceivedCallback:" << package->payloadData();
 
         serverFlag += QString( "server packageReceivedCallback: %1\n" ).arg( QString::fromLatin1( package->payloadData() ) );
 
@@ -600,7 +621,7 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest()
             const auto &payloadTotalSize
         )
     {
-        qDebug() << "client packageSendingCallback:" << hostName << port << randomFlag << payloadCurrentIndex << payloadCurrentSize << payloadTotalSize;
+//        qDebug() << "client packageSendingCallback:" << hostName << port << randomFlag << payloadCurrentIndex << payloadCurrentSize << payloadTotalSize;
 
         clientFlag += QString( "client packageSendingCallback: %1 %2 %3 %4 %5 %6\n" ).arg( hostName ).arg( port ).arg( randomFlag ).arg( payloadCurrentIndex ).arg( payloadCurrentSize ).arg( payloadTotalSize );
 
@@ -620,7 +641,7 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest()
             const auto &payloadTotalSize
         )
     {
-        qDebug() << "client packageReceivingCallback:" << hostName << port << randomFlag << payloadCurrentIndex << payloadCurrentSize << payloadTotalSize;
+//        qDebug() << "client packageReceivingCallback:" << hostName << port << randomFlag << payloadCurrentIndex << payloadCurrentSize << payloadTotalSize;
 
         clientFlag += QString( "client packageReceivingCallback: %1 %2 %3 %4 %5 %6\n" ).arg( hostName ).arg( port ).arg( randomFlag ).arg( payloadCurrentIndex ).arg( payloadCurrentSize ).arg( payloadTotalSize );
 
@@ -633,7 +654,7 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest()
             const auto &package
         )
     {
-        qDebug() << "client packageReceivedCallback:" << hostName << port << package->payloadData();
+//        qDebug() << "client packageReceivedCallback:" << hostName << port << package->payloadData();
 
         clientFlag += QString( "client packageReceivedCallback: %1 %2 %3\n" ).arg( hostName ).arg( port ).arg( QString::fromLatin1( package->payloadData() ) );
 
@@ -649,7 +670,7 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest()
                 const auto &package
             )
     {
-        qDebug() << "client succeedCallback:" << package->payloadData();
+//        qDebug() << "client succeedCallback:" << package->payloadData();
 
         clientFlag += QString( "client succeedCallback: %1\n" ).arg( QString::fromLatin1( package->payloadData() ) );
 
@@ -707,7 +728,7 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest2()
             const auto &payloadTotalSize
         )
     {
-        qDebug() << "server packageReceivingCallback:" << randomFlag << payloadCurrentIndex << payloadCurrentSize << payloadTotalSize;
+//        qDebug() << "server packageReceivingCallback:" << randomFlag << payloadCurrentIndex << payloadCurrentSize << payloadTotalSize;
 
         serverFlag += QString( "server packageReceivingCallback: %1 %2 %3 %4\n" ).arg( randomFlag ).arg( payloadCurrentIndex ).arg( payloadCurrentSize ).arg( payloadTotalSize );
     };
@@ -716,7 +737,7 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest2()
             const auto &package
         )
     {
-        qDebug() << "server packageReceivedCallback:" << package->payloadDataSize();
+//        qDebug() << "server packageReceivedCallback:" << package->payloadDataSize();
 
         QCOMPARE( package->payloadData(), testData );
 
@@ -738,7 +759,7 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest2()
             const auto &payloadTotalSize
         )
     {
-        qDebug() << "client packageSendingCallback:" << hostName << port << randomFlag << payloadCurrentIndex << payloadCurrentSize << payloadTotalSize;
+//        qDebug() << "client packageSendingCallback:" << hostName << port << randomFlag << payloadCurrentIndex << payloadCurrentSize << payloadTotalSize;
 
         clientFlag += QString( "client packageSendingCallback: %1 %2 %3 %4 %5 %6\n" ).arg( hostName ).arg( port ).arg( randomFlag ).arg( payloadCurrentIndex ).arg( payloadCurrentSize ).arg( payloadTotalSize );
     };
@@ -752,13 +773,13 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest2()
     QCOMPARE( client->sendPayloadData( "127.0.0.1", 34567, testData ), 1 );
 
     const auto &&elapsed = time.elapsed();
-    qDebug() << "elapsed:" << elapsed;
+//    qDebug() << "elapsed:" << elapsed;
     QCOMPARE( elapsed > 200, true );
 
     QThread::msleep( 8000 );
 
     const auto &&alreadyWrittenBytes = client->getConnect( "127.0.0.1", 34567 )->alreadyWrittenBytes();
-    qDebug() << "alreadyWrittenBytes:" << alreadyWrittenBytes;
+//    qDebug() << "alreadyWrittenBytes:" << alreadyWrittenBytes;
     QCOMPARE( alreadyWrittenBytes < 30554432, true );
 
     QCOMPARE( serverFlag.toLatin1().data(),
@@ -786,19 +807,19 @@ void JQNetworkOverallTest::jqNetworkLanTest()
     {
         auto lan = JQNetworkLan::createLan( QHostAddress( "228.12.23.34" ), 12345 );
 
-        lan->lanSettings()->lanNodeOnlineCallback = [ &flag1 ](const auto &lanNode)
+        lan->lanSettings()->lanNodeOnlineCallback = [ &flag1 ](const auto & /*lanNode*/)
         {
-            qDebug() << "lanNodeOnlineCallback" << lanNode.nodeMarkSummary;
+//            qDebug() << "lanNodeOnlineCallback" << lanNode.nodeMarkSummary;
             flag1 = true;
         };
-        lan->lanSettings()->lanNodeActiveCallback = [ &flag2 ](const auto &lanNode)
+        lan->lanSettings()->lanNodeActiveCallback = [ &flag2 ](const auto & /*lanNode*/)
         {
-            qDebug() << "lanNodeActiveCallback" << lanNode.nodeMarkSummary;
+//            qDebug() << "lanNodeActiveCallback" << lanNode.nodeMarkSummary;
             flag2 = true;
         };
-        lan->lanSettings()->lanNodeOfflineCallback = [ &flag3 ](const auto &lanNode)
+        lan->lanSettings()->lanNodeOfflineCallback = [ &flag3 ](const auto & /*lanNode*/)
         {
-            qDebug() << "lanNodeOfflineCallback" << lanNode.nodeMarkSummary;
+//            qDebug() << "lanNodeOfflineCallback" << lanNode.nodeMarkSummary;
             flag3 = true;
         };
 
@@ -830,10 +851,10 @@ void JQNetworkOverallTest::jqNetworkLanTest()
 
     QCOMPARE( lanAddressEntries.size() >= 1, true );
 
-    for ( const auto &addressEntries: lanAddressEntries )
-    {
-        qDebug() << "addressEntries:" << addressEntries.ip << addressEntries.netmask << addressEntries.ipSegment << addressEntries.isVmAddress;
-    }
+//    for ( const auto &addressEntries: lanAddressEntries )
+//    {
+//        qDebug() << "addressEntries:" << addressEntries.ip << addressEntries.netmask << addressEntries.ipSegment << addressEntries.isVmAddress;
+//    }
 
     {
         QVector< QSharedPointer< JQNetworkLan > > lans;
@@ -900,6 +921,73 @@ void JQNetworkOverallTest::jqNetworkProcessorTest()
 
     QCOMPARE( myProcessor.testData_, QVariantMap( { { "key", "value" } } ) );
     QCOMPARE( myProcessor.testData2_, QThread::currentThread() );
+}
+
+void JQNetworkOverallTest::jqNetworkProcessor2Test()
+{
+    QFile::remove( MyProcessor2::testFileInfo( 1 ).filePath() );
+    QFile::remove( MyProcessor2::testFileInfo( 2 ).filePath() );
+    QFile::remove( MyProcessor2::testFileInfo( 3 ).filePath() );
+    QFile::remove( MyProcessor2::testFileInfo( 4 ).filePath() );
+
+    QThread::sleep( 1 );
+
+    MyProcessor2::createTestFile( 1 );
+    MyProcessor2::createTestFile( 3 );
+
+    auto server = JQNetworkServer::createServer( 33445, QHostAddress::LocalHost, true );
+    auto processor = new MyProcessor2;
+
+    server->registerProcessor( processor );
+
+    auto filePathProvider = [ ](const auto &, const auto &, const auto &fileName)
+    {
+        return QString( "%1/JQNetworkOverallTest/%2" ).arg(
+                        QStandardPaths::writableLocation( QStandardPaths::TempLocation ),
+                        ( fileName == "myprocessor2_testfile1" ) ? ( "myprocessor2_testfile2" ) : ( "myprocessor2_testfile4" )
+                    );
+    };
+
+    server->connectSettings()->filePathProvider = filePathProvider;
+
+    QCOMPARE( server->availableProcessorMethodNames().size(), 12 );
+    QCOMPARE( server->begin(), true );
+
+    auto client = JQNetworkClient::createClient( true );
+
+    client->connectSettings()->filePathProvider = filePathProvider;
+
+    QCOMPARE( client->begin(), true );
+
+    QCOMPARE( client->waitForCreateConnect( "127.0.0.1", 33445 ), true );
+
+    int succeedCounter = 0;
+    auto succeedCallback = [ &succeedCounter ](const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer &){ ++succeedCounter; };
+
+    client->sendPayloadData( "127.0.0.1", 33445, "receivedByteArray", "test", { }, succeedCallback );
+    client->sendPayloadData( "127.0.0.1", 33445, "receivedByteArraySendByteArray", "test", { }, succeedCallback );
+    client->sendPayloadData( "127.0.0.1", 33445, "receivedByteArraySendVariantMap", "test", { }, succeedCallback );
+    client->sendPayloadData( "127.0.0.1", 33445, "receivedByteArraySendFile", "test", { }, succeedCallback );
+
+    client->sendPayloadData( "127.0.0.1", 33445, "receivedVariantMap", QJsonDocument( QJsonObject::fromVariantMap( QVariantMap( { { "key", "value" } } ) ) ).toJson( QJsonDocument::Compact ), { }, succeedCallback );
+    client->sendPayloadData( "127.0.0.1", 33445, "receivedVariantMapSendByteArray", QJsonDocument( QJsonObject::fromVariantMap( QVariantMap( { { "key", "value" } } ) ) ).toJson( QJsonDocument::Compact ), { }, succeedCallback );
+    client->sendPayloadData( "127.0.0.1", 33445, "receivedVariantMapSendVariantMap", QJsonDocument( QJsonObject::fromVariantMap( QVariantMap( { { "key", "value" } } ) ) ).toJson( QJsonDocument::Compact ), { }, succeedCallback );
+    client->sendPayloadData( "127.0.0.1", 33445, "receivedVariantMapSendFile", QJsonDocument( QJsonObject::fromVariantMap( QVariantMap( { { "key", "value" } } ) ) ).toJson( QJsonDocument::Compact ), { }, succeedCallback );
+
+    client->sendFileData( "127.0.0.1", 33445, "receiveFile", MyProcessor2::testFileInfo( 1 ), { }, succeedCallback );
+    client->sendFileData( "127.0.0.1", 33445, "receiveFileSendByteArray", MyProcessor2::testFileInfo( 1 ), { }, succeedCallback );
+    client->sendFileData( "127.0.0.1", 33445, "receiveFileSendVariantMap", MyProcessor2::testFileInfo( 1 ), { }, succeedCallback );
+    client->sendFileData( "127.0.0.1", 33445, "receiveFileSendFile", MyProcessor2::testFileInfo( 1 ), { }, succeedCallback );
+
+    QThread::sleep( 3 );
+
+    QCOMPARE( processor->counter_.size(), 12 );
+    QCOMPARE( succeedCounter, 9 );
+
+    QCOMPARE( MyProcessor2::testFileInfo( 1 ).exists(), true );
+    QCOMPARE( MyProcessor2::testFileInfo( 2 ).exists(), true );
+    QCOMPARE( MyProcessor2::testFileInfo( 3 ).exists(), true );
+    QCOMPARE( MyProcessor2::testFileInfo( 4 ).exists(), true );
 }
 
 void JQNetworkOverallTest::jqNetworkSendFile()

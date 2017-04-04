@@ -18,9 +18,8 @@ JQNETWORK_COMPILE_MODE = SRC
 include( $$PWD/../../JQNetwork/JQNetwork.pri )
 
 HEADERS += \
-    $$PWD/cpp/jqnetwork_overalltest.h \
-    $$PWD/cpp/myprocessor.hpp
+    $$PWD/cpp/*.h \
+    $$PWD/cpp/*.hpp
 
 SOURCES += \
-    $$PWD/cpp/main.cpp \
-    $$PWD/cpp/jqnetwork_overalltest.cpp
+    $$PWD/cpp/*.cpp

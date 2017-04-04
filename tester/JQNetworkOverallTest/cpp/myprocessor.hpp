@@ -18,11 +18,10 @@ public:
     ~MyProcessor() = default;
 
 public slots:
-    void actionFlag(const QVariantMap &received, QVariantMap &send)
+    void actionFlag(const QVariantMap &received)
     {
         testData_ = received;
         testData2_ = QThread::currentThread();
-        send = { };
     }
 
 public:

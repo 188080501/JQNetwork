@@ -4,6 +4,7 @@
 // Qt lib import
 #include <QStandardPaths>
 #include <QFileInfo>
+#include <QDir>
 
 // JQNetwork lib improt
 #include <JQNetwork>
@@ -26,12 +27,8 @@ public:
         // 注册当前类
         server_->registerProcessor( this );
 
-        // 保存路径提供回调，用于提供接收文件的保存路径
-        server_->connectSettings()->filePathProvider = [ ](const auto &, const auto &, const auto &fileName)->QString
-        {
-            // 保存到桌面
-            return QString( "%1/%2" ).arg( QStandardPaths::writableLocation( QStandardPaths::DesktopLocation ), fileName );
-        };
+        // 设置文件保存到桌面
+        server_->connectSettings()->setFilePathProviderToDir( QStandardPaths::writableLocation( QStandardPaths::DesktopLocation ) );
 
         // 初始化服务端
         if ( !server_->begin() )

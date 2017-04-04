@@ -23,6 +23,7 @@ PRIVATEMACRO slots:
 PRIVATEMACRO slots:
     void jqNetworkThreadPoolBenchmark();
 
+PRIVATEMACRO slots:
     void jqNetworkThreadPoolBenchmark2();
 
 PRIVATEMACRO slots:
@@ -51,6 +52,9 @@ PRIVATEMACRO slots:
 
 PRIVATEMACRO slots:
     void jqNetworkProcessorTest();
+
+PRIVATEMACRO slots:
+    void jqNetworkProcessor2Test();
 
 PRIVATEMACRO slots:
     void jqNetworkSendFile();
