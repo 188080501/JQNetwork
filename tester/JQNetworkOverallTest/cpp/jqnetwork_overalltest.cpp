@@ -2,6 +2,7 @@
 
 // Qt lib import
 #include <QtTest>
+#include <QTime>
 #include <QtConcurrent>
 #include <QTcpSocket>
 #include <QTcpServer>
@@ -10,8 +11,9 @@
 #include <JQNetwork>
 
 // Project lib import
-#include "myprocessor.hpp"
-#include "myprocessor2.hpp"
+#include "processortest1.hpp"
+#include "processortest2.hpp"
+#include "fusiontest1.hpp"
 
 void JQNetworkOverallTest::jqNetworkThreadPoolTest()
 {
@@ -58,7 +60,7 @@ void JQNetworkOverallTest::jqNetworkThreadPoolTest()
     }
 }
 
-void JQNetworkOverallTest::jqNetworkThreadPoolBenchmark()
+void JQNetworkOverallTest::jqNetworkThreadPoolBenchmark1()
 {
     int number = 0;
 
@@ -550,7 +552,7 @@ void JQNetworkOverallTest::jqNetworkClientTest()
     connectSettings->maximumReceivePackageWaitTime = 30 * 1000;
 }
 
-void JQNetworkOverallTest::jqNetworkServerAndClientTest()
+void JQNetworkOverallTest::jqNetworkServerAndClientTest1()
 {
     QString serverFlag;
     QString clientFlag;
@@ -891,9 +893,9 @@ void JQNetworkOverallTest::jqNetworkLanTest()
     }
 }
 
-void JQNetworkOverallTest::jqNetworkProcessorTest()
+void JQNetworkOverallTest::jqNetworkProcessorTest1()
 {
-    MyProcessor myProcessor;
+    ProcessorTest1::TestProcessor myProcessor;
 
     QCOMPARE( myProcessor.availableSlots(), QSet< QString >( { "actionFlag" } ) );
 
@@ -902,7 +904,7 @@ void JQNetworkOverallTest::jqNetworkProcessorTest()
         auto package = JQNetworkPackage::createPayloadTransportPackages(
                     "actionFlag",
                     "{\"key\":\"value\"}",
-                    { }, // empty appendData
+                    { }, // Empty appendData
                     0x1234
                 ).first();
         package->refreshPackage();
@@ -923,22 +925,22 @@ void JQNetworkOverallTest::jqNetworkProcessorTest()
     QCOMPARE( myProcessor.testData2_, QThread::currentThread() );
 }
 
-void JQNetworkOverallTest::jqNetworkProcessor2Test()
+void JQNetworkOverallTest::jqNetworkProcessorTest2()
 {
-    QFile::remove( MyProcessor2::testFileInfo( 1 ).filePath() );
-    QFile::remove( MyProcessor2::testFileInfo( 2 ).filePath() );
-    QFile::remove( MyProcessor2::testFileInfo( 3 ).filePath() );
-    QFile::remove( MyProcessor2::testFileInfo( 4 ).filePath() );
+    QFile::remove( ProcessorTest2::TestProcessor::testFileInfo( 1 ).filePath() );
+    QFile::remove( ProcessorTest2::TestProcessor::testFileInfo( 2 ).filePath() );
+    QFile::remove( ProcessorTest2::TestProcessor::testFileInfo( 3 ).filePath() );
+    QFile::remove( ProcessorTest2::TestProcessor::testFileInfo( 4 ).filePath() );
 
     QThread::sleep( 1 );
 
-    MyProcessor2::createTestFile( 1 );
-    MyProcessor2::createTestFile( 3 );
+    ProcessorTest2::TestProcessor::createTestFile( 1 );
+    ProcessorTest2::TestProcessor::createTestFile( 3 );
 
     auto server = JQNetworkServer::createServer( 33445, QHostAddress::LocalHost, true );
-    auto processor = new MyProcessor2;
+    auto processor = QSharedPointer< ProcessorTest2::TestProcessor >( new ProcessorTest2::TestProcessor );
 
-    server->registerProcessor( processor );
+    server->registerProcessor( processor.data() );
 
     auto filePathProvider = [ ](const auto &, const auto &, const auto &fileName)
     {
@@ -964,30 +966,30 @@ void JQNetworkOverallTest::jqNetworkProcessor2Test()
     int succeedCounter = 0;
     auto succeedCallback = [ &succeedCounter ](const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer &){ ++succeedCounter; };
 
-    client->sendPayloadData( "127.0.0.1", 33445, "receivedByteArray", "test", { }, succeedCallback );
-    client->sendPayloadData( "127.0.0.1", 33445, "receivedByteArraySendByteArray", "test", { }, succeedCallback );
-    client->sendPayloadData( "127.0.0.1", 33445, "receivedByteArraySendVariantMap", "test", { }, succeedCallback );
-    client->sendPayloadData( "127.0.0.1", 33445, "receivedByteArraySendFile", "test", { }, succeedCallback );
+    client->sendPayloadData( "127.0.0.1", 33445, "receivedByteArray", "test", succeedCallback );
+    client->sendPayloadData( "127.0.0.1", 33445, "receivedByteArraySendByteArray", "test", succeedCallback );
+    client->sendPayloadData( "127.0.0.1", 33445, "receivedByteArraySendVariantMap", "test", succeedCallback );
+    client->sendPayloadData( "127.0.0.1", 33445, "receivedByteArraySendFile", "test", succeedCallback );
 
-    client->sendPayloadData( "127.0.0.1", 33445, "receivedVariantMap", QJsonDocument( QJsonObject::fromVariantMap( QVariantMap( { { "key", "value" } } ) ) ).toJson( QJsonDocument::Compact ), { }, succeedCallback );
-    client->sendPayloadData( "127.0.0.1", 33445, "receivedVariantMapSendByteArray", QJsonDocument( QJsonObject::fromVariantMap( QVariantMap( { { "key", "value" } } ) ) ).toJson( QJsonDocument::Compact ), { }, succeedCallback );
-    client->sendPayloadData( "127.0.0.1", 33445, "receivedVariantMapSendVariantMap", QJsonDocument( QJsonObject::fromVariantMap( QVariantMap( { { "key", "value" } } ) ) ).toJson( QJsonDocument::Compact ), { }, succeedCallback );
-    client->sendPayloadData( "127.0.0.1", 33445, "receivedVariantMapSendFile", QJsonDocument( QJsonObject::fromVariantMap( QVariantMap( { { "key", "value" } } ) ) ).toJson( QJsonDocument::Compact ), { }, succeedCallback );
+    client->sendPayloadData( "127.0.0.1", 33445, "receivedVariantMap", QJsonDocument( QJsonObject::fromVariantMap( QVariantMap( { { "key", "value" } } ) ) ).toJson( QJsonDocument::Compact ), succeedCallback );
+    client->sendPayloadData( "127.0.0.1", 33445, "receivedVariantMapSendByteArray", QJsonDocument( QJsonObject::fromVariantMap( QVariantMap( { { "key", "value" } } ) ) ).toJson( QJsonDocument::Compact ), succeedCallback );
+    client->sendPayloadData( "127.0.0.1", 33445, "receivedVariantMapSendVariantMap", QJsonDocument( QJsonObject::fromVariantMap( QVariantMap( { { "key", "value" } } ) ) ).toJson( QJsonDocument::Compact ), succeedCallback );
+    client->sendPayloadData( "127.0.0.1", 33445, "receivedVariantMapSendFile", QJsonDocument( QJsonObject::fromVariantMap( QVariantMap( { { "key", "value" } } ) ) ).toJson( QJsonDocument::Compact ), succeedCallback );
 
-    client->sendFileData( "127.0.0.1", 33445, "receiveFile", MyProcessor2::testFileInfo( 1 ), { }, succeedCallback );
-    client->sendFileData( "127.0.0.1", 33445, "receiveFileSendByteArray", MyProcessor2::testFileInfo( 1 ), { }, succeedCallback );
-    client->sendFileData( "127.0.0.1", 33445, "receiveFileSendVariantMap", MyProcessor2::testFileInfo( 1 ), { }, succeedCallback );
-    client->sendFileData( "127.0.0.1", 33445, "receiveFileSendFile", MyProcessor2::testFileInfo( 1 ), { }, succeedCallback );
+    client->sendFileData( "127.0.0.1", 33445, "receiveFile", ProcessorTest2::TestProcessor::testFileInfo( 1 ), succeedCallback );
+    client->sendFileData( "127.0.0.1", 33445, "receiveFileSendByteArray", ProcessorTest2::TestProcessor::testFileInfo( 1 ), succeedCallback );
+    client->sendFileData( "127.0.0.1", 33445, "receiveFileSendVariantMap", ProcessorTest2::TestProcessor::testFileInfo( 1 ), succeedCallback );
+    client->sendFileData( "127.0.0.1", 33445, "receiveFileSendFile", ProcessorTest2::TestProcessor::testFileInfo( 1 ), succeedCallback );
 
     QThread::sleep( 3 );
 
     QCOMPARE( processor->counter_.size(), 12 );
     QCOMPARE( succeedCounter, 9 );
 
-    QCOMPARE( MyProcessor2::testFileInfo( 1 ).exists(), true );
-    QCOMPARE( MyProcessor2::testFileInfo( 2 ).exists(), true );
-    QCOMPARE( MyProcessor2::testFileInfo( 3 ).exists(), true );
-    QCOMPARE( MyProcessor2::testFileInfo( 4 ).exists(), true );
+    QCOMPARE( ProcessorTest2::TestProcessor::testFileInfo( 1 ).exists(), true );
+    QCOMPARE( ProcessorTest2::TestProcessor::testFileInfo( 2 ).exists(), true );
+    QCOMPARE( ProcessorTest2::TestProcessor::testFileInfo( 3 ).exists(), true );
+    QCOMPARE( ProcessorTest2::TestProcessor::testFileInfo( 4 ).exists(), true );
 }
 
 void JQNetworkOverallTest::jqNetworkSendFile()
@@ -1037,4 +1039,82 @@ void JQNetworkOverallTest::jqNetworkSendFile()
     eventLoop.exec();
 
     QCOMPARE( flag1, true );
+}
+
+void JQNetworkOverallTest::fusionTest1()
+{
+    auto server = JQNetworkServer::createServer( 24680 );
+    auto userProcessor = QSharedPointer< FusionTest1::UserProcessor >( new FusionTest1::UserProcessor );
+    auto dataProcessor = QSharedPointer< FusionTest1::DataProcessor >( new FusionTest1::DataProcessor );
+
+    server->registerProcessor( userProcessor.data() );
+    server->registerProcessor( dataProcessor.data() );
+
+    QCOMPARE( server->availableProcessorMethodNames().size(), 2 );
+    QCOMPARE( server->begin(), true );
+
+    auto client = JQNetworkClient::createClient();
+
+    QCOMPARE( client->begin(), true );
+
+    {
+        QTime time;
+        time.start();
+
+        {
+            const auto &&sendReply = client->waitForSendPayloadData(
+                            "127.0.0.1",
+                            24680,
+                            "accountLogin",
+                            QByteArray()
+                        );
+            QCOMPARE( sendReply, 1 );
+        }
+
+        {
+            bool flag2 = false;
+            const auto &&sendReply = client->waitForSendPayloadData(
+                            "127.0.0.1",
+                            24680,
+                            "accountLogin",
+                            { },
+                            nullptr,
+                            [ &flag2 ](const auto &){ flag2 = true; }
+                        );
+            QCOMPARE( sendReply, 2 );
+            QCOMPARE( flag2, false );
+        }
+
+        {
+            bool flag1 = false;
+            const auto &&sendReply = client->waitForSendPayloadData(
+                            "127.0.0.1",
+                            24680,
+                            "accountLogin",
+                            { },
+                            [ &flag1 ](const auto &, const auto &){ flag1 = true; },
+                            nullptr
+                        );
+            QCOMPARE( sendReply, 3 );
+            QCOMPARE( flag1, true );
+        }
+
+        {
+            bool flag1 = false;
+            bool flag2 = false;
+            const auto &&sendReply = client->waitForSendPayloadData(
+                            "127.0.0.1",
+                            24680,
+                            "accountLogin",
+                            { },
+                            [ &flag1 ](const auto &, const auto &){ flag1 = true; },
+                            [ &flag2 ](const auto &){ flag2 = true; }
+                        );
+            QCOMPARE( sendReply, 4 );
+            QCOMPARE( flag1, true );
+            QCOMPARE( flag2, false );
+        }
+
+        QCOMPARE( ( time.elapsed() < 100 ), true );
+    }
 }

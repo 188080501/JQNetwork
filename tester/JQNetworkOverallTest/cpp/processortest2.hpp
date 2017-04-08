@@ -1,5 +1,5 @@
-﻿#ifndef __CPP_MYPROCESSOR2_HPP__
-#define __CPP_MYPROCESSOR2_HPP__
+﻿#ifndef __CPP_PROCESSORTEST2_HPP__
+#define __CPP_PROCESSORTEST2_HPP__
 
 // Qt lib import
 #include <QStandardPaths>
@@ -10,15 +10,18 @@
 // JQNetwork lib import
 #include <JQNetworkProcessor>
 
-class MyProcessor2: public JQNetworkProcessor
+namespace ProcessorTest2
+{
+
+class TestProcessor: public JQNetworkProcessor
 {
     Q_OBJECT
-    Q_DISABLE_COPY( MyProcessor2 )
+    Q_DISABLE_COPY( TestProcessor )
 
 public:
-    MyProcessor2() = default;
+    TestProcessor() = default;
 
-    ~MyProcessor2() = default;
+    ~TestProcessor() = default;
 
     static QFileInfo testFileInfo(const int &index)
     {
@@ -149,4 +152,6 @@ public:
     QMap< QString, int > counter_; // methodName -> count
 };
 
-#endif//__CPP_MYPROCESSOR2_HPP__
+}
+
+#endif//__CPP_PROCESSORTEST2_HPP__

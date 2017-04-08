@@ -1,5 +1,5 @@
-﻿#ifndef __CPP_MYPROCESSOR_HPP__
-#define __CPP_MYPROCESSOR_HPP__
+﻿#ifndef __CPP_PROCESSORTEST1_HPP__
+#define __CPP_PROCESSORTEST1_HPP__
 
 // Qt lib import
 #include <QThread>
@@ -7,15 +7,18 @@
 // JQNetwork lib import
 #include <JQNetworkProcessor>
 
-class MyProcessor: public JQNetworkProcessor
+namespace ProcessorTest1
+{
+
+class TestProcessor: public JQNetworkProcessor
 {
     Q_OBJECT
-    Q_DISABLE_COPY( MyProcessor )
+    Q_DISABLE_COPY( TestProcessor )
 
 public:
-    MyProcessor() = default;
+    TestProcessor() = default;
 
-    ~MyProcessor() = default;
+    ~TestProcessor() = default;
 
 public slots:
     void actionFlag(const QVariantMap &received)
@@ -29,4 +32,6 @@ public:
     QThread *testData2_;
 };
 
-#endif//__CPP_MYPROCESSOR_HPP__
+}
+
+#endif//__CPP_PROCESSORTEST1_HPP__

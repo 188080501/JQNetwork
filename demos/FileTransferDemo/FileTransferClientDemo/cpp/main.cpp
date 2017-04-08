@@ -44,7 +44,6 @@ int main(int argc, char *argv[])
                 26432,                                                  // 服务端的端口
                 "fileTransfer",                                         // 需要调用的服务端方法名称
                 QFileInfo( sourceFilePath ),                            // 需要发送的文件
-                { },                                                    // empty appendData
                 [ ](const auto &, const auto &)
                 {
                     qDebug() << "Client: send file succeed";

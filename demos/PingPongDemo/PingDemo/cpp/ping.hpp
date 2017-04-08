@@ -77,13 +77,14 @@ public:
     // Ping 测试
     void ping()
     {
+        ++pingCount_;
+
         // 发送数据前会自动检查连接，如果有则使用已经有的链接，没有则创建一个新的（以阻塞方式创建）
         const auto &&randomFlag = client_->sendPayloadData( // 发送数据，返回0表示失败，其余数表示发送成功
                     "127.0.0.1", // 服务端IP
                     34543, // 服务端端口
                     "pong",
                     QJsonDocument( QJsonObject::fromVariantMap( QVariantMap( { { "ping", "ping" } } ) ) ).toJson( QJsonDocument::Compact ),
-                    { }, // empty appendData
                     std::bind( &Ping::onPingSucceed, this, std::placeholders::_1, std::placeholders::_2 ),
                     std::bind( &Ping::onPingFail, this, std::placeholders::_1  )
                 );
@@ -93,7 +94,6 @@ public:
             // 发送失败
 
             qDebug() << "Ping: send fail";
-            QMetaObject::invokeMethod( &timer_, "start" );
         }
         else
         {
@@ -110,17 +110,18 @@ public:
         // 回调会发生在一个专用的线程，请注意线程安全
 
         // 打印服务端回复的数据
-        qDebug() << "Ping: received reply:" << package->payloadData() << ", randomFlag:" << package->randomFlag();
+        qDebug() << "Ping: ping reply:" << package->payloadData() << ", randomFlag:" << package->randomFlag();
 
         ++replySucceedCount_;
 
-        qDebug() << "TotalCount: sendSucceedCount:" << this->sendSucceedCount_ << ", replySucceedCount:" << replySucceedCount_ << "\n";
+        qDebug() << "TotalCount: "
+                 << "pingCount:" << this->pingCount_
+                 << ", sendSucceedCount:" << this->sendSucceedCount_
+                 << ", replySucceedCount:" << replySucceedCount_ << "\n";
 
         if ( !( replySucceedCount_ % 100000 ) )
         {
-            // 到达特定数量后，停止 PingPong 测试的循环发送
-            // 因为这里在一个新的线程，所以通过 invokeMethod 去调用 stop
-            QMetaObject::invokeMethod( &timer_, "stop" );
+            // 到达特定数量后，退出发送循环
             return;
         }
 
@@ -134,7 +135,7 @@ public:
     {
         // 回调会发生在一个专用的线程，请注意线程安全
 
-        qDebug() << "Ping: received fail";
+        qDebug() << "Ping: ping fail";
 
         // 循环发送
         // 因为这里在一个新的线程，所以通过 invokeMethod 去调用 start
@@ -145,6 +146,7 @@ private:
     JQNetworkClientSharedPointer client_;
 
     // 计数器
+    int pingCount_ = 0;
     int sendSucceedCount_ = 0;
     int replySucceedCount_ = 0;
 
