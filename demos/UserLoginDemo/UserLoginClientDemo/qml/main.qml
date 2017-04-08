@@ -36,6 +36,7 @@ Window {
 
             if ( !beginClientSucceed ) { return; }
 
+            // 预创建一个连接，指向某个服务端，并保持长连接，不创建也可以
             networkClient.createConnect( "127.0.0.1", 23456 );
         }
     }
@@ -93,6 +94,7 @@ Window {
         anchors.verticalCenterOffset: 75
 
         onClicked: {
+            // 发送数据前会自动检查连接，如果有则使用已经有的链接，没有则创建一个新的（以阻塞方式创建）
             networkClient.sendPayloadData(
                         "127.0.0.1",                                // 服务端的IP地址
                         23456,                                      // 服务端的端口

@@ -158,7 +158,11 @@ void JQNetworkClient::createConnect(const QString &hostName, const quint16 &port
     );
 }
 
-bool JQNetworkClient::waitForCreateConnect(const QString &hostName, const quint16 &port)
+bool JQNetworkClient::waitForCreateConnect(
+        const QString &hostName,
+        const quint16 &port,
+        const int &maximumConnectToHostWaitTime
+    )
 {
     QSharedPointer< QSemaphore > semaphore( new QSemaphore );
     const auto &&hostKey = QString( "%1:%2" ).arg( hostName, QString::number( port ) );
@@ -170,7 +174,10 @@ bool JQNetworkClient::waitForCreateConnect(const QString &hostName, const quint1
 
     mutex_.unlock();
 
-    const auto &&acquireSucceed = semaphore->tryAcquire( 1, connectSettings_->maximumConnectToHostWaitTime );
+    const auto &&acquireSucceed = semaphore->tryAcquire(
+                1,
+                ( maximumConnectToHostWaitTime == -1 ) ? ( connectSettings_->maximumConnectToHostWaitTime ) : ( maximumConnectToHostWaitTime )
+            );
 
     mutex_.lock();
 
@@ -193,7 +200,14 @@ qint32 JQNetworkClient::sendPayloadData(
 {
     auto connect = this->getConnect( hostName, port );
 
-    if ( !connect ) { return 0; }
+    if ( !connect )
+    {
+        if ( failCallback )
+        {
+            failCallback( nullptr );
+        }
+        return 0;
+    }
 
     return connect->sendPayloadData(
                 targetActionFlag,
@@ -216,7 +230,14 @@ qint32 JQNetworkClient::sendFileData(
 {
     auto connect = this->getConnect( hostName, port );
 
-    if ( !connect ) { return 0; }
+    if ( !connect )
+    {
+        if ( failCallback )
+        {
+            failCallback( nullptr );
+        }
+        return 0;
+    }
 
     return connect->sendFileData(
                 targetActionFlag,
@@ -227,8 +248,119 @@ qint32 JQNetworkClient::sendFileData(
             );
 }
 
+qint32 JQNetworkClient::waitForSendPayloadData(
+        const QString &hostName,
+        const quint16 &port,
+        const QString &targetActionFlag,
+        const QByteArray &payloadData,
+        const QVariantMap &appendData,
+        const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback,
+        const JQNetworkConnectPointerFunction &failCallback
+    )
+{
+    QSemaphore semaphore;
+
+    const auto &&sendReply = this->sendPayloadData(
+                hostName,
+                port,
+                targetActionFlag,
+                payloadData,
+                appendData,
+                [
+                    &semaphore,
+                    succeedCallback
+                ]
+                (const auto &connect, const auto &package)
+                {
+                    if ( succeedCallback )
+                    {
+                        succeedCallback( connect, package );
+                    }
+                    semaphore.release( 1 );
+                },
+                [
+                    &semaphore,
+                    failCallback
+                ]
+                (const auto &connect)
+                {
+                    if ( failCallback )
+                    {
+                        failCallback( connect );
+                    }
+                    semaphore.release( 1 );
+                }
+            );
+
+    semaphore.acquire();
+
+    return sendReply;
+}
+
+qint32 JQNetworkClient::waitForSendFileData(
+        const QString &hostName,
+        const quint16 &port,
+        const QString &targetActionFlag,
+        const QFileInfo &fileInfo,
+        const QVariantMap &appendData,
+        const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback,
+        const JQNetworkConnectPointerFunction &failCallback
+    )
+{
+    QSemaphore semaphore;
+
+    const auto &&sendReply = this->sendFileData(
+                hostName,
+                port,
+                targetActionFlag,
+                fileInfo,
+                appendData,
+                [
+                    &semaphore,
+                    succeedCallback
+                ]
+                (const auto &connect, const auto &package)
+                {
+                    if ( succeedCallback )
+                    {
+                        succeedCallback( connect, package );
+                    }
+                    semaphore.release( 1 );
+                },
+                [
+                    &semaphore,
+                    failCallback
+                ]
+                (const auto &connect)
+                {
+                    if ( failCallback )
+                    {
+                        failCallback( connect );
+                    }
+                    semaphore.release( 1 );
+                }
+            );
+
+    semaphore.acquire();
+
+    return sendReply;
+}
+
 JQNetworkConnectPointer JQNetworkClient::getConnect(const QString &hostName, const quint16 &port)
 {
+    for ( const auto &connectPool: this->connectPools_ )
+    {
+        auto connect = connectPool->getConnectByHostAndPort( hostName, port );
+
+        if ( !connect ) { continue; }
+
+        return connect;
+    }
+
+    const auto &&autoConnectSucceed = this->waitForCreateConnect( hostName, port, clientSettings_->maximumAutoConnectToHostWaitTime );
+
+    if ( !autoConnectSucceed ) { return { }; }
+
     for ( const auto &connectPool: this->connectPools_ )
     {
         auto connect = connectPool->getConnectByHostAndPort( hostName, port );

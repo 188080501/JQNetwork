@@ -19,6 +19,7 @@
 struct JQNetworkClientSettings
 {
     QString dutyMark;
+    int maximumAutoConnectToHostWaitTime = 15 * 1000;
 
     std::function< void( const JQNetworkConnectPointer &, const QString &hostName, const quint16 &port ) > connectToHostErrorCallback = nullptr;
     std::function< void( const JQNetworkConnectPointer &, const QString &hostName, const quint16 &port ) > connectToHostTimeoutCallback = nullptr;
@@ -63,7 +64,11 @@ public:
 
     void createConnect(const QString &hostName, const quint16 &port);
 
-    bool waitForCreateConnect(const QString &hostName, const quint16 &port);
+    bool waitForCreateConnect(
+            const QString &hostName,
+            const quint16 &port,
+            const int &maximumConnectToHostWaitTime = -1
+        );
 
     qint32 sendPayloadData(
             const QString &hostName,
@@ -71,6 +76,15 @@ public:
             const QString &targetActionFlag,
             const QByteArray &payloadData,
             const QVariantMap &appendData,
+            const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback = nullptr,
+            const JQNetworkConnectPointerFunction &failCallback = nullptr
+        );
+
+    inline qint32 sendPayloadData(
+            const QString &hostName,
+            const quint16 &port,
+            const QString &targetActionFlag,
+            const QByteArray &payloadData,
             const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback = nullptr,
             const JQNetworkConnectPointerFunction &failCallback = nullptr
         );
@@ -94,6 +108,69 @@ public:
         );
 
     inline qint32 sendFileData(
+            const QString &hostName,
+            const quint16 &port,
+            const QString &targetActionFlag,
+            const QFileInfo &fileInfo,
+            const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback = nullptr,
+            const JQNetworkConnectPointerFunction &failCallback = nullptr
+        );
+
+    inline qint32 sendFileData(
+            const QString &hostName,
+            const quint16 &port,
+            const QFileInfo &fileInfo,
+            const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback = nullptr,
+            const JQNetworkConnectPointerFunction &failCallback = nullptr
+        );
+
+    qint32 waitForSendPayloadData(
+            const QString &hostName,
+            const quint16 &port,
+            const QString &targetActionFlag,
+            const QByteArray &payloadData,
+            const QVariantMap &appendData,
+            const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback = nullptr,
+            const JQNetworkConnectPointerFunction &failCallback = nullptr
+        );
+
+    inline qint32 waitForSendPayloadData(
+            const QString &hostName,
+            const quint16 &port,
+            const QString &targetActionFlag,
+            const QByteArray &payloadData,
+            const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback = nullptr,
+            const JQNetworkConnectPointerFunction &failCallback = nullptr
+        );
+
+    inline qint32 waitForSendPayloadData(
+            const QString &hostName,
+            const quint16 &port,
+            const QByteArray &payloadData,
+            const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback = nullptr,
+            const JQNetworkConnectPointerFunction &failCallback = nullptr
+        );
+
+    qint32 waitForSendFileData(
+            const QString &hostName,
+            const quint16 &port,
+            const QString &targetActionFlag,
+            const QFileInfo &fileInfo,
+            const QVariantMap &appendData,
+            const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback = nullptr,
+            const JQNetworkConnectPointerFunction &failCallback = nullptr
+        );
+
+    inline qint32 waitForSendFileData(
+            const QString &hostName,
+            const quint16 &port,
+            const QString &targetActionFlag,
+            const QFileInfo &fileInfo,
+            const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback = nullptr,
+            const JQNetworkConnectPointerFunction &failCallback = nullptr
+        );
+
+    inline qint32 waitForSendFileData(
             const QString &hostName,
             const quint16 &port,
             const QFileInfo &fileInfo,

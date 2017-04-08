@@ -69,6 +69,8 @@ public:
 
     void registerProcessor(const JQNetworkProcessorPointer &processor);
 
+    inline QSet< QString > availableProcessorMethodNames() const;
+
 private:
     void incomingConnection(const qintptr &socketDescriptor);
 

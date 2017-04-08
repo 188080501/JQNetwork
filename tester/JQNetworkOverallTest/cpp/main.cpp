@@ -8,8 +8,6 @@
 // Project import
 #include "jqnetwork_overalltest.h"
 
-#include <utime.h>
-
 int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);

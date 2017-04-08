@@ -27,12 +27,20 @@ CONFIG( release, debug | release ) {
 JQNETWORK_COMPILE_MODE = SRC
 include( $$PWD/../../JQNetwork/JQNetwork.pri )
 
-win32 {
-    CONFIG( debug, debug | release ) {
-        SOURCEFILEPATH = $$OUT_PWD/debug/$$JQNETWORK_LIB_FILENAME
+_QMAKE_SPEC_ = $$[QMAKE_SPEC]
+
+win32 | equals( _QMAKE_SPEC_, win32-g++ ) {
+
+    android {
+        SOURCEFILEPATH = $$OUT_PWD/$$JQNETWORK_LIB_FILENAME
     }
-    else: CONFIG( release, debug | release ) {
-        SOURCEFILEPATH = $$OUT_PWD/release/$$JQNETWORK_LIB_FILENAME
+    else {
+        CONFIG( debug, debug | release ) {
+            SOURCEFILEPATH = $$OUT_PWD/debug/$$JQNETWORK_LIB_FILENAME
+        }
+        else: CONFIG( release, debug | release ) {
+            SOURCEFILEPATH = $$OUT_PWD/release/$$JQNETWORK_LIB_FILENAME
+        }
     }
 
     TARGETFILEPATH = $$JQNETWORK_LIB_FILEPATH

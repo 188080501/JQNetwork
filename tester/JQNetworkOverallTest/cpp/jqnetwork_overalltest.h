@@ -21,8 +21,9 @@ PRIVATEMACRO slots:
     void jqNetworkThreadPoolTest();
 
 PRIVATEMACRO slots:
-    void jqNetworkThreadPoolBenchmark();
+    void jqNetworkThreadPoolBenchmark1();
 
+PRIVATEMACRO slots:
     void jqNetworkThreadPoolBenchmark2();
 
 PRIVATEMACRO slots:
@@ -41,7 +42,7 @@ PRIVATEMACRO slots:
     void jqNetworkClientTest();
 
 PRIVATEMACRO slots:
-    void jqNetworkServerAndClientTest();
+    void jqNetworkServerAndClientTest1();
 
 PRIVATEMACRO slots:
     void jqNetworkServerAndClientTest2();
@@ -50,10 +51,17 @@ PRIVATEMACRO slots:
     void jqNetworkLanTest();
 
 PRIVATEMACRO slots:
-    void jqNetworkProcessorTest();
+    void jqNetworkProcessorTest1();
+
+PRIVATEMACRO slots:
+    void jqNetworkProcessorTest2();
 
 PRIVATEMACRO slots:
     void jqNetworkSendFile();
+
+PRIVATEMACRO slots:
+//    private slots:
+    void fusionTest1();
 };
 
 #endif//__CPP_JQNETWORK_OVERALLTEST_H__
