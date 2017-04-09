@@ -346,7 +346,7 @@ bool JQNetworkProcessor::checkMapContainsAndNotEmpty(const QStringList &keys, co
 
 bool JQNetworkProcessor::checkDataContasinsExpectedContent(const QString &key, const QVariantList &expectedContentList, const QVariantMap &received, QVariantMap &send)
 {
-    if ( checkMapContains( { key }, received, send ) ) { return false; }
+    if ( !checkMapContains( { key }, received, send ) ) { return false; }
 
     const auto &&data = received[ key ];
 

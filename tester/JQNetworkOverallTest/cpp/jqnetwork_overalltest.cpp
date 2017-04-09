@@ -1050,7 +1050,7 @@ void JQNetworkOverallTest::fusionTest1()
     server->registerProcessor( userProcessor.data() );
     server->registerProcessor( dataProcessor.data() );
 
-    QCOMPARE( server->availableProcessorMethodNames().size(), 2 );
+    QCOMPARE( server->availableProcessorMethodNames().size(), 3 );
     QCOMPARE( server->begin(), true );
 
     auto client = JQNetworkClient::createClient();
@@ -1116,5 +1116,128 @@ void JQNetworkOverallTest::fusionTest1()
         }
 
         QCOMPARE( ( time.elapsed() < 100 ), true );
+
+        {
+            const auto &&sendReply = client->waitForSendPayloadData(
+                        "127.0.0.1",
+                        24680,
+                        "msleep",
+                        QJsonDocument( QJsonObject::fromVariantMap( { { "msleep", 500 } } ) ).toJson( QJsonDocument::Compact )
+                    );
+            QCOMPARE( sendReply, 5 );
+        }
+
+        QCOMPARE( ( time.elapsed() > 500 ), true );
+    }
+
+    {
+        client->waitForSendPayloadData(
+                        "127.0.0.1",
+                        24680,
+                        "accountLogin",
+                        QJsonDocument( QJsonObject::fromVariantMap( { } ) ).toJson( QJsonDocument::Compact ),
+                        [ ](const auto &, const auto &package)
+                        {
+                            const auto &&received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
+                            QCOMPARE( received.isEmpty(), false );
+                            QCOMPARE( received[ "succeed" ].toBool(), false );
+                            QCOMPARE( received[ "message" ].toString(), QString( "error: handle is empty" ) );
+                            QCOMPARE( received[ "userName" ].toString(), QString( "" ) );
+                            QCOMPARE( received[ "userPhoneNumber" ].toString(), QString( "" ) );
+                        },
+                        [ ](const auto &){ }
+                    );
+
+        client->waitForSendPayloadData(
+                        "127.0.0.1",
+                        24680,
+                        "accountLogin",
+                        QJsonDocument( QJsonObject::fromVariantMap( { { "handle", "test" } } ) ).toJson( QJsonDocument::Compact ),
+                        [ ](const auto &, const auto &package)
+                        {
+                            const auto &&received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
+                            QCOMPARE( received.isEmpty(), false );
+                            QCOMPARE( received[ "succeed" ].toBool(), false );
+                            QCOMPARE( received[ "message" ].toString(), QString( "error: password is empty" ) );
+                            QCOMPARE( received[ "userName" ].toString(), QString( "" ) );
+                            QCOMPARE( received[ "userPhoneNumber" ].toString(), QString( "" ) );
+                        },
+                        [ ](const auto &){ }
+                    );
+
+        client->waitForSendPayloadData(
+                        "127.0.0.1",
+                        24680,
+                        "accountLogin",
+                        QJsonDocument( QJsonObject::fromVariantMap( { { "handle", "test" }, { "password", "123456" } } ) ).toJson( QJsonDocument::Compact ),
+                        [ ](const auto &, const auto &package)
+                        {
+                            const auto &&received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
+                            QCOMPARE( received.isEmpty(), false );
+                            QCOMPARE( received[ "succeed" ].toBool(), true );
+                            QCOMPARE( received[ "message" ].toString(), QString( "" ) );
+                            QCOMPARE( received[ "userName" ].toString(), QString( "" ) );
+                            QCOMPARE( received[ "userPhoneNumber" ].toString(), QString( "" ) );
+                        },
+                        [ ](const auto &){ }
+                    );
+
+        client->waitForSendPayloadData(
+                        "127.0.0.1",
+                        24680,
+                        "accountLogin",
+                        QJsonDocument( QJsonObject::fromVariantMap( { { "handle", "test" }, { "password", "123456" }, { "userName", "" }, { "userPhoneNumber", "" } } ) ).toJson( QJsonDocument::Compact ),
+                        [ ](const auto &, const auto &package)
+                        {
+                            const auto &&received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
+                            QCOMPARE( received.isEmpty(), false );
+                            QCOMPARE( received[ "succeed" ].toBool(), true );
+                            QCOMPARE( received[ "message" ].toString(), QString( "" ) );
+                            QCOMPARE( received[ "userName" ].toString(), QString( "Jason" ) );
+                            QCOMPARE( received[ "userPhoneNumber" ].toString(), QString( "18600000000" ) );
+                        },
+                        [ ](const auto &){ }
+                    );
+    }
+
+    {
+        client->waitForSendPayloadData(
+                        "127.0.0.1",
+                        24680,
+                        "someRecords",
+                        QJsonDocument( QJsonObject::fromVariantMap( { { "action", "download" } } ) ).toJson( QJsonDocument::Compact ),
+                        [ ](const auto &, const auto &package)
+                        {
+                            const auto &&received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
+                            QCOMPARE( received[ "someRecords" ].toList(), QVariantList() );
+                        },
+                        [ ](const auto &){ }
+                    );
+
+        client->waitForSendPayloadData(
+                        "127.0.0.1",
+                        24680,
+                        "someRecords",
+                        QJsonDocument( QJsonObject::fromVariantMap( { { "action", "upload" }, { "someRecords", QVariantList( { QVariant( "tests" ) } ) } } ) ).toJson( QJsonDocument::Compact ),
+                        [ ](const auto &, const auto &package)
+                        {
+                            const auto &&received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
+                            QCOMPARE( received[ "someRecords" ].toList(), QVariantList() );
+                        },
+                        [ ](const auto &){ }
+                    );
+
+        client->waitForSendPayloadData(
+                        "127.0.0.1",
+                        24680,
+                        "someRecords",
+                        QJsonDocument( QJsonObject::fromVariantMap( { { "action", "download" } } ) ).toJson( QJsonDocument::Compact ),
+                        [ ](const auto &, const auto &package)
+                        {
+                            const auto &&received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
+                            QCOMPARE( received[ "someRecords" ].toList(), QVariantList( { QVariant( "tests" ) } ) );
+                        },
+                        [ ](const auto &){ }
+                    );
     }
 }

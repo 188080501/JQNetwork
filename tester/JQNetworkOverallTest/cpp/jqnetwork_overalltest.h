@@ -60,7 +60,6 @@ PRIVATEMACRO slots:
     void jqNetworkSendFile();
 
 PRIVATEMACRO slots:
-//    private slots:
     void fusionTest1();
 };
 
