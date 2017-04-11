@@ -95,7 +95,7 @@ Window {
 
         onClicked: {
             // 发送数据前会自动检查连接，如果有则使用已经有的链接，没有则创建一个新的（以阻塞方式创建）
-            networkClient.sendPayloadData(
+            networkClient.sendVariantMapData(
                         "127.0.0.1",                                // 服务端的IP地址
                         23456,                                      // 服务端的端口
                         "userLogin",                                // 需要调用的服务端方法名称

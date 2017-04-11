@@ -23,7 +23,7 @@ public:
 public slots:
     bool accountLogin(const QVariantMap &received, QVariantMap &send)
     {
-        qDebug() << "accountLogin:" << received;
+//        qDebug() << "accountLogin:" << received;
 
         JQNP_CHECKRECEIVEDATACONTAINSANDNOTEMPTY( "handle", "password" );
 
@@ -62,7 +62,7 @@ public:
 public slots:
     bool someRecords(const QVariantMap &received, QVariantMap &send)
     {
-        qDebug() << "someRecords:" << received;
+//        qDebug() << "someRecords:" << received;
 
         JQNP_CHECKDATACONTAINSEXPECTEDCONTENT( "action", { "upload", "download" } );
 
@@ -76,6 +76,17 @@ public slots:
         {
             send[ "someRecords" ] = someRecords_;
         }
+
+        JQNP_SUCCEED();
+    }
+
+    bool msleep(const QVariantMap &received, QVariantMap &send)
+    {
+//        qDebug() << "msleep:" << received;
+
+        JQNP_CHECKRECEIVEDATACONTAINSANDNOT0( "msleep" );
+
+        QThread::msleep( received[ "msleep" ].toInt() );
 
         JQNP_SUCCEED();
     }
