@@ -971,10 +971,10 @@ void JQNetworkOverallTest::jqNetworkProcessorTest2()
     client->sendPayloadData( "127.0.0.1", 33445, "receivedByteArraySendVariantMap", "test", succeedCallback );
     client->sendPayloadData( "127.0.0.1", 33445, "receivedByteArraySendFile", "test", succeedCallback );
 
-    client->sendPayloadData( "127.0.0.1", 33445, "receivedVariantMap", QJsonDocument( QJsonObject::fromVariantMap( QVariantMap( { { "key", "value" } } ) ) ).toJson( QJsonDocument::Compact ), succeedCallback );
-    client->sendPayloadData( "127.0.0.1", 33445, "receivedVariantMapSendByteArray", QJsonDocument( QJsonObject::fromVariantMap( QVariantMap( { { "key", "value" } } ) ) ).toJson( QJsonDocument::Compact ), succeedCallback );
-    client->sendPayloadData( "127.0.0.1", 33445, "receivedVariantMapSendVariantMap", QJsonDocument( QJsonObject::fromVariantMap( QVariantMap( { { "key", "value" } } ) ) ).toJson( QJsonDocument::Compact ), succeedCallback );
-    client->sendPayloadData( "127.0.0.1", 33445, "receivedVariantMapSendFile", QJsonDocument( QJsonObject::fromVariantMap( QVariantMap( { { "key", "value" } } ) ) ).toJson( QJsonDocument::Compact ), succeedCallback );
+    client->sendVariantMapData( "127.0.0.1", 33445, "receivedVariantMap", { { "key", "value" } }, succeedCallback );
+    client->sendVariantMapData( "127.0.0.1", 33445, "receivedVariantMapSendByteArray", { { "key", "value" } }, succeedCallback );
+    client->sendVariantMapData( "127.0.0.1", 33445, "receivedVariantMapSendVariantMap", { { "key", "value" } }, succeedCallback );
+    client->sendVariantMapData( "127.0.0.1", 33445, "receivedVariantMapSendFile", { { "key", "value" } }, succeedCallback );
 
     client->sendFileData( "127.0.0.1", 33445, "receiveFile", ProcessorTest2::TestProcessor::testFileInfo( 1 ), succeedCallback );
     client->sendFileData( "127.0.0.1", 33445, "receiveFileSendByteArray", ProcessorTest2::TestProcessor::testFileInfo( 1 ), succeedCallback );
@@ -1118,11 +1118,11 @@ void JQNetworkOverallTest::fusionTest1()
         QCOMPARE( ( time.elapsed() < 100 ), true );
 
         {
-            const auto &&sendReply = client->waitForSendPayloadData(
+            const auto &&sendReply = client->waitForSendVariantMapData(
                         "127.0.0.1",
                         24680,
                         "msleep",
-                        QJsonDocument( QJsonObject::fromVariantMap( { { "msleep", 500 } } ) ).toJson( QJsonDocument::Compact )
+                        { { "msleep", 500 } }
                     );
             QCOMPARE( sendReply, 5 );
         }
@@ -1131,11 +1131,11 @@ void JQNetworkOverallTest::fusionTest1()
     }
 
     {
-        client->waitForSendPayloadData(
+        client->waitForSendVariantMapData(
                         "127.0.0.1",
                         24680,
                         "accountLogin",
-                        QJsonDocument( QJsonObject::fromVariantMap( { } ) ).toJson( QJsonDocument::Compact ),
+                        { },
                         [ ](const auto &, const auto &package)
                         {
                             const auto &&received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
@@ -1148,11 +1148,11 @@ void JQNetworkOverallTest::fusionTest1()
                         [ ](const auto &){ }
                     );
 
-        client->waitForSendPayloadData(
+        client->waitForSendVariantMapData(
                         "127.0.0.1",
                         24680,
                         "accountLogin",
-                        QJsonDocument( QJsonObject::fromVariantMap( { { "handle", "test" } } ) ).toJson( QJsonDocument::Compact ),
+                        { { "handle", "test" } },
                         [ ](const auto &, const auto &package)
                         {
                             const auto &&received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
@@ -1165,11 +1165,11 @@ void JQNetworkOverallTest::fusionTest1()
                         [ ](const auto &){ }
                     );
 
-        client->waitForSendPayloadData(
+        client->waitForSendVariantMapData(
                         "127.0.0.1",
                         24680,
                         "accountLogin",
-                        QJsonDocument( QJsonObject::fromVariantMap( { { "handle", "test" }, { "password", "123456" } } ) ).toJson( QJsonDocument::Compact ),
+                        { { "handle", "test" }, { "password", "123456" } },
                         [ ](const auto &, const auto &package)
                         {
                             const auto &&received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
@@ -1182,11 +1182,11 @@ void JQNetworkOverallTest::fusionTest1()
                         [ ](const auto &){ }
                     );
 
-        client->waitForSendPayloadData(
+        client->waitForSendVariantMapData(
                         "127.0.0.1",
                         24680,
                         "accountLogin",
-                        QJsonDocument( QJsonObject::fromVariantMap( { { "handle", "test" }, { "password", "123456" }, { "userName", "" }, { "userPhoneNumber", "" } } ) ).toJson( QJsonDocument::Compact ),
+                        { { "handle", "test" }, { "password", "123456" }, { "userName", "" }, { "userPhoneNumber", "" } },
                         [ ](const auto &, const auto &package)
                         {
                             const auto &&received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
@@ -1201,11 +1201,11 @@ void JQNetworkOverallTest::fusionTest1()
     }
 
     {
-        client->waitForSendPayloadData(
+        client->waitForSendVariantMapData(
                         "127.0.0.1",
                         24680,
                         "someRecords",
-                        QJsonDocument( QJsonObject::fromVariantMap( { { "action", "download" } } ) ).toJson( QJsonDocument::Compact ),
+                        { { "action", "download" } },
                         [ ](const auto &, const auto &package)
                         {
                             const auto &&received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
@@ -1214,11 +1214,11 @@ void JQNetworkOverallTest::fusionTest1()
                         [ ](const auto &){ }
                     );
 
-        client->waitForSendPayloadData(
+        client->waitForSendVariantMapData(
                         "127.0.0.1",
                         24680,
                         "someRecords",
-                        QJsonDocument( QJsonObject::fromVariantMap( { { "action", "upload" }, { "someRecords", QVariantList( { QVariant( "tests" ) } ) } } ) ).toJson( QJsonDocument::Compact ),
+                        { { "action", "upload" }, { "someRecords", QVariantList( { QVariant( "tests" ) } ) } },
                         [ ](const auto &, const auto &package)
                         {
                             const auto &&received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
@@ -1227,11 +1227,11 @@ void JQNetworkOverallTest::fusionTest1()
                         [ ](const auto &){ }
                     );
 
-        client->waitForSendPayloadData(
+        client->waitForSendVariantMapData(
                         "127.0.0.1",
                         24680,
                         "someRecords",
-                        QJsonDocument( QJsonObject::fromVariantMap( { { "action", "download" } } ) ).toJson( QJsonDocument::Compact ),
+                        { { "action", "download" } },
                         [ ](const auto &, const auto &package)
                         {
                             const auto &&received = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();

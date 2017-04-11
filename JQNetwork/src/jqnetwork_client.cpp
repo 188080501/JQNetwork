@@ -16,6 +16,9 @@
 #include <QDebug>
 #include <QThread>
 #include <QSemaphore>
+#include <QJsonArray>
+#include <QJsonObject>
+#include <QJsonDocument>
 
 // JQNetwork lib import
 #include <JQNetworkConnectPool>
@@ -218,6 +221,27 @@ qint32 JQNetworkClient::sendPayloadData(
             );
 }
 
+qint32 JQNetworkClient::sendVariantMapData(
+        const QString &hostName,
+        const quint16 &port,
+        const QString &targetActionFlag,
+        const QVariantMap &variantMap,
+        const QVariantMap &appendData,
+        const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback,
+        const JQNetworkConnectPointerFunction &failCallback
+    )
+{
+    return this->sendPayloadData(
+                hostName,
+                port,
+                targetActionFlag,
+                QJsonDocument( QJsonObject::fromVariantMap( variantMap ) ).toJson( QJsonDocument::Compact ),
+                appendData,
+                succeedCallback,
+                failCallback
+            );
+}
+
 qint32 JQNetworkClient::sendFileData(
         const QString &hostName,
         const quint16 &port,
@@ -295,6 +319,27 @@ qint32 JQNetworkClient::waitForSendPayloadData(
     semaphore.acquire();
 
     return sendReply;
+}
+
+qint32 JQNetworkClient::waitForSendVariantMapData(
+        const QString &hostName,
+        const quint16 &port,
+        const QString &targetActionFlag,
+        const QVariantMap &variantMap,
+        const QVariantMap &appendData,
+        const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback,
+        const JQNetworkConnectPointerFunction &failCallback
+    )
+{
+    return this->waitForSendPayloadData(
+                hostName,
+                port,
+                targetActionFlag,
+                QJsonDocument( QJsonObject::fromVariantMap( variantMap ) ).toJson( QJsonDocument::Compact ),
+                appendData,
+                succeedCallback,
+                failCallback
+            );
 }
 
 qint32 JQNetworkClient::waitForSendFileData(

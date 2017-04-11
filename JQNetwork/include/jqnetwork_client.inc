@@ -75,6 +75,45 @@ inline qint32 JQNetworkClient::sendPayloadData(
             );
 }
 
+inline qint32 JQNetworkClient::sendVariantMapData(
+        const QString &hostName,
+        const quint16 &port,
+        const QString &targetActionFlag,
+        const QVariantMap &variantMap,
+        const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback,
+        const JQNetworkConnectPointerFunction &failCallback
+    )
+{
+    return this->sendVariantMapData(
+                hostName,
+                port,
+                targetActionFlag,
+                variantMap,
+                { }, // empty appendData
+                succeedCallback,
+                failCallback
+            );
+}
+
+inline qint32 JQNetworkClient::sendVariantMapData(
+        const QString &hostName,
+        const quint16 &port,
+        const QVariantMap &variantMap,
+        const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback,
+        const JQNetworkConnectPointerFunction &failCallback
+    )
+{
+    return this->sendVariantMapData(
+                hostName,
+                port,
+                { }, // empty targetActionFlag
+                variantMap,
+                { }, // empty appendData
+                succeedCallback,
+                failCallback
+            );
+}
+
 inline qint32 JQNetworkClient::sendFileData(
         const QString &hostName,
         const quint16 &port,
@@ -147,6 +186,45 @@ inline qint32 JQNetworkClient::waitForSendPayloadData(
                 port,
                 { }, // empty targetActionFlag
                 payloadData,
+                { }, // empty appendData
+                succeedCallback,
+                failCallback
+            );
+}
+
+inline qint32 JQNetworkClient::waitForSendVariantMapData(
+        const QString &hostName,
+        const quint16 &port,
+        const QString &targetActionFlag,
+        const QVariantMap &variantMap,
+        const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback,
+        const JQNetworkConnectPointerFunction &failCallback
+    )
+{
+    return this->waitForSendVariantMapData(
+                hostName,
+                port,
+                targetActionFlag,
+                variantMap,
+                { }, // empty appendData
+                succeedCallback,
+                failCallback
+            );
+}
+
+inline qint32 JQNetworkClient::waitForSendVariantMapData(
+        const QString &hostName,
+        const quint16 &port,
+        const QVariantMap &variantMap,
+        const JQNetworkConnectPointerAndPackageSharedPointerFunction &succeedCallback,
+        const JQNetworkConnectPointerFunction &failCallback
+    )
+{
+    return this->waitForSendVariantMapData(
+                hostName,
+                port,
+                { }, // empty targetActionFlag
+                variantMap,
                 { }, // empty appendData
                 succeedCallback,
                 failCallback
