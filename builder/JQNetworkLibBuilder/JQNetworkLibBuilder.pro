@@ -27,32 +27,4 @@ CONFIG( release, debug | release ) {
 JQNETWORK_COMPILE_MODE = SRC
 include( $$PWD/../../JQNetwork/JQNetwork.pri )
 
-_QMAKE_SPEC_ = $$[QMAKE_SPEC]
-
-win32 | equals( _QMAKE_SPEC_, win32-g++ ) {
-
-    android {
-        SOURCEFILEPATH = $$OUT_PWD/$$JQNETWORK_LIB_FILENAME
-    }
-    else {
-        CONFIG( debug, debug | release ) {
-            SOURCEFILEPATH = $$OUT_PWD/debug/$$JQNETWORK_LIB_FILENAME
-        }
-        else: CONFIG( release, debug | release ) {
-            SOURCEFILEPATH = $$OUT_PWD/release/$$JQNETWORK_LIB_FILENAME
-        }
-    }
-
-    TARGETFILEPATH = $$JQNETWORK_LIB_FILEPATH
-
-    SOURCEFILEPATH ~= s,/,\\,g
-    TARGETFILEPATH ~= s,/,\\,g
-
-    QMAKE_POST_LINK += copy \"$$SOURCEFILEPATH\" \"$$TARGETFILEPATH\"
-}
-else: unix | linux {
-    QMAKE_POST_LINK += cp \"$$OUT_PWD/$$JQNETWORK_LIB_FILENAME\" \"$$JQNETWORK_LIB_FILEPATH\"
-}
-else {
-    error( unknow platfrom )
-}
+DESTDIR = $$JQNETWORK_BIN_DIR
