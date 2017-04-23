@@ -445,6 +445,26 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
         QCOMPARE( packageForTarget->isCompletePackage(), true );
         QCOMPARE( packageForTarget->payloadData(), QByteArray( "12345" ) );
     }
+
+    {
+        auto packagesForSource = JQNetworkPackage::createPayloadTransportPackages( { }, "12345", QVariantMap( { { "key", "value" } } ), 1, 2, true );
+
+        QCOMPARE( packagesForSource.size(), 3 );
+
+        for ( auto index = 0; index < packagesForSource.size(); ++index )
+        {
+            if ( index )
+            {
+                QCOMPARE( packagesForSource[ index ]->metaDataCurrentSize(), 0 );
+                QCOMPARE( packagesForSource[ index ]->metaData(), QByteArray() );
+            }
+            else
+            {
+                QCOMPARE( packagesForSource[ index ]->metaDataCurrentSize(), 52 );
+                QCOMPARE( packagesForSource[ index ]->metaData(), QByteArray( "{\"appendData\":{\"key\":\"value\"},\"targetActionFlag\":\"\"}" ) );
+            }
+        }
+    }
 }
 
 void JQNetworkOverallTest::jqNetworkServerTest()
