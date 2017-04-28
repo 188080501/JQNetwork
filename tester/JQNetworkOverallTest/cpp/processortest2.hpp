@@ -148,6 +148,23 @@ public slots:
         send = QFileInfo( this->testFileInfo( 3 ) );
     }
 
+    void receivedVariantMapAndAppendSendVariantMapAndAppend(
+            const QVariantMap &received,
+            QVariantMap &send,
+            const QVariantMap &receivedAppend,
+            QVariantMap &sendAppend
+        )
+    {
+        if ( ( received == QVariantMap( { { "key2", "value2" } } ) ) &&
+             ( receivedAppend == QVariantMap( { { "key3", "value3" } } ) ) )
+        {
+            ++counter_[ "receivedVariantMapAndAppendSendVariantMapAndAppend" ];
+        }
+
+        send = QVariantMap( { { "key", "value" } } );
+        sendAppend = QVariantMap( { { "key2", "value2" } } );
+    }
+
 public:
     QMap< QString, int > counter_; // methodName -> count
 };
