@@ -25,7 +25,7 @@ public slots:
     {
 //        qDebug() << "accountLogin:" << received;
 
-        JQNP_CHECKRECEIVEDATACONTAINSANDNOTEMPTY( "handle", "password" );
+        JQNP_CHECKRECEIVEDDATACONTAINSANDNOTEMPTY( "handle", "password" );
 
         const auto &&handle = received[ "handle" ].toString();
         const auto &&password = received[ "password" ].toString();
@@ -64,11 +64,11 @@ public slots:
     {
 //        qDebug() << "someRecords:" << received;
 
-        JQNP_CHECKDATACONTAINSEXPECTEDCONTENT( "action", { "upload", "download" } );
+        JQNP_CHECKRECEIVEDDATACONTAINSEXPECTEDCONTENT( "action", { "upload", "download" } );
 
         if ( received[ "action" ] == "upload" )
         {
-            JQNP_CHECKRECEIVEDATACONTAINS( "someRecords" );
+            JQNP_CHECKRECEIVEDDATACONTAINS( "someRecords" );
 
             someRecords_ = received[ "someRecords" ].toList();
         }
@@ -84,7 +84,7 @@ public slots:
     {
 //        qDebug() << "msleep:" << received;
 
-        JQNP_CHECKRECEIVEDATACONTAINSANDNOT0( "msleep" );
+        JQNP_CHECKRECEIVEDDATACONTAINSANDNOT0( "msleep" );
 
         QThread::msleep( received[ "msleep" ].toInt() );
 
