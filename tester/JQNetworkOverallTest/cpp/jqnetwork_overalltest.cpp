@@ -972,7 +972,7 @@ void JQNetworkOverallTest::jqNetworkProcessorTest2()
 
     server->connectSettings()->filePathProvider = filePathProvider;
 
-    QCOMPARE( server->availableProcessorMethodNames().size(), 12 );
+    QCOMPARE( server->availableProcessorMethodNames().size(), 13 );
     QCOMPARE( server->begin(), true );
 
     auto client = JQNetworkClient::createClient( true );
@@ -984,7 +984,25 @@ void JQNetworkOverallTest::jqNetworkProcessorTest2()
     QCOMPARE( client->waitForCreateConnect( "127.0.0.1", 33445 ), true );
 
     int succeedCounter = 0;
-    auto succeedCallback = [ &succeedCounter ](const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer &){ ++succeedCounter; };
+    int keySucceedCounter = 0;
+    int appendKey2SucceedCounter = 0;
+    auto succeedCallback = [ & ](const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer &package)
+    {
+        ++succeedCounter;
+
+        const auto &&receivedData = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
+        const auto &&receivedAppendData = package->appendData();
+
+        if ( receivedData[ "key" ] == "value" )
+        {
+            ++keySucceedCounter;
+        }
+
+        if ( receivedAppendData[ "key2" ] == "value2" )
+        {
+            ++appendKey2SucceedCounter;
+        }
+    };
 
     client->sendPayloadData( "127.0.0.1", 33445, "receivedByteArray", "test", succeedCallback );
     client->sendPayloadData( "127.0.0.1", 33445, "receivedByteArraySendByteArray", "test", succeedCallback );
@@ -1001,10 +1019,14 @@ void JQNetworkOverallTest::jqNetworkProcessorTest2()
     client->sendFileData( "127.0.0.1", 33445, "receiveFileSendVariantMap", ProcessorTest2::TestProcessor::testFileInfo( 1 ), succeedCallback );
     client->sendFileData( "127.0.0.1", 33445, "receiveFileSendFile", ProcessorTest2::TestProcessor::testFileInfo( 1 ), succeedCallback );
 
-    QThread::sleep( 3 );
+    client->sendVariantMapData( "127.0.0.1", 33445, "receivedVariantMapAndAppendSendVariantMapAndAppend", { { "key2", "value2" } }, { { "key3", "value3" } }, succeedCallback );
 
-    QCOMPARE( processor->counter_.size(), 12 );
-    QCOMPARE( succeedCounter, 9 );
+    QThread::sleep( 2 );
+
+    QCOMPARE( processor->counter_.size(), 13 );
+    QCOMPARE( succeedCounter, 10 );
+    QCOMPARE( keySucceedCounter, 4 );
+    QCOMPARE( appendKey2SucceedCounter, 1 );
 
     QCOMPARE( ProcessorTest2::TestProcessor::testFileInfo( 1 ).exists(), true );
     QCOMPARE( ProcessorTest2::TestProcessor::testFileInfo( 2 ).exists(), true );
