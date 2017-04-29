@@ -48,6 +48,9 @@ PRIVATEMACRO slots:
     void jqNetworkServerAndClientTest2();
 
 PRIVATEMACRO slots:
+    void jqNetworkServerAndClientTest3();
+
+PRIVATEMACRO slots:
     void jqNetworkLanTest();
 
 PRIVATEMACRO slots:

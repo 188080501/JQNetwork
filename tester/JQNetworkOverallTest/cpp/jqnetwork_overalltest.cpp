@@ -185,6 +185,12 @@ void JQNetworkOverallTest::jqNetworkConnectTest()
     QCOMPARE( flag4, false );
     QCOMPARE( flag5, true );
 
+    const auto &&lanAddressEntries = JQNetworkLan::lanAddressEntries();
+    if ( lanAddressEntries.isEmpty() || ( lanAddressEntries[ 0 ].ip == QHostAddress::LocalHost ) )
+    {
+        QSKIP( "lanAddressEntries is empty" );
+    }
+
     flag1 = false;
     flag2 = false;
     flag3 = false;
@@ -555,6 +561,9 @@ void JQNetworkOverallTest::jqNetworkClientTest()
 
         flag1 = false;
         QCOMPARE( client.waitForCreateConnect( "127.0.0.1", 12345 ), true );
+        QCOMPARE( client.waitForCreateConnect( "127.0.0.1", 12345 ), true );
+        QCOMPARE( client.waitForCreateConnect( "127.0.0.1", 12345 ), true );
+
         QThread::msleep( 200 );
         QCOMPARE( flag1, false );
 
@@ -820,6 +829,68 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest2()
           );
 }
 
+void JQNetworkOverallTest::jqNetworkServerAndClientTest3()
+{
+    auto server = JQNetworkServer::createServer( 12569 );
+
+    QMutex mutex;
+    auto succeedCount = 0;
+
+    QByteArray testData;
+    testData.resize( 4 * 1024 );
+    memset( testData.data(), 0, testData.size() );
+
+    server->serverSettings()->packageReceivedCallback = [ testData, &mutex, &succeedCount ](const auto &connect, const auto &package)
+    {
+        if ( package->payloadData() == testData )
+        {
+            mutex.lock();
+            ++succeedCount;
+            mutex.unlock();
+        }
+
+        connect->replyPayloadData( package->randomFlag(), "OK" );
+    };
+
+    const auto &&lanAddressEntries = JQNetworkLan::lanAddressEntries();
+    if ( lanAddressEntries.isEmpty() || ( lanAddressEntries[ 0 ].ip == QHostAddress::LocalHost ) )
+    {
+        QSKIP( "lanAddressEntries is empty" );
+    }
+
+    auto test = [ targetIp = lanAddressEntries[ 0 ].ip.toString(), testData ]()
+    {
+        auto client = JQNetworkClient::createClient();
+
+        QCOMPARE( client->begin(), true );
+        QCOMPARE( client->waitForCreateConnect( "127.0.0.1", 12569 ), true );
+        QCOMPARE( client->waitForCreateConnect( targetIp, 12569 ), true );
+
+        for ( auto count = 100; count; --count )
+        {
+            client->waitForSendPayloadData( "127.0.0.1", 12569, testData );
+            client->waitForSendPayloadData( targetIp, 12569, testData );
+        }
+    };
+
+    QCOMPARE( server->begin(), true );
+
+    test();
+    test();
+    test();
+    test();
+    test();
+
+    for ( auto count = 500; count; --count )
+    {
+        QtConcurrent::run( test );
+    }
+
+    QThreadPool::globalInstance()->waitForDone();
+
+    QCOMPARE( succeedCount, 101000 );
+}
+
 void JQNetworkOverallTest::jqNetworkLanTest()
 {
     bool flag1 = false;
@@ -872,11 +943,6 @@ void JQNetworkOverallTest::jqNetworkLanTest()
     const auto &&lanAddressEntries = JQNetworkLan::lanAddressEntries();
 
     QCOMPARE( lanAddressEntries.size() >= 1, true );
-
-//    for ( const auto &addressEntries: lanAddressEntries )
-//    {
-//        qDebug() << "addressEntries:" << addressEntries.ip << addressEntries.netmask << addressEntries.ipSegment << addressEntries.isVmAddress;
-//    }
 
     {
         QVector< QSharedPointer< JQNetworkLan > > lans;
