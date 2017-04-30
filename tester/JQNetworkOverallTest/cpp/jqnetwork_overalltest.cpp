@@ -866,7 +866,7 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest3()
         QCOMPARE( client->waitForCreateConnect( "127.0.0.1", 12569 ), true );
         QCOMPARE( client->waitForCreateConnect( targetIp, 12569 ), true );
 
-        for ( auto count = 100; count; --count )
+        for ( auto count = 50; count; --count )
         {
             client->waitForSendPayloadData( "127.0.0.1", 12569, testData );
             client->waitForSendPayloadData( targetIp, 12569, testData );
@@ -881,14 +881,14 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest3()
     test();
     test();
 
-    for ( auto count = 500; count; --count )
+    for ( auto count = 300; count; --count )
     {
         QtConcurrent::run( test );
     }
 
     QThreadPool::globalInstance()->waitForDone();
 
-    QCOMPARE( succeedCount, 101000 );
+    QCOMPARE( succeedCount, 30500 );
 }
 
 void JQNetworkOverallTest::jqNetworkLanTest()
