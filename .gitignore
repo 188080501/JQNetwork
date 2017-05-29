@@ -1,3 +1,6 @@
+### JQNetworkLib ###
+sharedlibrary/JQNetwork/bin
+
 ### C++ ###
 # Prerequisites
 *.d
@@ -48,5 +51,3 @@ CMakeLists.txt.user*
 ### macOS ###
 *.DS_Store
 
-### JQNetworkLib ###
-JQNetwork/bin

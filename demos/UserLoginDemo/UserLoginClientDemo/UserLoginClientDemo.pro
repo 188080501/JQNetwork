@@ -15,7 +15,7 @@ QT       += core qml quick
 TEMPLATE = app
 
 #JQNETWORK_COMPILE_MODE = SRC
-include( $$PWD/../../../JQNetwork/JQNetwork.pri )
+include( $$PWD/../../../sharedlibrary/JQNetwork/JQNetwork.pri )
 
 SOURCES += \
     $$PWD/cpp/main.cpp

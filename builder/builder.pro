@@ -12,5 +12,4 @@
 
 TEMPLATE = subdirs
 
-SUBDIRS += \
-    JQNetworkLibBuilder
+SUBDIRS += JQNetworkLibBuilder
