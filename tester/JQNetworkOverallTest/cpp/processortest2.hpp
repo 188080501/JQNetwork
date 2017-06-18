@@ -1,5 +1,5 @@
-﻿#ifndef __CPP_PROCESSORTEST2_HPP__
-#define __CPP_PROCESSORTEST2_HPP__
+﻿#ifndef CPP_PROCESSORTEST2_HPP_
+#define CPP_PROCESSORTEST2_HPP_
 
 // Qt lib import
 #include <QStandardPaths>
@@ -171,4 +171,4 @@ public:
 
 }
 
-#endif//__CPP_PROCESSORTEST2_HPP__
+#endif//CPP_PROCESSORTEST2_HPP_

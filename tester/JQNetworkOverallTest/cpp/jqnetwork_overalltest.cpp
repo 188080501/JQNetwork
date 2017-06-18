@@ -14,6 +14,7 @@
 #include "processortest1.hpp"
 #include "processortest2.hpp"
 #include "fusiontest1.hpp"
+#include "fusiontest2.hpp"
 
 void JQNetworkOverallTest::jqNetworkThreadPoolTest()
 {
@@ -267,13 +268,13 @@ void JQNetworkOverallTest::jeNetworkPackageTest()
             QCOMPARE( rawData.size(), 0 );
             QCOMPARE( package->isCompletePackage(), true );
             QCOMPARE( package->isAbandonPackage(), false );
-            QCOMPARE( (int)package->bootFlag(), 0x7d );
-            QCOMPARE( (int)package->packageFlag(), 0x1 );
+            QCOMPARE( package->bootFlag(), static_cast< qint8 >( 0x7d ) );
+            QCOMPARE( package->packageFlag(), static_cast< qint8 >( 0x1 ) );
             QCOMPARE( package->randomFlag(), 0x01020304 );
-            QCOMPARE( (int)package->metaDataFlag(), 0x1 );
+            QCOMPARE( package->metaDataFlag(), static_cast< qint8 >( 0x1 ) );
             QCOMPARE( package->metaDataTotalSize(), 0x2 );
             QCOMPARE( package->metaDataCurrentSize(), 2 );
-            QCOMPARE( (int)package->payloadDataFlag(), 0x1 );
+            QCOMPARE( package->payloadDataFlag(), static_cast< qint8 >( 0x1 ) );
             QCOMPARE( package->payloadDataTotalSize(), 3 );
             QCOMPARE( package->payloadDataCurrentSize(), 3 );
             QCOMPARE( package->metaData(), QByteArray::fromHex( "1122" ) );
@@ -540,7 +541,7 @@ void JQNetworkOverallTest::jqNetworkClientTest()
 
         for ( auto count = 0; count < 500; ++count )
         {
-            client.createConnect( "127.0.0.1", 34567 + count );
+            client.createConnect( "127.0.0.1", static_cast< quint16 >( 34567 + count ) );
         }
 
         QThread::msleep( 15 * 1000 );
@@ -838,7 +839,7 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest3()
 
     QByteArray testData;
     testData.resize( 4 * 1024 );
-    memset( testData.data(), 0, testData.size() );
+    memset( testData.data(), 0, static_cast< size_t >( testData.size() ) );
 
     server->serverSettings()->packageReceivedCallback = [ testData, &mutex, &succeedCount ](const auto &connect, const auto &package)
     {
@@ -1348,4 +1349,36 @@ void JQNetworkOverallTest::fusionTest1()
                         [ ](const auto &){ }
                     );
     }
+}
+
+void JQNetworkOverallTest::fusionTest2()
+{
+    FusionTest2::ServerProcessor serverProcessor;
+    FusionTest2::ClientProcessor clientProcessor;
+
+    auto server = JQNetworkServer::createServer( 36412 );
+
+    server->registerProcessor( &serverProcessor );
+
+    QCOMPARE( server->begin(), true );
+
+    QVector< JQNetworkClientSharedPointer > clients;
+
+    for ( auto i = 0; i < 10; ++i )
+    {
+        auto client = JQNetworkClient::createClient();
+
+        clients.push_back( client );
+
+        client->registerProcessor( &clientProcessor );
+
+        QCOMPARE( client->begin(), true );
+        QCOMPARE( client->waitForCreateConnect( "127.0.0.1", 36412, 1000 ), true );
+
+        QCOMPARE( client->waitForSendVariantMapData( "127.0.0.1", 36412, "registerClient", { { "clientId", i } } ) > 0, true );
+    }
+
+    clients.first()->waitForSendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { } );
+
+    QThread::sleep( 1 );
 }

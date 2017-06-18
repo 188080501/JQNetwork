@@ -1,5 +1,5 @@
-﻿#ifndef __CPP_PING_HPP__
-#define __CPP_PING_HPP__
+﻿#ifndef CPP_PING_HPP_
+#define CPP_PING_HPP_
 
 // Qt lib import
 #include <QTimer>
@@ -154,4 +154,4 @@ private:
     QTimer timer_;
 };
 
-#endif//__CPP_PING_HPP__
+#endif//CPP_PING_HPP_

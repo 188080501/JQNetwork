@@ -1,5 +1,5 @@
-﻿#ifndef __CPP_MYSERVER_HPP__
-#define __CPP_MYSERVER_HPP__
+﻿#ifndef CPP_MYSERVER_HPP_
+#define CPP_MYSERVER_HPP_
 
 // Qt lib import
 #include <QTimer>
@@ -70,4 +70,4 @@ private:
     JQNetworkServerSharedPointer server_;
 };
 
-#endif//__CPP_MYSERVER_HPP__
+#endif//CPP_MYSERVER_HPP_

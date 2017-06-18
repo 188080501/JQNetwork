@@ -1,5 +1,5 @@
-﻿#ifndef __CPP_PONG_HPP__
-#define __CPP_PONG_HPP__
+﻿#ifndef CPP_PONG_HPP_
+#define CPP_PONG_HPP_
 
 // JQNetwork lib improt
 #include <JQNetwork>
@@ -52,4 +52,4 @@ private:
     JQNetworkServerSharedPointer server_;
 };
 
-#endif//__CPP_PONG_HPP__
+#endif//CPP_PONG_HPP_

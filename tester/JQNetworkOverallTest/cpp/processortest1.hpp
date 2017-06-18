@@ -1,5 +1,5 @@
-﻿#ifndef __CPP_PROCESSORTEST1_HPP__
-#define __CPP_PROCESSORTEST1_HPP__
+﻿#ifndef CPP_PROCESSORTEST1_HPP_
+#define CPP_PROCESSORTEST1_HPP_
 
 // Qt lib import
 #include <QThread>
@@ -34,4 +34,4 @@ public:
 
 }
 
-#endif//__CPP_PROCESSORTEST1_HPP__
+#endif//CPP_PROCESSORTEST1_HPP_

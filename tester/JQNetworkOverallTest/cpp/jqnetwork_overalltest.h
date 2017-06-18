@@ -1,11 +1,11 @@
-﻿#ifndef __CPP_JQNETWORK_OVERALLTEST_H__
-#define __CPP_JQNETWORK_OVERALLTEST_H__
+﻿#ifndef CPP_JQNETWORK_OVERALLTEST_H_
+#define CPP_JQNETWORK_OVERALLTEST_H_
 
 // Qt lib import
 #include <QObject>
 
-//#define PRIVATEMACRO public
-#define PRIVATEMACRO private
+#define PRIVATEMACRO public
+//#define PRIVATEMACRO private
 
 class JQNetworkOverallTest: public QObject
 {
@@ -64,6 +64,9 @@ PRIVATEMACRO slots:
 
 PRIVATEMACRO slots:
     void fusionTest1();
+
+private slots:
+    void fusionTest2();
 };
 
-#endif//__CPP_JQNETWORK_OVERALLTEST_H__
+#endif//CPP_JQNETWORK_OVERALLTEST_H_
