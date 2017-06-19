@@ -10,8 +10,8 @@
     GitHub: https://github.com/188080501/
 */
 
-#ifndef JQNETWORK_INCLUDE_JQNETWORK_SERVER_INC
-#define JQNETWORK_INCLUDE_JQNETWORK_SERVER_INC
+#ifndef JQNETWORK_INCLUDE_JQNETWORK_SERVER_INC_
+#define JQNETWORK_INCLUDE_JQNETWORK_SERVER_INC_
 
 // JQNetwork lib import
 #include "jqnetwork_server.h"
@@ -45,7 +45,7 @@ inline void JQNetworkServer::onConnectToHostError(const JQNetworkConnectPointer 
 {
     if ( !serverSettings_->connectToHostErrorCallback ) { return; }
 
-    processorThreadPool_->run(
+    callbackThreadPool_->run(
                 [
                     connect,
                     callback = serverSettings_->connectToHostErrorCallback
@@ -60,7 +60,7 @@ inline void JQNetworkServer::onConnectToHostTimeout(const JQNetworkConnectPointe
 {
     if ( !serverSettings_->connectToHostTimeoutCallback ) { return; }
 
-    processorThreadPool_->run(
+    callbackThreadPool_->run(
                 [
                     connect,
                     callback = serverSettings_->connectToHostTimeoutCallback
@@ -75,7 +75,7 @@ inline void JQNetworkServer::onConnectToHostSucceed(const JQNetworkConnectPointe
 {
     if ( !serverSettings_->connectToHostSucceedCallback ) { return; }
 
-    processorThreadPool_->run(
+    callbackThreadPool_->run(
                 [
                     connect,
                     callback = serverSettings_->connectToHostSucceedCallback
@@ -90,7 +90,7 @@ inline void JQNetworkServer::onRemoteHostClosed(const JQNetworkConnectPointer &c
 {
     if ( !serverSettings_->remoteHostClosedCallback ) { return; }
 
-    processorThreadPool_->run(
+    callbackThreadPool_->run(
                 [
                     connect,
                     callback = serverSettings_->remoteHostClosedCallback
@@ -105,7 +105,7 @@ inline void JQNetworkServer::onReadyToDelete(const JQNetworkConnectPointer &conn
 {
     if ( !serverSettings_->readyToDeleteCallback ) { return; }
 
-    processorThreadPool_->run(
+    callbackThreadPool_->run(
                 [
                     connect,
                     callback = serverSettings_->readyToDeleteCallback
@@ -127,7 +127,7 @@ inline void JQNetworkServer::onPackageSending(
 {
     if ( !serverSettings_->packageSendingCallback ) { return; }
 
-    processorThreadPool_->run(
+    callbackThreadPool_->run(
                 [
                     connect,
                     callback = serverSettings_->packageSendingCallback,
@@ -153,7 +153,7 @@ inline void JQNetworkServer::onPackageReceiving(
 {
     if ( !serverSettings_->packageReceivingCallback ) { return; }
 
-    processorThreadPool_->run(
+    callbackThreadPool_->run(
                 [
                     connect,
                     callback = serverSettings_->packageReceivingCallback,
@@ -168,4 +168,4 @@ inline void JQNetworkServer::onPackageReceiving(
     );
 }
 
-#endif//JQNETWORK_INCLUDE_JQNETWORK_SERVER_INC
+#endif//JQNETWORK_INCLUDE_JQNETWORK_SERVER_INC_

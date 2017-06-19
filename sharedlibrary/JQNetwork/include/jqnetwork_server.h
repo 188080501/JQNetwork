@@ -10,8 +10,8 @@
     GitHub: https://github.com/188080501/
 */
 
-#ifndef JQNETWORK_INCLUDE_JQNETWORK_SERVER_H
-#define JQNETWORK_INCLUDE_JQNETWORK_SERVER_H
+#ifndef JQNETWORK_INCLUDE_JQNETWORK_SERVER_H_
+#define JQNETWORK_INCLUDE_JQNETWORK_SERVER_H_
 
 // JQNetwork lib import
 #include <JQNetworkFoundation>
@@ -114,8 +114,8 @@ private:
     QSharedPointer< JQNetworkThreadPool > serverThreadPool_;
     static QWeakPointer< JQNetworkThreadPool > globalSocketThreadPool_;
     QSharedPointer< JQNetworkThreadPool > socketThreadPool_;
-    static QWeakPointer< JQNetworkThreadPool > globalProcessorThreadPool_;
-    QSharedPointer< JQNetworkThreadPool > processorThreadPool_;
+    static QWeakPointer< JQNetworkThreadPool > globalCallbackThreadPool_;
+    QSharedPointer< JQNetworkThreadPool > callbackThreadPool_;
 
     // Settings
     JQNetworkServerSettingsSharedPointer serverSettings_;
@@ -126,15 +126,15 @@ private:
     QSharedPointer< QTcpServer > tcpServer_;
     QMap< QThread *, JQNetworkConnectPoolSharedPointer > connectPools_;
 
-    // Other
-    QString nodeMarkSummary_;
-
     // Processor
     QSet< JQNetworkProcessor * > processors_;
     QMap< QString, std::function< void( const JQNetworkConnectPointer &, const JQNetworkPackageSharedPointer & ) > > processorCallbacks_;
+
+    // Other
+    QString nodeMarkSummary_;
 };
 
 // inc import
 #include "jqnetwork_server.inc"
 
-#endif//JQNETWORK_INCLUDE_JQNETWORK_SERVER_H
+#endif//JQNETWORK_INCLUDE_JQNETWORK_SERVER_H_

@@ -77,8 +77,8 @@ QSet< QString > JQNetworkProcessor::availableSlots()
                 receiveArgumentMaker.reset( new std::function< QGenericArgument(const JQNetworkVoidSharedPointer &receivedArg, const JQNetworkPackageSharedPointer &package) >
                                             ( [ ](const auto &receivedArg, const auto &package)
                 {
-                    ( *( QByteArray * )receivedArg.get() ) = package->payloadData();
-                    return Q_ARG( const QByteArray &, *( const QByteArray * )receivedArg.get() );
+                    ( *static_cast< QByteArray * >( receivedArg.get() ) ) = package->payloadData();
+                    return Q_ARG( const QByteArray &, *static_cast< const QByteArray * >( receivedArg.get() ) );
                 } ) );
             }
             else if ( currentSum == "QVariantMap:received" )
@@ -91,8 +91,8 @@ QSet< QString > JQNetworkProcessor::availableSlots()
                 receiveArgumentMaker.reset( new std::function< QGenericArgument(const JQNetworkVoidSharedPointer &receivedArg, const JQNetworkPackageSharedPointer &package) >
                                             ( [ ](const auto &receivedArg, const auto &package)
                 {
-                    ( *( QVariantMap * )receivedArg.get() ) = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
-                    return Q_ARG( const QVariantMap &, *( const QVariantMap * )receivedArg.get() );
+                    ( *static_cast< QVariantMap * >( receivedArg.get() ) ) = QJsonDocument::fromJson( package->payloadData() ).object().toVariantMap();
+                    return Q_ARG( const QVariantMap &, *static_cast< const QVariantMap * >( receivedArg.get() ) );
                 } ) );
             }
             else if ( currentSum == "QFileInfo:received" )
@@ -105,8 +105,8 @@ QSet< QString > JQNetworkProcessor::availableSlots()
                 receiveArgumentMaker.reset( new std::function< QGenericArgument(const JQNetworkVoidSharedPointer &receivedArg, const JQNetworkPackageSharedPointer &package) >
                                             ( [ ](const auto &receivedArg, const auto &package)
                 {
-                    ( *( QFileInfo * )receivedArg.get() ) = QFileInfo( package->localFilePath() );
-                    return Q_ARG( const QFileInfo &, *( const QFileInfo * )receivedArg.get() );
+                    ( *static_cast< QFileInfo * >( receivedArg.get() ) ) = QFileInfo( package->localFilePath() );
+                    return Q_ARG( const QFileInfo &, *static_cast< const QFileInfo * >( receivedArg.get() ) );
                 } ) );
             }
             else if ( !method.parameterNames()[ 0 ].isEmpty() )
@@ -151,9 +151,15 @@ QSet< QString > JQNetworkProcessor::availableSlots()
                         return;
                     }
 
+                    if ( !package->randomFlag() )
+                    {
+                        qDebug() << "JQNetworkProcessor::availableSlots: when the randomFlag is 0, the reply is not allowed";
+                        return;
+                    }
+
                     const auto &&replyReply = connect->replyPayloadData(
                                 package->randomFlag(),
-                                *( QByteArray * )sendArg.get(),
+                                *static_cast< QByteArray * >( sendArg.get() ),
                                 sendAppend
                             );
                     if ( !replyReply )
@@ -193,9 +199,15 @@ QSet< QString > JQNetworkProcessor::availableSlots()
                         return;
                     }
 
+                    if ( !package->randomFlag() )
+                    {
+                        qDebug() << "JQNetworkProcessor::availableSlots: when the randomFlag is 0, the reply is not allowed";
+                        return;
+                    }
+
                     const auto &&replyReply = connect->replyPayloadData(
                                 package->randomFlag(),
-                                QJsonDocument( QJsonObject::fromVariantMap( *( QVariantMap * )sendArg.get() ) ).toJson( QJsonDocument::Compact ),
+                                QJsonDocument( QJsonObject::fromVariantMap( *static_cast< QVariantMap * >( sendArg.get() ) ) ).toJson( QJsonDocument::Compact ),
                                 sendAppend
                             );
                     if ( !replyReply )
@@ -235,11 +247,17 @@ QSet< QString > JQNetworkProcessor::availableSlots()
                         return;
                     }
 
-                    const auto &sendFileInfo = *( QFileInfo * )sendArg.get();
+                    if ( !package->randomFlag() )
+                    {
+                        qDebug() << "JQNetworkProcessor::availableSlots: when the randomFlag is 0, the reply is not allowed";
+                        return;
+                    }
+
+                    const auto &sendFileInfo = *static_cast< QFileInfo * >( sendArg.get() );
 
                     if ( !sendFileInfo.isFile() )
                     {
-                        qDebug() << "JQNetworkProcessor::availableSlots: not file:" << sendFileInfo.filePath();
+                        qDebug() << "JQNetworkProcessor::availableSlots: current fileinfo is not file:" << sendFileInfo.filePath();
                         return;
                     }
 
@@ -275,8 +293,8 @@ QSet< QString > JQNetworkProcessor::availableSlots()
                 receiveAppendArgumentMaker.reset( new std::function< QGenericArgument(const JQNetworkVoidSharedPointer &receivedAppendArg, const JQNetworkPackageSharedPointer &package) >
                                             ( [ ](const auto &receivedAppendArg, const auto &package)
                 {
-                    ( *( QVariantMap * )receivedAppendArg.get() ) = package->appendData();
-                    return Q_ARG( const QVariantMap &, *( const QVariantMap * )receivedAppendArg.get() );
+                    ( *static_cast< QVariantMap * >( receivedAppendArg.get() ) ) = package->appendData();
+                    return Q_ARG( const QVariantMap &, *static_cast< const QVariantMap * >( receivedAppendArg.get() ) );
                 } ) );
             }
             else if ( !method.parameterNames()[ 2 ].isEmpty() )
@@ -368,7 +386,7 @@ QSet< QString > JQNetworkProcessor::availableSlots()
             {
                 if ( sendAppendArg )
                 {
-                    ( *sendArgumentAnswer )( connect, package, sendArg, *(const QVariantMap *)sendAppendArg.get() );
+                    ( *sendArgumentAnswer )( connect, package, sendArg, *static_cast< const QVariantMap * >( sendAppendArg.get() ) );
                 }
                 else
                 {

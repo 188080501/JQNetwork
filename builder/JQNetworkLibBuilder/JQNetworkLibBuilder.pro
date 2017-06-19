@@ -25,6 +25,6 @@ CONFIG( release, debug | release ) {
 }
 
 JQNETWORK_COMPILE_MODE = SRC
-include( $$PWD/../../JQNetwork/JQNetwork.pri )
+include( $$PWD/../../sharedlibrary/JQNetwork/JQNetwork.pri )
 
 DESTDIR = $$JQNETWORK_BIN_DIR

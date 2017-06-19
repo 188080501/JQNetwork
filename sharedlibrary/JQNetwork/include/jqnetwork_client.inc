@@ -10,8 +10,8 @@
     GitHub: https://github.com/188080501/
 */
 
-#ifndef JQNETWORK_INCLUDE_JQNETWORK_CLIENG_INC
-#define JQNETWORK_INCLUDE_JQNETWORK_CLIENG_INC
+#ifndef JQNETWORK_INCLUDE_JQNETWORK_CLIENG_INC_
+#define JQNETWORK_INCLUDE_JQNETWORK_CLIENG_INC_
 
 // JQNetwork lib import
 #include "jqnetwork_client.h"
@@ -36,6 +36,11 @@ inline QString JQNetworkClient::nodeMarkSummary() const
     return nodeMarkSummary_;
 }
 
+inline QSet< QString > JQNetworkClient::availableProcessorMethodNames() const
+{
+    return QSet< QString >::fromList( processorCallbacks_.keys() );
+}
+
 inline qint32 JQNetworkClient::sendPayloadData(
         const QString &hostName,
         const quint16 &port,
@@ -270,4 +275,4 @@ inline qint32 JQNetworkClient::waitForSendFileData(
             );
 }
 
-#endif//JQNETWORK_INCLUDE_JQNETWORK_CLIENG_INC
+#endif//JQNETWORK_INCLUDE_JQNETWORK_CLIENG_INC_

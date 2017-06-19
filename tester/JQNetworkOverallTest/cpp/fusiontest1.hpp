@@ -1,5 +1,5 @@
-﻿#ifndef __CPP_FUSIONTEST1_HPP__
-#define __CPP_FUSIONTEST1_HPP__
+﻿#ifndef CPP_FUSIONTEST1_HPP_
+#define CPP_FUSIONTEST1_HPP_
 
 // Qt lib import
 #include <QThread>
@@ -86,7 +86,7 @@ public slots:
 
         JQNP_CHECKRECEIVEDDATACONTAINSANDNOT0( "msleep" );
 
-        QThread::msleep( received[ "msleep" ].toInt() );
+        QThread::msleep( static_cast< unsigned long >( received[ "msleep" ].toInt() ) );
 
         JQNP_SUCCEED();
     }
@@ -97,4 +97,4 @@ private:
 
 }
 
-#endif//__CPP_FUSIONTEST1_HPP__
+#endif//CPP_FUSIONTEST1_HPP_

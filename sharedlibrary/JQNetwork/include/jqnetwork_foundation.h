@@ -10,8 +10,8 @@
     GitHub: https://github.com/188080501/
 */
 
-#ifndef JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_H
-#define JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_H
+#ifndef JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_H_
+#define JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_H_
 
 // C++ lib import
 #include <functional>
@@ -47,6 +47,16 @@
 
 #define JQNETWORK_NULLPTR_CHECK( ptr, ... ) \
     if ( !ptr ) { qDebug( "%s: %s is null", __func__, # ptr ); return __VA_ARGS__; }
+
+#define JQNETWORK_THISNULL_CHECK( message, ... )                \
+    {                                                           \
+        auto this_ = this;                                      \
+        if ( !this_ )                                           \
+        {                                                       \
+            qDebug( "%s: this is null", message );              \
+            return __VA_ARGS__;                                 \
+        }                                                       \
+    }
 
 class QSemaphore;
 class QMutex;
@@ -208,4 +218,4 @@ void printVersionInformation(const char *jqNetworkCompileModeString = JQNETWORK_
 // inc import
 #include "jqnetwork_foundation.inc"
 
-#endif//JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_H
+#endif//JQNETWORK_INCLUDE_JQNETWORK_FOUNDATION_H_
