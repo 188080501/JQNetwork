@@ -51,7 +51,7 @@ qint32 JQNetworkPackage::checkDataIsReadyReceive(const QByteArray &rawData)
         case JQNETWORKPACKAGE_FILEDATAREQUESTPACKGEFLAG: { break; }
         default: { return -1; }
     }
-    if ( head->randomFlag_ == 0 ) { return -1; }
+    if ( head->randomFlag_ <= 0 ) { return -1; }
 
     switch ( head->metaDataFlag_ )
     {

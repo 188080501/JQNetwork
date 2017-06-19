@@ -1354,31 +1354,84 @@ void JQNetworkOverallTest::fusionTest1()
 void JQNetworkOverallTest::fusionTest2()
 {
     FusionTest2::ServerProcessor serverProcessor;
-    FusionTest2::ClientProcessor clientProcessor;
-
     auto server = JQNetworkServer::createServer( 36412 );
 
     server->registerProcessor( &serverProcessor );
 
     QCOMPARE( server->begin(), true );
 
+    QVector< QSharedPointer< FusionTest2::ClientProcessor > > clientProcessors;
     QVector< JQNetworkClientSharedPointer > clients;
 
     for ( auto i = 0; i < 10; ++i )
     {
         auto client = JQNetworkClient::createClient();
+        QSharedPointer< FusionTest2::ClientProcessor > clientProcessor( new FusionTest2::ClientProcessor );
 
         clients.push_back( client );
+        clientProcessors.push_back( clientProcessor );
 
-        client->registerProcessor( &clientProcessor );
+        client->registerProcessor( clientProcessor.data() );
 
         QCOMPARE( client->begin(), true );
         QCOMPARE( client->waitForCreateConnect( "127.0.0.1", 36412, 1000 ), true );
 
-        QCOMPARE( client->waitForSendVariantMapData( "127.0.0.1", 36412, "registerClient", { { "clientId", i } } ) > 0, true );
+        QCOMPARE( client->waitForSendVariantMapData( "127.0.0.1", 36412, "registerClient", { { "clientId", i + 1 } } ) > 0, true );
     }
 
-    clients.first()->waitForSendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { } );
+    clients.first()->waitForSendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello" } } );
 
-    QThread::sleep( 1 );
+    QThread::msleep( 300 );
+
+    for ( const auto &clientProcessor: clientProcessors )
+    {
+        QCOMPARE( clientProcessor->receivedMessageCount(), 1 );
+        QCOMPARE( clientProcessor->lastReceived(), QVariantMap( { { "message", "hello" } } ) );
+    }
+
+    for ( auto i = 0; i < 1000; ++i )
+    {
+        clients[ i % 10 ]->sendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello" } } );
+        clients[ ( i + 5 )% 10 ]->waitForSendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello" } } );
+    }
+
+    QThread::msleep( 300 );
+
+    for ( const auto &clientProcessor: clientProcessors )
+    {
+        QCOMPARE( clientProcessor->receivedMessageCount(), 2001 );
+        QCOMPARE( clientProcessor->lastReceived(), QVariantMap( { { "message", "hello" } } ) );
+    }
+
+    QSemaphore semaphore;
+
+    for ( auto i = 0; i < 500; ++i )
+    {
+        QtConcurrent::run( [ & ]()
+        {
+            for ( auto i = 0; i < 10; ++i )
+            {
+                clients[ i % 10 ]->sendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello" } } );
+                clients[ i % 10 ]->sendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello" } } );
+
+                clients[ i % 10 ]->sendVariantMapData( "127.0.0.1", 36412, "broadcastToOne", { { "clientId", i + 1 } } );
+                clients[ i % 10 ]->sendVariantMapData( "127.0.0.1", 36412, "broadcastToOne", { { "clientId", i + 1 } } );
+
+                clients[ i % 10 ]->sendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello" } } );
+                clients[ ( i + 5 )% 10 ]->waitForSendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello" } } );
+            }
+
+            semaphore.release( 1 );
+        } );
+    }
+
+    semaphore.acquire( 500 );
+
+    QThread::msleep( 1000 );
+
+    for ( const auto &clientProcessor: clientProcessors )
+    {
+        QCOMPARE( clientProcessor->receivedMessageCount(), 2001 + 5000 + 5000 + 500 + 500 + 5000 + 5000 );
+        QCOMPARE( clientProcessor->lastReceived(), QVariantMap( { { "message", "hello" } } ) );
+    }
 }

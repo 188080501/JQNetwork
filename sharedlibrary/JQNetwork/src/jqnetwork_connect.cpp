@@ -283,7 +283,7 @@ bool JQNetworkConnect::putPayloadData(
     JQNETWORK_NULLPTR_CHECK( runOnConnectThreadCallback_, 0 );
 
     const auto &&readySendPayloadDataSucceed = this->readySendPayloadData(
-                0,
+                2000000001,
                 targetActionFlag,
                 payloadData,
                 appendData,
@@ -322,7 +322,7 @@ bool JQNetworkConnect::putFile(
     JQNETWORK_NULLPTR_CHECK( runOnConnectThreadCallback_, 0 );
 
     const auto &&readySendFileData = this->readySendFileData(
-                0,
+                2000000001,
                 targetActionFlag,
                 fileInfo,
                 appendData,

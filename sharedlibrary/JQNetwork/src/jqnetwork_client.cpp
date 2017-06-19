@@ -97,6 +97,21 @@ bool JQNetworkClient::begin()
         globalCallbackThreadPool_ = callbackThreadPool_.toWeakRef();
     }
 
+    if ( !processors_.isEmpty() )
+    {
+        QSet< QThread * > receivedPossibleThreads;
+
+        callbackThreadPool_->waitRunEach( [ &receivedPossibleThreads ]()
+        {
+            receivedPossibleThreads.insert( QThread::currentThread() );
+        } );
+
+        for ( const auto &processor: processors_ )
+        {
+            processor->setReceivedPossibleThreads( receivedPossibleThreads );
+        }
+    }
+
     socketThreadPool_->waitRunEach(
                 [
                     this
@@ -139,7 +154,7 @@ void JQNetworkClient::registerProcessor(const JQNetworkProcessorPointer &process
 {
     JQNETWORK_THISNULL_CHECK( "JQNetworkClient::registerProcessor" );
 
-    if ( connectPools_.isEmpty() )
+    if ( !connectPools_.isEmpty() )
     {
         qDebug() << "JQNetworkClient::registerProcessor: please use registerProcessor befor begin()";
         return;

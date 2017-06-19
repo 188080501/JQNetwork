@@ -24,8 +24,6 @@ public:
 public slots:
     bool registerClient(const QVariantMap &received, QVariantMap &send)
     {
-        qDebug() << "ServerProcessor::registerClient:" << received;
-
         JQNP_CHECKRECEIVEDDATACONTAINSANDNOT0( "clientId" );
 
         mutex_.lock();
@@ -39,13 +37,11 @@ public slots:
 
     bool broadcastToAll(const QVariantMap &received, QVariantMap &send)
     {
-        qDebug() << "ServerProcessor::broadcastToAll:" << received;
-
         mutex_.lock();
 
         for( const auto &connect: clients_ )
         {
-            connect->putVariantMapData( "receivedMessage", { { "message", "hello" } } );
+            connect->putVariantMapData( "receivedMessage", received );
         }
 
         mutex_.unlock();
@@ -53,9 +49,17 @@ public slots:
         JQNP_SUCCEED();
     }
 
-    void broadcastToOne(const QVariantMap &received)
+    bool broadcastToOne(const QVariantMap &received, QVariantMap &send)
     {
-        qDebug() << "ServerProcessor::broadcastToOne:" << received;
+        JQNP_CHECKRECEIVEDDATACONTAINSANDNOT0( "clientId" );
+
+        mutex_.lock();
+
+        clients_[ received[ "clientId" ].toInt() ]->putVariantMapData( "receivedMessage", received );
+
+        mutex_.unlock();
+
+        JQNP_SUCCEED();
     }
 
 private:
@@ -72,11 +76,20 @@ public:
 
     ~ClientProcessor() = default;
 
+    inline int receivedMessageCount() const { return receivedMessageCount_; }
+
+    inline QVariantMap lastReceived() const { return lastReceived_; }
+
 public slots:
     void receivedMessage(const QVariantMap &received)
     {
-        qDebug() << "ClientProcessor::receivedMessage:" << received;
+        ++receivedMessageCount_;
+        lastReceived_ = received;
     }
+
+private:
+    int receivedMessageCount_ = 0;
+    QVariantMap lastReceived_;
 };
 
 }

@@ -4,8 +4,8 @@
 // Qt lib import
 #include <QObject>
 
-#define PRIVATEMACRO public
-//#define PRIVATEMACRO private
+//#define PRIVATEMACRO public
+#define PRIVATEMACRO private
 
 class JQNetworkOverallTest: public QObject
 {
@@ -65,7 +65,7 @@ PRIVATEMACRO slots:
 PRIVATEMACRO slots:
     void fusionTest1();
 
-private slots:
+PRIVATEMACRO slots:
     void fusionTest2();
 };
 
