@@ -47,7 +47,9 @@ public slots:
     {
         if ( received == "test" )
         {
+            mutex_.lock();
             ++counter_[ "receivedByteArray" ];
+            mutex_.unlock();
         }
     }
 
@@ -55,7 +57,9 @@ public slots:
     {
         if ( received == "test" )
         {
+            mutex_.lock();
             ++counter_[ "receivedByteArraySendByteArray" ];
+            mutex_.unlock();
         }
         send = "test";
     }
@@ -64,7 +68,9 @@ public slots:
     {
         if ( received == "test" )
         {
+            mutex_.lock();
             ++counter_[ "receivedByteArraySendVariantMap" ];
+            mutex_.unlock();
         }
         send = QVariantMap( { { "key", "value" } } );
     }
@@ -73,7 +79,9 @@ public slots:
     {
         if ( received == "test" )
         {
+            mutex_.lock();
             ++counter_[ "receivedByteArraySendFile" ];
+            mutex_.unlock();
         }
         send = QFileInfo( this->testFileInfo( 3 ) );
     }
@@ -82,7 +90,9 @@ public slots:
     {
         if ( received == QVariantMap( { { "key", "value" } } ) )
         {
+            mutex_.lock();
             ++counter_[ "receivedVariantMap" ];
+            mutex_.unlock();
         }
     }
 
@@ -90,7 +100,9 @@ public slots:
     {
         if ( received == QVariantMap( { { "key", "value" } } ) )
         {
+            mutex_.lock();
             ++counter_[ "receivedVariantMapSendByteArray" ];
+            mutex_.unlock();
         }
         send = "test";
     }
@@ -99,7 +111,9 @@ public slots:
     {
         if ( received == QVariantMap( { { "key", "value" } } ) )
         {
+            mutex_.lock();
             ++counter_[ "receivedVariantMapSendVariantMap" ];
+            mutex_.unlock();
         }
         send = QVariantMap( { { "key", "value" } } );
     }
@@ -108,7 +122,9 @@ public slots:
     {
         if ( received == QVariantMap( { { "key", "value" } } ) )
         {
+            mutex_.lock();
             ++counter_[ "receivedVariantMapSendFile" ];
+            mutex_.unlock();
         }
         send = QFileInfo( this->testFileInfo( 3 ) );
     }
@@ -117,7 +133,9 @@ public slots:
     {
         if ( received == this->testFileInfo( 2 ) )
         {
+            mutex_.lock();
             ++counter_[ "receiveFile" ];
+            mutex_.unlock();
         }
     }
 
@@ -125,7 +143,9 @@ public slots:
     {
         if ( received == this->testFileInfo( 2 ) )
         {
+            mutex_.lock();
             ++counter_[ "receiveFileSendByteArray" ];
+            mutex_.unlock();
         }
         send = "test";
     }
@@ -134,7 +154,9 @@ public slots:
     {
         if ( received == this->testFileInfo( 2 ) )
         {
+            mutex_.lock();
             ++counter_[ "receiveFileSendVariantMap" ];
+            mutex_.unlock();
         }
         send = QVariantMap( { { "key", "value" } } );
     }
@@ -143,7 +165,9 @@ public slots:
     {
         if ( received == this->testFileInfo( 2 ) )
         {
+            mutex_.lock();
             ++counter_[ "receiveFileSendFile" ];
+            mutex_.unlock();
         }
         send = QFileInfo( this->testFileInfo( 3 ) );
     }
@@ -158,7 +182,9 @@ public slots:
         if ( ( received == QVariantMap( { { "key2", "value2" } } ) ) &&
              ( receivedAppend == QVariantMap( { { "key3", "value3" } } ) ) )
         {
+            mutex_.lock();
             ++counter_[ "receivedVariantMapAndAppendSendVariantMapAndAppend" ];
+            mutex_.unlock();
         }
 
         send = QVariantMap( { { "key", "value" } } );
@@ -166,6 +192,7 @@ public slots:
     }
 
 public:
+    QMutex mutex_;
     QMap< QString, int > counter_; // methodName -> count
 };
 

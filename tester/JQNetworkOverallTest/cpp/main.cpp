@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 
     JQNetworkOverallTest jqNetworkTest;
 
-//    for ( auto count = 2; count; --count )
+//    for ( auto count = 100; count; --count )
 //    {
 //        if ( QTest::qExec( &jqNetworkTest, argc, argv ) )
 //        {
