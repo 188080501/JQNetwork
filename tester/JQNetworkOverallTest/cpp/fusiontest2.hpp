@@ -83,11 +83,14 @@ public:
 public slots:
     void receivedMessage(const QVariantMap &received)
     {
+        mutex_.lock();
         ++receivedMessageCount_;
         lastReceived_ = received;
+        mutex_.unlock();
     }
 
 private:
+    QMutex mutex_;
     int receivedMessageCount_ = 0;
     QVariantMap lastReceived_;
 };

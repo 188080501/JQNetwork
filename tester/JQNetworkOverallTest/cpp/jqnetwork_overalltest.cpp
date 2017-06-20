@@ -591,7 +591,7 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest1()
 
     auto server = JQNetworkServer::createServer( 23456 );
     server->connectSettings()->cutPackageSize = 2;
-    server->serverSettings()->globalProcessorThreadCount = 1;
+    server->serverSettings()->globalCallbackThreadCount = 1;
     server->serverSettings()->packageSendingCallback = [ &serverFlag, &serverProcessThread ](
             const auto &,
             const auto &randomFlag,
@@ -642,7 +642,7 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest1()
 
     auto client = JQNetworkClient::createClient();
     client->connectSettings()->cutPackageSize = 2;
-    client->clientSettings()->globalProcessorThreadCount = 1;
+    client->clientSettings()->globalCallbackThreadCount = 1;
     client->clientSettings()->packageSendingCallback = [ &clientFlag, &clientProcessThread ](
             const auto &,
             const auto &hostName,
@@ -751,7 +751,7 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest2()
     }
 
     auto server = JQNetworkServer::createServer( 34567 );
-    server->serverSettings()->globalProcessorThreadCount = 1;
+    server->serverSettings()->globalCallbackThreadCount = 1;
     server->serverSettings()->packageReceivingCallback = [ &serverFlag ](
             const auto &,
             const auto &randomFlag,
@@ -780,7 +780,7 @@ void JQNetworkOverallTest::jqNetworkServerAndClientTest2()
     auto client = JQNetworkClient::createClient();
     client->connectSettings()->cutPackageSize = 8 * 1024 * 1024;
     client->connectSettings()->packageCompressionThresholdForConnectSucceedElapsed = 0;
-    client->clientSettings()->globalProcessorThreadCount = 1;
+    client->clientSettings()->globalCallbackThreadCount = 1;
     client->clientSettings()->packageSendingCallback = [ &clientFlag ](
             const auto &,
             const auto &hostName,
@@ -1381,7 +1381,7 @@ void JQNetworkOverallTest::fusionTest2()
 
     clients.first()->waitForSendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello" } } );
 
-    QThread::msleep( 300 );
+    QThread::msleep( 500 );
 
     for ( const auto &clientProcessor: clientProcessors )
     {
@@ -1392,10 +1392,10 @@ void JQNetworkOverallTest::fusionTest2()
     for ( auto i = 0; i < 1000; ++i )
     {
         clients[ i % 10 ]->sendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello" } } );
-        clients[ ( i + 5 )% 10 ]->waitForSendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello" } } );
+        clients[ ( i + 5 ) % 10 ]->waitForSendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello" } } );
     }
 
-    QThread::msleep( 300 );
+    QThread::msleep( 1000 );
 
     for ( const auto &clientProcessor: clientProcessors )
     {
@@ -1427,11 +1427,14 @@ void JQNetworkOverallTest::fusionTest2()
 
     semaphore.acquire( 500 );
 
+    clients[ 0 ]->waitForSendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello" } } );
+
     QThread::msleep( 1000 );
 
     for ( const auto &clientProcessor: clientProcessors )
     {
-        QCOMPARE( clientProcessor->receivedMessageCount(), 2001 + 5000 + 5000 + 500 + 500 + 5000 + 5000 );
+        QCOMPARE( clientProcessor->receivedMessageCount(), 2001 + 5000 + 5000 + 500 + 500 + 5000 + 5000 + 1 );
+
         QCOMPARE( clientProcessor->lastReceived(), QVariantMap( { { "message", "hello" } } ) );
     }
 }
