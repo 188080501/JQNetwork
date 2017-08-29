@@ -13,8 +13,6 @@ int main(int argc, char *argv[])
     QCoreApplication app(argc, argv);
     JQNetwork::printVersionInformation();
 
-    JQNetworkOverallTest jqNetworkTest;
-
 //    for ( auto count = 100; count; --count )
 //    {
 //        if ( QTest::qExec( &jqNetworkTest, argc, argv ) )
@@ -23,6 +21,8 @@ int main(int argc, char *argv[])
 //        }
 //    }
 //    return 0;
+
+    JQNetworkOverallTest jqNetworkTest;
 
     return QTest::qExec( &jqNetworkTest, argc, argv );
 }

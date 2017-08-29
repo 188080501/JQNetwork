@@ -528,13 +528,19 @@ void JQNetworkOverallTest::jqNetworkClientTest()
     JQNetworkConnectPoolSettingsSharedPointer connectPoolSettings( new JQNetworkConnectPoolSettings );
     JQNetworkConnectSettingsSharedPointer connectSettings( new JQNetworkConnectSettings );
 
-    clientSettings->readyToDeleteCallback = [ &flag1, &count1 ](const auto &, const auto &, const auto &){ flag1 = true; ++count1; };
+    clientSettings->readyToDeleteCallback = [ &flag1, &count1 ](const auto &, const auto &, const auto &)
+    {
+        flag1 = true; ++count1;
+    };
 
     {
         JQNetworkClient client( clientSettings, connectPoolSettings, connectSettings );
         client.begin();
 
         QCOMPARE( client.sendPayloadData( "127.0.0.1", 23456, { } ), 0 );
+
+        QThread::sleep( 1 );
+
         QCOMPARE( client.waitForCreateConnect( "127.0.0.1", 23456 ), false );
 
         count1 = 0;
@@ -546,7 +552,7 @@ void JQNetworkOverallTest::jqNetworkClientTest()
 
         QThread::msleep( 15 * 1000 );
 
-        QCOMPARE( count1, 500 );
+        QCOMPARE( count1, 501 );
     }
 
     connectSettings->maximumReceivePackageWaitTime = 800;
@@ -1411,14 +1417,14 @@ void JQNetworkOverallTest::fusionTest2()
         {
             for ( auto i = 0; i < 10; ++i )
             {
-                clients[ i % 10 ]->sendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello" } } );
-                clients[ i % 10 ]->sendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello" } } );
+                clients[ i % 10 ]->sendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello-1" } } );
+                clients[ i % 10 ]->sendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello-2" } } );
 
                 clients[ i % 10 ]->sendVariantMapData( "127.0.0.1", 36412, "broadcastToOne", { { "clientId", i + 1 } } );
                 clients[ i % 10 ]->sendVariantMapData( "127.0.0.1", 36412, "broadcastToOne", { { "clientId", i + 1 } } );
 
-                clients[ i % 10 ]->sendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello" } } );
-                clients[ ( i + 5 )% 10 ]->waitForSendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello" } } );
+                clients[ i % 10 ]->sendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello-3" } } );
+                clients[ ( i + 5 )% 10 ]->waitForSendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello-4" } } );
             }
 
             semaphore.release( 1 );
@@ -1427,7 +1433,9 @@ void JQNetworkOverallTest::fusionTest2()
 
     semaphore.acquire( 500 );
 
-    clients[ 0 ]->waitForSendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello" } } );
+    QThread::msleep( 1000 );
+
+    clients[ 0 ]->waitForSendVariantMapData( "127.0.0.1", 36412, "broadcastToAll", { { "message", "hello-end" } } );
 
     QThread::msleep( 1000 );
 
@@ -1435,6 +1443,11 @@ void JQNetworkOverallTest::fusionTest2()
     {
         QCOMPARE( clientProcessor->receivedMessageCount(), 2001 + 5000 + 5000 + 500 + 500 + 5000 + 5000 + 1 );
 
-        QCOMPARE( clientProcessor->lastReceived(), QVariantMap( { { "message", "hello" } } ) );
+        if ( clientProcessor->lastReceived() != QVariantMap( { { "message", "hello-end" } } ) )
+        {
+            qDebug() << clientProcessor->lastReceived();
+            QFAIL( "111" );
+        }
+        QCOMPARE( clientProcessor->lastReceived(), QVariantMap( { { "message", "hello-end" } } ) );
     }
 }
