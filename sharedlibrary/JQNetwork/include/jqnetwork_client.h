@@ -20,6 +20,7 @@ struct JQNetworkClientSettings
 {
     QString dutyMark;
     int maximumAutoConnectToHostWaitTime = 10 * 1000;
+    bool autoCreateConnect = true;
 
     std::function< void( const JQNetworkConnectPointer &, const QString &hostName, const quint16 &port ) > connectToHostErrorCallback = nullptr;
     std::function< void( const JQNetworkConnectPointer &, const QString &hostName, const quint16 &port ) > connectToHostTimeoutCallback = nullptr;
@@ -288,6 +289,8 @@ private:
             const JQNetworkConnectPoolPointer &connectPool,
             const JQNetworkConnectPointerFunction &failCallback
         );
+
+    void releaseWaitConnectSucceedSemaphore(const QString &hostName, const quint16 &port, const bool &succeed);
 
 private:
     // Thread pool

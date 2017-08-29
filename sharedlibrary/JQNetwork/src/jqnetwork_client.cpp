@@ -262,7 +262,7 @@ bool JQNetworkClient::waitForCreateConnect(
 
     mutex_.unlock();
 
-    const auto &&acquireSucceed = semaphore->tryAcquire(
+    auto acquireSucceed = semaphore->tryAcquire(
                 1,
                 ( maximumConnectToHostWaitTime == -1 ) ? ( connectSettings_->maximumConnectToHostWaitTime ) : ( maximumConnectToHostWaitTime )
             );
@@ -272,6 +272,12 @@ bool JQNetworkClient::waitForCreateConnect(
     waitConnectSucceedSemaphore_.remove( hostKey );
 
     mutex_.unlock();
+
+    if ( !acquireSucceed ) { return false; }
+
+    acquireSucceed = semaphore->tryAcquire( 1 );
+
+//    qDebug() << "-->" << acquireSucceed;
 
     return acquireSucceed;
 }
@@ -437,7 +443,7 @@ qint32 JQNetworkClient::waitForSendPayloadData(
                     {
                         succeedCallback( connect, package );
                     }
-                    semaphore.release( 1 );
+                    semaphore.release( 2 );
                 },
                 [
                     &semaphore,
@@ -453,9 +459,9 @@ qint32 JQNetworkClient::waitForSendPayloadData(
                 }
             );
 
-    semaphore.acquire();
+    semaphore.acquire( 1 );
 
-    return sendReply;
+    return ( semaphore.tryAcquire( 1 ) ) ? ( sendReply ) : ( 0 );
 }
 
 qint32 JQNetworkClient::waitForSendVariantMapData(
@@ -522,7 +528,7 @@ qint32 JQNetworkClient::waitForSendFileData(
                     {
                         succeedCallback( connect, package );
                     }
-                    semaphore.release( 1 );
+                    semaphore.release( 2 );
                 },
                 [
                     &semaphore,
@@ -538,9 +544,9 @@ qint32 JQNetworkClient::waitForSendFileData(
                 }
             );
 
-    semaphore.acquire();
+    semaphore.acquire( 1 );
 
-    return sendReply;
+    return ( semaphore.tryAcquire( 1 ) ) ? ( sendReply ) : ( 0 );
 }
 
 JQNetworkConnectPointer JQNetworkClient::getConnect(const QString &hostName, const quint16 &port)
@@ -561,6 +567,8 @@ JQNetworkConnectPointer JQNetworkClient::getConnect(const QString &hostName, con
 
         return connect;
     }
+
+    if ( !clientSettings_->autoCreateConnect ) { return { }; }
 
     const auto &&autoConnectSucceed = this->waitForCreateConnect( hostName, port, clientSettings_->maximumAutoConnectToHostWaitTime );
 
@@ -602,9 +610,11 @@ bool JQNetworkClient::containsConnect(const QString &hostName, const quint16 &po
 
 void JQNetworkClient::onConnectToHostError(const JQNetworkConnectPointer &connect, const JQNetworkConnectPoolPointer &connectPool)
 {
-    if ( !clientSettings_->connectToHostErrorCallback ) { return; }
-
     const auto &&reply = connectPool->getHostAndPortByConnect( connect );
+
+    this->releaseWaitConnectSucceedSemaphore( reply.first, reply.second, false );
+
+    if ( !clientSettings_->connectToHostErrorCallback ) { return; }
 
     if ( reply.first.isEmpty() || !reply.second )
     {
@@ -620,6 +630,7 @@ void JQNetworkClient::onConnectToHostError(const JQNetworkConnectPointer &connec
                     port = reply.second
                 ]()
                 {
+                    if ( !this->clientSettings_->connectToHostErrorCallback ) { return; }
                     this->clientSettings_->connectToHostErrorCallback( connect, hostName, port );
                 }
     );
@@ -627,9 +638,11 @@ void JQNetworkClient::onConnectToHostError(const JQNetworkConnectPointer &connec
 
 void JQNetworkClient::onConnectToHostTimeout(const JQNetworkConnectPointer &connect, const JQNetworkConnectPoolPointer &connectPool)
 {
-    if ( !clientSettings_->connectToHostTimeoutCallback ) { return; }
-
     const auto &&reply = connectPool->getHostAndPortByConnect( connect );
+
+    this->releaseWaitConnectSucceedSemaphore( reply.first, reply.second, false );
+
+    if ( !clientSettings_->connectToHostTimeoutCallback ) { return; }
 
     if ( reply.first.isEmpty() || !reply.second )
     {
@@ -645,6 +658,7 @@ void JQNetworkClient::onConnectToHostTimeout(const JQNetworkConnectPointer &conn
                     port = reply.second
                 ]()
                 {
+                    if ( !this->clientSettings_->connectToHostTimeoutCallback ) { return; }
                     this->clientSettings_->connectToHostTimeoutCallback( connect, hostName, port );
                 }
     );
@@ -668,26 +682,7 @@ void JQNetworkClient::onConnectToHostSucceed(const JQNetworkConnectPointer &conn
                     port = reply.second
                 ]()
                 {
-                    const auto &&hostKey = QString( "%1:%2" ).arg( hostName, QString::number( port ) );
-
-                    this->mutex_.lock();
-
-                    {
-                        auto it = this->waitConnectSucceedSemaphore_.find( hostKey );
-                        if ( it != this->waitConnectSucceedSemaphore_.end() )
-                        {
-                            if ( it->data() )
-                            {
-                                it->data()->release( 1 );
-                            }
-                            else
-                            {
-                                qDebug() << "JQNetworkClient::onConnectToHostSucceed: semaphore error";
-                            }
-                        }
-                    }
-
-                    this->mutex_.unlock();
+                    this->releaseWaitConnectSucceedSemaphore( hostName, port, true );
 
                     if ( !this->clientSettings_->connectToHostSucceedCallback ) { return; }
                     this->clientSettings_->connectToHostSucceedCallback( connect, hostName, port );
@@ -926,4 +921,30 @@ void JQNetworkClient::onWaitReplyPackageFail(
                     failCallback( connect );
                 }
     );
+}
+
+void JQNetworkClient::releaseWaitConnectSucceedSemaphore(const QString &hostName, const quint16 &port, const bool &succeed)
+{
+//    qDebug() << "releaseWaitConnectSucceedSemaphore: hostName:" << hostName << ", port:" << port;
+
+    const auto &&hostKey = QString( "%1:%2" ).arg( hostName, QString::number( port ) );
+
+    this->mutex_.lock();
+
+    {
+        auto it = this->waitConnectSucceedSemaphore_.find( hostKey );
+        if ( it != this->waitConnectSucceedSemaphore_.end() )
+        {
+            if ( it->data() )
+            {
+                it->data()->release( ( succeed ) ? ( 2 ) : ( 1 ) );
+            }
+            else
+            {
+                qDebug() << "JQNetworkClient::onConnectToHostSucceed: semaphore error";
+            }
+        }
+    }
+
+    this->mutex_.unlock();
 }

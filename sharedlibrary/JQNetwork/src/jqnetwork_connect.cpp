@@ -362,6 +362,8 @@ void JQNetworkConnect::onTcpSocketStateChanged()
         }
         case QAbstractSocket::UnconnectedState:
         {
+//            qDebug() << "onTcpSocketStateChanged:" << this << ": UnconnectedState: error:" << tcpSocket_->error();
+
             switch ( tcpSocket_->error() )
             {
                 case QAbstractSocket::UnknownSocketError:
@@ -384,6 +386,10 @@ void JQNetworkConnect::onTcpSocketStateChanged()
                 {
                     JQNETWORK_NULLPTR_CHECK( connectSettings_->connectToHostErrorCallback );
                     connectSettings_->connectToHostErrorCallback( this );
+                    break;
+                }
+                case QAbstractSocket::NetworkError:
+                {
                     break;
                 }
                 default:
@@ -828,6 +834,16 @@ void JQNetworkConnect::onReadyToDelete()
     if ( !timerForConnectToHostTimeOut_ )
     {
         timerForConnectToHostTimeOut_.clear();
+    }
+
+    if ( !onReceivedCallbacks_.isEmpty() )
+    {
+        for ( const auto &callback: onReceivedCallbacks_ )
+        {
+            if ( !callback.failCallback ) { continue; }
+
+            callback.failCallback( this );
+        }
     }
 
     JQNETWORK_NULLPTR_CHECK( tcpSocket_ );
