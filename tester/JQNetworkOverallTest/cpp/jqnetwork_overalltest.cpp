@@ -543,6 +543,8 @@ void JQNetworkOverallTest::jqNetworkClientTest()
 
         QCOMPARE( client.waitForCreateConnect( "127.0.0.1", 23456 ), false );
 
+        QThread::sleep( 1 );
+
         count1 = 0;
 
         for ( auto count = 0; count < 500; ++count )
@@ -550,9 +552,17 @@ void JQNetworkOverallTest::jqNetworkClientTest()
             client.createConnect( "127.0.0.1", static_cast< quint16 >( 34567 + count ) );
         }
 
-        QThread::msleep( 15 * 1000 );
+        for ( auto i = 0; i < 30; ++i )
+        {
+            QThread::sleep( 1 );
 
-        QCOMPARE( count1, 501 );
+            if ( count1 == 500 )
+            {
+                break;
+            }
+        }
+
+        QCOMPARE( count1, 500 );
     }
 
     connectSettings->maximumReceivePackageWaitTime = 800;
